@@ -6,7 +6,7 @@ import { getDefaultTenant } from "@/lib/tenant";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createOrUpdateInventoryReview } from "@/app/host/inventory-review/actions";
-import { InventoryReviewStatus } from "@prisma/client";
+import { InventoryReviewStatus, type Prisma } from "@prisma/client";
 import { requireCleanerAccessToCleaning } from "@/lib/cleaner/requireCleanerAccessToCleaning";
 import { assertCleanerCanOperateCleaning } from "@/lib/cleaner/assertCleanerCanOperateCleaning";
 import { resolveCleanerContext } from "@/lib/cleaner/resolveCleanerContext";
@@ -34,7 +34,7 @@ export async function acceptCleaning(formData: FormData) {
     if (ctx.mode === "legacy") {
       const access = await requireCleanerAccessToCleaning(cleaningId);
 
-      const cleaning = await (prisma as any).cleaning.findFirst({
+      const cleaning = await prisma.cleaning.findFirst({
         where: { id: cleaningId, tenantId: access.cleaning.tenantId },
         select: {
           id: true,
@@ -52,7 +52,7 @@ export async function acceptCleaning(formData: FormData) {
 
       const currentMemberId = access.legacyMember.id;
 
-      await (prisma as any).$transaction(async (tx: any) => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const currentCleaning = await tx.cleaning.findFirst({
           where: {
             id: cleaningId,
@@ -146,7 +146,7 @@ export async function acceptCleaning(formData: FormData) {
     }
 
     const membershipTeamIds = new Set(myMemberships.map((m) => m.teamId));
-    const propertyTeams = await (prisma as any).propertyTeam.findMany({
+    const propertyTeams = await prisma.propertyTeam.findMany({
       where: {
         tenantId: cleaning.tenantId,
         propertyId: cleaning.propertyId,
@@ -181,10 +181,7 @@ export async function acceptCleaning(formData: FormData) {
       return;
     }
 
-    const teamForCleaningId =
-      cleaning.teamId ||
-      propertyTeams.find((pt: any) => pt.teamId)?.teamId ||
-      null;
+    const teamForCleaningId = cleaning.teamId || propertyTeams.find((pt) => pt.teamId)?.teamId || null;
     const mustBeActiveForFuture = teamForCleaningId
       ? activeTeamIds.includes(teamForCleaningId)
       : false;
@@ -197,8 +194,7 @@ export async function acceptCleaning(formData: FormData) {
     const targetTeamId =
       cleaning.teamId && membershipTeamIds.has(cleaning.teamId)
         ? cleaning.teamId
-        : propertyTeams.find((pt: any) => pt.team?.status !== "INACTIVE")?.teamId ||
-          propertyTeams[0].teamId;
+        : propertyTeams.find((pt) => pt.team?.status !== "INACTIVE")?.teamId || propertyTeams[0].teamId;
 
     const myMembership = myMemberships.find((m) => m.teamId === targetTeamId);
     if (!myMembership) {
@@ -208,7 +204,7 @@ export async function acceptCleaning(formData: FormData) {
 
     // Compatibilidad: si existe TeamMember legacy para este user+team, setear assignedMemberId y CleaningAssignee
     const teamMember = targetTeamId
-      ? await (prisma as any).teamMember.findFirst({
+      ? await prisma.teamMember.findFirst({
           where: { userId: ctx.user.id, teamId: targetTeamId, isActive: true },
           select: { id: true },
         })
@@ -248,17 +244,17 @@ export async function acceptCleaning(formData: FormData) {
       });
 
       if (teamMemberId) {
-        const existingAssignee = await (tx as any).cleaningAssignee.findFirst({
+        const existingAssignee = await tx.cleaningAssignee.findFirst({
           where: { cleaningId, memberId: teamMemberId },
         });
 
         if (existingAssignee) {
-          await (tx as any).cleaningAssignee.update({
+          await tx.cleaningAssignee.update({
             where: { id: existingAssignee.id },
             data: { status: "ASSIGNED", assignedAt: new Date() },
           });
         } else {
-          await (tx as any).cleaningAssignee.create({
+          await tx.cleaningAssignee.create({
             data: {
               tenantId: cleaning.tenantId,
               cleaningId,
@@ -276,17 +272,18 @@ export async function acceptCleaning(formData: FormData) {
     revalidatePath("/cleaner/cleanings");
     if (returnTo && returnTo.startsWith("/cleaner")) redirect(returnTo);
     redirect("/cleaner");
-  } catch (error: any) {
-    if (error?.message === "NEXT_REDIRECT" || `${error?.digest || ""}`.startsWith("NEXT_REDIRECT")) {
-      throw error;
+  } catch (error: unknown) {
+    const err = error as { message?: string; digest?: string };
+    if (err?.message === "NEXT_REDIRECT" || `${err?.digest || ""}`.startsWith("NEXT_REDIRECT")) {
+      throw err;
     }
-    if (error?.message === "ALREADY_TAKEN") {
+    if (err?.message === "ALREADY_TAKEN") {
       revalidatePath("/cleaner");
       if (returnTo && returnTo.startsWith("/cleaner")) redirect(returnTo);
       redirect("/cleaner");
       return;
     }
-    if (DEBUG_LOGS) console.error("[acceptCleaning] Error:", error);
+    if (DEBUG_LOGS) console.error("[acceptCleaning] Error:", err);
     redirect("/cleaner");
   }
 }
@@ -303,7 +300,7 @@ export async function startCleaning(formData: FormData) {
     const membershipId = access.membershipId;
     let currentMemberId: string | null = access.memberId;
     if (!currentMemberId && access.cleaning.teamId) {
-      const teamMember = await (prisma as any).teamMember.findFirst({
+      const teamMember = await prisma.teamMember.findFirst({
         where: {
           userId: access.userId,
           teamId: access.cleaning.teamId,
@@ -316,7 +313,7 @@ export async function startCleaning(formData: FormData) {
     }
 
     // Solo permitir iniciar si está asignada a este miembro (membership o legacy) y está PENDING
-    const result = await (prisma as any).cleaning.updateMany({
+    const result = await prisma.cleaning.updateMany({
       where: {
         id: cleaningId,
         tenantId: access.cleaning.tenantId,
@@ -365,11 +362,12 @@ export async function startCleaning(formData: FormData) {
     
     // Redirigir al detalle de la limpieza después de iniciar
     redirect(`/cleaner/cleanings/${cleaningId}`);
-  } catch (error: any) {
-    if (error?.status === 403 || error?.status === 404) {
-      throw error;
+  } catch (error: unknown) {
+    const err = error as { status?: number };
+    if (err?.status === 403 || err?.status === 404) {
+      throw err;
     }
-    if (DEBUG_LOGS) console.error("[startCleaning] Error:", error);
+    if (DEBUG_LOGS) console.error("[startCleaning] Error:", err);
     redirect("/cleaner");
   }
 }
@@ -386,7 +384,7 @@ export async function completeCleaning(formData: FormData) {
     const membershipId = access.membershipId;
     let currentMemberId: string | null = access.memberId;
     if (!currentMemberId && access.cleaning.teamId) {
-      const teamMember = await (prisma as any).teamMember.findFirst({
+      const teamMember = await prisma.teamMember.findFirst({
         where: {
           userId: access.userId,
           teamId: access.cleaning.teamId,
@@ -399,7 +397,7 @@ export async function completeCleaning(formData: FormData) {
     }
 
     // Solo permitir completar si está asignada a este miembro
-    await (prisma as any).cleaning.updateMany({
+    await prisma.cleaning.updateMany({
       where: {
         id: cleaningId,
         tenantId: access.cleaning.tenantId,
@@ -426,11 +424,12 @@ export async function completeCleaning(formData: FormData) {
     }
     
     redirect("/cleaner");
-  } catch (error: any) {
-    if (error?.status === 403 || error?.status === 404) {
-      throw error;
+  } catch (error: unknown) {
+    const err = error as { status?: number };
+    if (err?.status === 403 || err?.status === 404) {
+      throw err;
     }
-    if (DEBUG_LOGS) console.error("[completeCleaning] Error:", error);
+    if (DEBUG_LOGS) console.error("[completeCleaning] Error:", err);
     redirect("/cleaner");
   }
 }
@@ -447,7 +446,7 @@ export async function declineCleaning(formData: FormData) {
     const membershipId = access.membershipId;
     let currentMemberId: string | null = access.memberId;
     if (!currentMemberId && access.cleaning.teamId) {
-      const teamMember = await (prisma as any).teamMember.findFirst({
+      const teamMember = await prisma.teamMember.findFirst({
         where: {
           userId: access.userId,
           teamId: access.cleaning.teamId,
@@ -460,7 +459,7 @@ export async function declineCleaning(formData: FormData) {
     }
 
     // Solo el primary assignee puede declinar (membership o legacy)
-    const cleaning = await (prisma as any).cleaning.findFirst({
+    const cleaning = await prisma.cleaning.findFirst({
       where: {
         id: cleaningId,
         tenantId: access.cleaning.tenantId,
@@ -482,7 +481,7 @@ export async function declineCleaning(formData: FormData) {
     }
 
     // Transacción para declinar
-    await (prisma as any).$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Marcar CleaningAssignee como DECLINED
       if (currentMemberId) {
         await tx.cleaningAssignee.updateMany({
@@ -534,11 +533,12 @@ export async function declineCleaning(formData: FormData) {
     }
     
     redirect("/cleaner");
-  } catch (error: any) {
-    if (error?.status === 403 || error?.status === 404) {
-      throw error;
+  } catch (error: unknown) {
+    const err = error as { status?: number };
+    if (err?.status === 403 || err?.status === 404) {
+      throw err;
     }
-    if (DEBUG_LOGS) console.error("[declineCleaning] Error:", error);
+    if (DEBUG_LOGS) console.error("[declineCleaning] Error:", err);
     redirect("/cleaner");
   }
 }
@@ -556,13 +556,13 @@ export async function markCleaningViewed(cleaningId: string, memberId: string, s
 
   // Validar que el cleaning y el member pertenecen al tenant
   const [cleaning, member] = await Promise.all([
-    (prisma as any).cleaning.findFirst({
+    prisma.cleaning.findFirst({
       where: {
         id: cleaningId,
         tenantId: tenant.id,
       },
     }),
-    (prisma as any).teamMember.findFirst({
+    prisma.teamMember.findFirst({
       where: {
         id: memberId,
         tenantId: tenant.id,
@@ -583,13 +583,16 @@ export async function markCleaningViewed(cleaningId: string, memberId: string, s
 
   // Upsert idempotente: si ya existe, no hace nada; si no, crea el registro
   try {
-    // Verificar si el modelo existe antes de usarlo
-    if (!(prisma as any).cleaningView) {
+    // NOTE: model may not exist in generated client in some envs; keep runtime guard
+    const prismaWithCleaningView = prisma as unknown as {
+      cleaningView?: { upsert: (args: unknown) => Promise<unknown> };
+    };
+    if (!prismaWithCleaningView.cleaningView) {
       console.warn("[markCleaningViewed] Modelo cleaningView no disponible");
       return;
     }
     
-    const result = await (prisma as any).cleaningView.upsert({
+    await prismaWithCleaningView.cleaningView.upsert({
       where: {
         cleaningId_memberId: {
           cleaningId,
@@ -612,11 +615,12 @@ export async function markCleaningViewed(cleaningId: string, memberId: string, s
     if (shouldRevalidate) {
       revalidatePath("/host/cleanings");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string };
     // Si falla por cualquier razón (ej: tabla no existe, constraint), ignorar silenciosamente
     // Esto asegura que sea idempotente y no rompa el flujo si la tabla aún no existe
     if (process.env.DEBUG_LOGS === "1") {
-      console.error("[markCleaningViewed] Error:", error?.message || error);
+      console.error("[markCleaningViewed] Error:", err?.message || err);
     }
     // No re-throw, es una acción idempotente y no crítica para el flujo principal
   }
