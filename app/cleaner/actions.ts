@@ -13,33 +13,6 @@ import { resolveCleanerContext } from "@/lib/cleaner/resolveCleanerContext";
 import { getAvailabilityWindow } from "@/lib/cleaner/availabilityWindow";
 import { getAccessibleTeamsForUser } from "@/lib/cleaner/getAccessibleTeamsForUser";
 
-/**
- * MVP: Identificación del miembro actual (legacy)
- * Se mantiene para compatibilidad con flujo legacy
- */
-async function getCurrentMemberId(tenantId: string, memberIdParam?: string): Promise<string | null> {
-  if (!memberIdParam) {
-    const firstMember = await (prisma as any).teamMember.findFirst({
-      where: {
-        tenantId,
-        isActive: true,
-      },
-      orderBy: { createdAt: "asc" },
-    });
-    return firstMember?.id || null;
-  }
-
-  const member = await (prisma as any).teamMember.findFirst({
-    where: {
-      id: memberIdParam,
-      tenantId,
-      isActive: true,
-    },
-  });
-
-  return member?.id || null;
-}
-
 const DEBUG_LOGS = process.env.DEBUG_LOGS === "1";
 
 export async function acceptCleaning(formData: FormData) {
