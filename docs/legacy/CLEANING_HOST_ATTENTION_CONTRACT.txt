@@ -1,0 +1,107 @@
+# FILE: CLEANING_HOST_ATTENTION_CONTRACT.txt
+# HAUSDAME — CLEANING HOST ATTENTION CONTRACT (LEY DEL SISTEMA)
+# VERSIÓN: 1.0
+# ESTADO: ACTIVO — OBLIGATORIO
+# ALCANCE: Banners/alerts en Detalle de Limpieza (Host) y cualquier lugar Host
+#          que calcule “Atención requerida” para una limpieza.
+
+══════════════════════════════════════════════
+0) PROPÓSITO
+══════════════════════════════════════════════
+Este contrato define la semántica FINAL y OBLIGATORIA para:
+- Cuándo una limpieza Host debe mostrar alertas (Attention Reasons)
+- Qué significa cada alerta
+- Qué fuentes de datos son válidas para concluir “ejecución” vs “configuración”
+Cualquier cambio que mezcle conceptos o cambie reglas sin actualizar este contrato
+constituye una REGRESIÓN.
+
+══════════════════════════════════════════════
+1) PRINCIPIO CANÓNICO (ANTI-CONFUSIÓN)
+══════════════════════════════════════════════
+Existen 2 verdades distintas en Host:
+
+A) OPERACIÓN (EJECUCIÓN REAL DE LA LIMPIEZA)
+- Responde: “¿Quién/equipo ejecuta esta limpieza?”
+- Fuente válida (Service world referenciada por Cleaning):
+  - Cleaning.teamId
+  - Cleaning.assignedMembershipId (y su validez/estado)
+- Prohibido:
+  - Concluir operación usando PropertyTeam (Host)
+
+B) CONFIGURACIÓN (HOST CONFIG)
+- Responde: “¿La propiedad está configurada en Host para automatizaciones/políticas?”
+- Fuente válida (Host world):
+  - PropertyTeam (en tenant Host) filtrado por team.status = ACTIVE
+- Prohibido:
+  - Concluir operación usando PropertyTeam
+  - Etiquetar ausencia de PropertyTeam como “no hay equipo asignado” (operativo)
+
+══════════════════════════════════════════════
+2) CÓDIGOS DE ALERTA (DEFINITIVOS)
+══════════════════════════════════════════════
+2.1) NO_TEAM_EXECUTING  (CRÍTICO — ATENCIÓN REQUERIDA)
+Significa:
+- NO existe evidencia válida de que la limpieza tenga equipo/persona ejecutando.
+
+Regla obligatoria:
+- Se dispara SOLO si:
+  - Cleaning.teamId es null/undefined
+  - Y Cleaning.assignedMembershipId es null/undefined
+  - (Opcional: o si assignedMembershipId existe pero NO resuelve a membership ACTIVE
+    en el team referenciado por Cleaning.teamId cuando aplique)
+Texto UI:
+- Título: “No hay equipo asignado a esta limpieza.”
+- CTA (si existe): “Asignar equipo” / “Asignar miembro”
+
+2.2) NO_HOST_TEAM_CONFIG  (WARNING — NO BLOQUEANTE)
+Significa:
+- La propiedad NO tiene configuración de equipo en Host (PropertyTeam) en el tenant Host,
+  lo cual puede afectar automatizaciones, reglas o asignación futura.
+
+Regla obligatoria:
+- Se dispara SOLO si:
+  - propertyTeamsCount === 0 (calculado en tenant Host, team.status=ACTIVE)
+- Pero:
+  - NO debe desplazar ni contradecir el estado operativo.
+  - Si la limpieza está ejecutándose (tiene teamId o assignedMembershipId),
+    este aviso se muestra como WARNING (no “Atención requerida”).
+
+Texto UI:
+- Título: “Configuración de equipo pendiente”
+- Body: “La limpieza no está asignada, porque esta propiedad no tiene un equipo configurado en Host.
+         Esto puede afectar asignaciones automáticas futuras.”
+- CTA: “Ir a propiedad y configurar equipo”
+
+══════════════════════════════════════════════
+3) PRIORIDAD Y PRESENTACIÓN (HOST)
+══════════════════════════════════════════════
+- Prioridad de severidad:
+  1) CRÍTICO (NO_TEAM_EXECUTING) → “Atención requerida”
+  2) WARNING (NO_HOST_TEAM_CONFIG) → aviso informativo, NO bloqueante
+- Prohibido:
+  - Mostrar “Atención requerida” por ausencia de PropertyTeam si existe ejecución
+  - Reusar el texto “Esta propiedad no tiene un equipo asignado” para NO_HOST_TEAM_CONFIG
+
+══════════════════════════════════════════════
+4) FUENTES DE DATOS (OBLIGATORIAS)
+══════════════════════════════════════════════
+- app/host/cleanings/[id]/page.tsx (o equivalente) debe pasar a getCleaningAttentionReasons:
+  - cleaning.teamId
+  - cleaning.assignedMembershipId
+  - propertyTeamsCount (tenant Host)
+  - (Opcional recomendado) assignedMembershipStatus / resolvedAssignedMembership
+- El cálculo propertyTeamsCount:
+  - Debe filtrar por tenantId = tenant Host
+  - Debe filtrar team.status = ACTIVE
+  - No debe considerar PropertyMemberAccess como “config Host”
+
+══════════════════════════════════════════════
+5) CHECKLIST ANTI-REGRESIÓN
+══════════════════════════════════════════════
+- [ ] Si Cleaning.teamId o assignedMembershipId existen → NO mostrar “Atención requerida”
+      por falta de PropertyTeam.
+- [ ] Si NO hay teamId NI assignedMembershipId → debe existir alerta CRÍTICA NO_TEAM_EXECUTING.
+- [ ] NO_HOST_TEAM_CONFIG usa texto de “configuración”, no de “asignación”.
+- [ ] Ninguna lógica Host concluye operación usando PropertyTeam.
+- [ ] La UI Host nunca afirma “no hay equipo asignado” cuando sí hay ejecución.
+
