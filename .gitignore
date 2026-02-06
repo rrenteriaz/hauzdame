@@ -39,3 +39,40 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/app/generated/prisma
+
+
+# -------------------------------------------------
+# Hausdame – archivos locales, backups y temporales
+# -------------------------------------------------
+
+# Backups de base de datos (NUNCA versionar)
+*.dump
+backup_*.sql
+backup_*.schema.sql
+
+# Exports y dry-runs con datos
+dev-export.json
+apply-*.json
+dry-run*.json
+preflight.json
+tmp/exports/
+
+# SQL temporales / diagnósticos locales
+check_*.sql
+tmp_*.sql
+query_*.sql
+find_*.sql
+inspect_*.sql
+list_*.sql
+
+# Directorios temporales
+tmp/
+scripts/tmp/
+
+# Logs y outputs locales
+lint-output.txt
+
+# Configuración de IDE (local)
+.vscode/
