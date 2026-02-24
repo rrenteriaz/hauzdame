@@ -1,0 +1,3 @@
+-- Add TEAM_LEADER to TeamRole enum
+ALTER TYPE "TeamRole" ADD VALUE IF NOT EXISTS 'TEAM_LEADER';
+

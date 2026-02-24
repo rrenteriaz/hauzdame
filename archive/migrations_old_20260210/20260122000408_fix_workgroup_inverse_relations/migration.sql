@@ -1,0 +1,3 @@
+-- Intentionally left empty.
+-- This migration previously attempted to ALTER tables that didn't exist yet in a fresh shadow DB.
+-- The required changes are already covered by later migrations (table creation) and/or are not needed.

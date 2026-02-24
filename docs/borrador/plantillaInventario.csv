@@ -1,0 +1,92 @@
+Item Name,Category,Area,Expected Qty,Condition,Priority,Brand,Model,Serial Number,Color,Size,Notes,Variant Key,Variant Value,Is Active,Is Replacable,Default Brand,Default Model,Default Color,Default Size,Default Variant Key,Default Variant Label,Default Variant Options
+Bote de basura,KITCHEN_ACCESSORIES,Baño 2,1,USED_LT_1Y,MEDIUM,,,,,Chico,Con tapa,,,true,true,,,,,,,
+Bote de basura,KITCHEN_ACCESSORIES,Baño 1,1,USED_LT_1Y,MEDIUM,,,,,Chico,Con tapa,,,true,true,,,,,,,
+Bote de basura,KITCHEN_ACCESSORIES,Lavandería,1,USED_LT_1Y,MEDIUM,,,,,,Con tapa,,,true,true,,,,,,,
+Bote de basura,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Toalla de piso,LINENS,Baño 2,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Toalla de piso,LINENS,Baño 1,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Toalla de manos,LINENS,Baño 2,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Toalla de manos,LINENS,Baño 1,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Toalla de manos,LINENS,Recámara 1,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Toalla de cuerpo,LINENS,Recámara 2,2,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Toalla de cuerpo,LINENS,Recámara 1,2,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Toalla de pies,LINENS,Recámara 1,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Frascos,KITCHEN_ACCESSORIES,Cocina,2,USED_LT_1Y,MEDIUM,,,,,,Para café y azúcar,material,Acero,true,true,,,,,material,Material,Acero; Vidrio; Plástico
+Cafetera,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,4 tazas,De goteo,,,true,true,,,,,,,
+Cazuela,TABLEWARE_UTENSILS,Cocina,2,USED_LT_1Y,MEDIUM,,,,,Chicas,Con asa,,,true,true,,,,,,,
+Refrigerador,FURNITURE_EQUIPMENT,Cocina,1,USED_GT_1Y,HIGH,,,,,,,,,true,false,,,,,,,
+Microondas,FURNITURE_EQUIPMENT,Cocina,1,USED_LT_1Y,HIGH,,,,,,,,,true,false,,,,,,,
+Lavadora,FURNITURE_EQUIPMENT,Lavandería,1,USED_GT_1Y,HIGH,,,,,16kg,,,,true,false,,,,,,,
+Secadora,FURNITURE_EQUIPMENT,Lavandería,1,USED_GT_1Y,HIGH,,,,,,,,,true,false,,,,,,,
+Almohadas,LINENS,Recámara 2,1,USED_LT_1Y,MEDIUM,,,,,,,tamañoCama,Individual,true,true,,,,,tamañoCama,Tamaño de cama,Individual; Matrimonial
+Almohadas,LINENS,Recámara 2,2,USED_LT_1Y,MEDIUM,,,,,,,tamañoCama,Matrimonial,true,true,,,,,tamañoCama,Tamaño de cama,Individual; Matrimonial
+Almohadas,LINENS,Recámara 1,1,USED_LT_1Y,MEDIUM,,,,,,,tamañoCama,Individual,true,true,,,,,tamañoCama,Tamaño de cama,Individual; Matrimonial
+Almohadas,LINENS,Recámara 1,2,USED_LT_1Y,MEDIUM,,,,,,,tamañoCama,Matrimonial,true,true,,,,,tamañoCama,Tamaño de cama,Individual; Matrimonial
+Cama,FURNITURE_EQUIPMENT,Recámara 2,1,USED_GT_1Y,HIGH,,,,,Queen,,tamaño,Queen,true,false,,,,,tamaño,Tamaño,Queen; King; Matrimonial
+Cama,FURNITURE_EQUIPMENT,Recámara 1,2,USED_GT_1Y,HIGH,,,,,Matrimonial,,tamaño,Matrimonial,true,false,,,,,tamaño,Tamaño,Queen; King; Matrimonial
+Cuadro Decorativo,DECOR,Comedor,1,USED_LT_1Y,LOW,,,,,,,,,true,true,,,,,,,
+Cuadro Decorativo,DECOR,Sala,4,USED_LT_1Y,LOW,,,,,,,,,true,true,,,,,,,
+Coladera,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,Chica,,material,Metal,true,true,,,,,material,Material,Metal; Plástico
+Coladera,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,Grande,,material,Metal,true,true,,,,,material,Material,Metal; Plástico
+Comal,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,,Cuadrado con asa,,,true,true,,,,,,,
+Copa,TABLEWARE_UTENSILS,Cocina,1,USED_LT_1Y,MEDIUM,,,,,,,material,Vidrio,true,true,,,,,material,Material,Vidrio; Plástico
+Cuchara,TABLEWARE_UTENSILS,Cocina,6,USED_LT_1Y,MEDIUM,,,,,,,tipo,Cafetera,true,true,,,,,tipo,Tipo,Cafetera; Sopera
+Cuchara,TABLEWARE_UTENSILS,Cocina,6,USED_LT_1Y,MEDIUM,,,,,,,tipo,Sopera,true,true,,,,,tipo,Tipo,Cafetera; Sopera
+Cucharón,TABLEWARE_UTENSILS,Cocina,1,USED_LT_1Y,MEDIUM,,,,Negro,,,material,Plástico,true,true,,,,,material,Material,Plástico; Metal
+Cuchillo,TABLEWARE_UTENSILS,Cocina,6,USED_LT_1Y,MEDIUM,,,,,,,tipo,Cubierto,true,true,,,,,tipo,Tipo,Cubierto; Cocina
+Cuchillo,TABLEWARE_UTENSILS,Cocina,2,USED_LT_1Y,MEDIUM,,,,Rojo,Mediano,,tipo,Cocina,true,true,,,,,tipo,Tipo,Cubierto; Cocina
+Dispensador de aceite,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,,,material,Vidrio,true,true,,,,,material,Material,Vidrio; Plástico
+Escurridor,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,,Para platos,,,true,true,,,,,,,
+Exprimidor,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,Grande,Para limones,,,true,true,,,,,,,
+Jarra,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,Naranja,Chica,Para agua,material,Plástico,true,true,,,,,material,Material,Plástico; Barro; Vidrio
+Jarra,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,Negro,,,material,Barro,true,true,,,,,material,Material,Plástico; Barro; Vidrio
+Licuadora,FURNITURE_EQUIPMENT,Cocina,1,USED_LT_1Y,HIGH,,,,,,Vaso de vidrio,,,true,false,,,,,,,
+Mantel individual,KITCHEN_ACCESSORIES,Cocina,4,USED_LT_1Y,MEDIUM,,,,,Pequeño,Para comedor,,,true,true,,,,,,,
+Olla,TABLEWARE_UTENSILS,Cocina,1,USED_LT_1Y,MEDIUM,,,,,Mediana,Con tapa,,,true,true,,,,,,,
+Pala,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,Negra,,,material,Plástico,true,true,,,,,material,Material,Plástico; Metal
+Plato,TABLEWARE_UTENSILS,Cocina,6,USED_LT_1Y,MEDIUM,,,,,Chico,,tipo,Extendido,true,true,,,,,tipo,Tipo,Extendido; Hondo
+Plato,TABLEWARE_UTENSILS,Cocina,6,USED_LT_1Y,MEDIUM,,,,,Grande,,tipo,Extendido,true,true,,,,,tipo,Tipo,Extendido; Hondo
+Plato,TABLEWARE_UTENSILS,Cocina,5,USED_LT_1Y,MEDIUM,,,,,,,tipo,Hondo,true,true,,,,,tipo,Tipo,Extendido; Hondo
+Sartén,TABLEWARE_UTENSILS,Cocina,2,USED_LT_1Y,MEDIUM,,,,,Mediano,,,,true,true,,,,,,,
+Servilletero,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,,,material,Metal,true,true,,,,,material,Material,Metal; Plástico
+Tabla de picar,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,Blanca,,,material,Plástico,true,true,,,,,material,Material,Plástico; Madera
+Tapa de cazuela,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,Chica,,,,true,true,,,,,,,
+Taza,TABLEWARE_UTENSILS,Cocina,2,USED_LT_1Y,MEDIUM,,,,,Alta,,,,true,true,,,,,,,
+Tenedor,TABLEWARE_UTENSILS,Cocina,5,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Tenedor,TABLEWARE_UTENSILS,Comedor,2,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Tijera,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,,Para cocina,,,true,true,,,,,,,
+Tortillero,KITCHEN_ACCESSORIES,Cocina,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Trapo,KITCHEN_ACCESSORIES,Cocina,3,USED_LT_1Y,MEDIUM,,,,,,Para cocina,uso,Limpiar,true,true,,,,,uso,Uso,Limpiar; Secar
+Trapo,KITCHEN_ACCESSORIES,Cocina,3,USED_LT_1Y,MEDIUM,,,,,,Para cocina,uso,Secar,true,true,,,,,uso,Uso,Limpiar; Secar
+Vaso,TABLEWARE_UTENSILS,Cocina,4,USED_LT_1Y,MEDIUM,,,,,Chico,Estilo old fashion,material,Vidrio,true,true,,,,,material,Material,Vidrio; Plástico
+Vaso,TABLEWARE_UTENSILS,Cocina,6,USED_LT_1Y,MEDIUM,,,,,Grande,Estilo old fashion,material,Vidrio,true,true,,,,,material,Material,Vidrio; Plástico
+Vaso,TABLEWARE_UTENSILS,Cocina,2,USED_LT_1Y,MEDIUM,,,,,Grande,,material,Vidrio,true,true,,,,,material,Material,Vidrio; Plástico
+Burro de planchar,FURNITURE_EQUIPMENT,Lavandería,1,USED_LT_1Y,MEDIUM,,,,,,,material,Metal,true,true,,,,,material,Material,Metal; Plástico
+Escalera,FURNITURE_EQUIPMENT,Lavandería,1,USED_LT_1Y,MEDIUM,,,,,2 escalones,,material,Metal,true,true,,,,,material,Material,Madera; Metal
+Soporte de equipaje,FURNITURE_EQUIPMENT,Recámara 2,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Soporte de equipaje,FURNITURE_EQUIPMENT,Recámara 1,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Tocador,FURNITURE_EQUIPMENT,Recámara 2,1,USED_GT_1Y,MEDIUM,,,,,,,material,Madera,true,false,,,,,material,Material,Madera; MDF
+Ventilador,FURNITURE_EQUIPMENT,Recámara 2,1,USED_LT_1Y,MEDIUM,,,,,Chico,,tipo,Torre,true,true,,,,,tipo,Tipo,Torre; Piso; Pedestal
+Ventilador,FURNITURE_EQUIPMENT,Recámara 1,1,USED_LT_1Y,MEDIUM,,,,,,,tipo,Torre,true,true,,,,,tipo,Tipo,Torre; Piso; Pedestal
+Ventilador,FURNITURE_EQUIPMENT,Sala,1,USED_LT_1Y,MEDIUM,,,,Blanco,,,tipo,Piso,true,true,,,,,tipo,Tipo,Torre; Piso; Pedestal
+Ventilador,FURNITURE_EQUIPMENT,Sala,1,USED_LT_1Y,MEDIUM,,,,,,,tipo,Torre,true,true,,,,,tipo,Tipo,Torre; Piso; Pedestal
+Mesa,FURNITURE_EQUIPMENT,Sala,1,USED_LT_1Y,MEDIUM,,,,,,,tipo,Centro,true,false,,,,,tipo,Tipo,Desayunadora; Esquinera; Centro; Lateral
+Mesa,FURNITURE_EQUIPMENT,Sala,2,USED_LT_1Y,MEDIUM,,,,,,,tipo,Lateral,true,false,,,,,tipo,Tipo,Desayunadora; Esquinera; Centro; Lateral
+Mueble de TV,FURNITURE_EQUIPMENT,Sala,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,false,,,,,,,
+Sofá,FURNITURE_EQUIPMENT,Sala,1,USED_LT_1Y,HIGH,,,,,,,,,true,false,,,,,,,
+Televisor,FURNITURE_EQUIPMENT,Sala,1,USED_LT_1Y,HIGH,,,,,55 pulgadas,Incluye control remoto,,,true,false,,,,,,,
+Soporte de TV,FURNITURE_EQUIPMENT,Sala,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Chapa electrónica,KEYS_ACCESS,Sala,1,USED_LT_1Y,HIGH,,,,,,,,,true,false,,,,,,,
+Cortina,DECOR,Sala,1,USED_LT_1Y,LOW,,,,,,Incluye cortinero,,,true,true,,,,,,,
+Perchero,FURNITURE_EQUIPMENT,Sala,1,USED_LT_1Y,MEDIUM,,,,,,,material,Madera,true,true,,,,,material,Material,Madera; Metal
+Plancha,FURNITURE_EQUIPMENT,Recámara 1,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Corbatín auto,DECOR,Sala,5,USED_LT_1Y,LOW,,,,,,,,,true,true,,,,,,,
+Colcha,LINENS,Recámara 2,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Colcha,LINENS,Recámara 1,1,USED_LT_1Y,MEDIUM,,,,Gris,,,,,true,true,,,,,,,
+Cobertor,LINENS,Recámara 1,1,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Sábanas,LINENS,Recámara 2,2,USED_LT_1Y,MEDIUM,,,,,,,,,true,true,,,,,,,
+Maceta,DECOR,Sala,1,USED_LT_1Y,LOW,,,,,Mediana,Con planta,material,Plástico,true,true,,,,,material,Material,Plástico; Barro; Cerámica
+Base de maceta,DECOR,Sala,1,USED_LT_1Y,LOW,,,,,,,material,Cantera,true,true,,,,,material,Material,Cantera; Plástico
+Espejo,DECOR,Sala,1,USED_LT_1Y,LOW,,,,,,,,,true,true,,,,,,,
+Comedor,DECOR,Sala,1,USED_GT_1Y,MEDIUM,,,,,,,,,true,false,,,,,,,
+Silla,DECOR,Comedor,4,USED_LT_1Y,MEDIUM,,,,Gris claro,,Para comedor,material,Tela,true,false,,,,,material,Material,Tela; Madera; Plástico

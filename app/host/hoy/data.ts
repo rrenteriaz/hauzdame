@@ -1,0 +1,579 @@
+// app/host/hoy/data.ts
+"use server";
+
+import prisma from "@/lib/prisma";
+import { getCleaningsNeedingAttention } from "@/lib/cleaning-needs-attention";
+import { InventoryReportStatus } from "@prisma/client";
+import { BlockData, HoyData, ProximasData, BlockItem } from "./types";
+
+/**
+ * Helpers para rangos de fecha
+ */
+function getStartOfToday(): Date {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return now;
+}
+
+function getEndOfToday(): Date {
+  const now = new Date();
+  now.setHours(23, 59, 59, 999);
+  return now;
+}
+
+function getStartOfTomorrow(): Date {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  return tomorrow;
+}
+
+function getEndOfNext7Days(): Date {
+  const future = new Date();
+  future.setDate(future.getDate() + 7);
+  future.setHours(23, 59, 59, 999);
+  return future;
+}
+
+/**
+ * Obtiene datos para el tab "Hoy"
+ */
+export async function getHoyData(
+  tenantId: string,
+  propertyId?: string
+): Promise<HoyData> {
+  const startOfToday = getStartOfToday();
+  const endOfToday = getEndOfToday();
+
+  // Construir filtro base para propertyId
+  const propertyFilter = propertyId ? { propertyId } : {};
+
+  // 1. Limpiezas sin confirmar (solo las de hoy)
+  const allUnconfirmedCleanings = await getCleaningsNeedingAttention(
+    tenantId,
+    false // incluir todas, luego filtrar por fecha
+  );
+  const todayUnconfirmedCleanings = allUnconfirmedCleanings.filter((c) => {
+    const scheduledDate = new Date(c.scheduledDate);
+    return (
+      scheduledDate >= startOfToday &&
+      scheduledDate <= endOfToday &&
+      (!propertyId || c.propertyId === propertyId)
+    );
+  });
+
+  // 2. Incidencias abiertas
+  const openIncidentsData = await getOpenIncidents(tenantId, propertyId);
+
+  // 3. Limpiezas de hoy
+  const todayCleaningsData = await getTodayCleanings(
+    tenantId,
+    startOfToday,
+    endOfToday,
+    propertyId
+  );
+
+  // 4. Reservas para hoy
+  const todayReservationsData = await getTodayReservations(
+    tenantId,
+    startOfToday,
+    endOfToday,
+    propertyId
+  );
+
+  // Para unconfirmedCleanings, necesitamos mapear todos los items
+  const allUnconfirmedItems = todayUnconfirmedCleanings.map((c) => ({
+    id: c.id,
+    title: `Limpieza sin confirmar`,
+    propertyName: c.property.shortName || c.property.name,
+    date: c.scheduledDate.toISOString(),
+    status: c.status,
+    href: `/host/cleanings/${c.id}${propertyId ? `?propertyId=${propertyId}` : ""}`,
+  }));
+
+  return {
+    unconfirmedCleanings: {
+      count: todayUnconfirmedCleanings.length,
+      items: allUnconfirmedItems.slice(0, 5), // Solo mostrar 5 en la tarjeta
+      allItems: allUnconfirmedItems, // Todos los items para el bottom sheet
+    },
+    openIncidents: openIncidentsData,
+    todayCleanings: todayCleaningsData,
+    todayReservations: todayReservationsData,
+  };
+}
+
+/**
+ * Obtiene datos para el tab "Próximas"
+ */
+export async function getProximasData(
+  tenantId: string,
+  propertyId?: string
+): Promise<ProximasData> {
+  const startOfTomorrow = getStartOfTomorrow();
+  const endOfNext7Days = getEndOfNext7Days();
+
+  // 1. Incidencias abiertas (todas, no solo próximas)
+  const openIncidentsData = await getOpenIncidents(tenantId, propertyId);
+
+  // 2. Limpiezas sin confirmar (próximos 7 días)
+  const allUnconfirmedCleanings = await getCleaningsNeedingAttention(
+    tenantId,
+    true // solo futuras
+  );
+  const upcomingUnconfirmedCleanings = allUnconfirmedCleanings.filter((c) => {
+    const scheduledDate = new Date(c.scheduledDate);
+    return (
+      scheduledDate >= startOfTomorrow &&
+      scheduledDate <= endOfNext7Days &&
+      (!propertyId || c.propertyId === propertyId)
+    );
+  });
+
+  // 3. Próximas limpiezas
+  const upcomingCleaningsData = await getUpcomingCleanings(
+    tenantId,
+    startOfTomorrow,
+    endOfNext7Days,
+    propertyId
+  );
+
+  // 4. Próximas reservas
+  const upcomingReservationsData = await getUpcomingReservations(
+    tenantId,
+    startOfTomorrow,
+    endOfNext7Days,
+    propertyId
+  );
+
+  // Para unconfirmedCleanings, necesitamos mapear todos los items
+  const allUpcomingUnconfirmedItems = upcomingUnconfirmedCleanings.map((c) => ({
+    id: c.id,
+    title: `Limpieza sin confirmar`,
+    propertyName: c.property.shortName || c.property.name,
+    date: c.scheduledDate.toISOString(),
+    status: c.status,
+    href: `/host/cleanings/${c.id}${propertyId ? `?propertyId=${propertyId}` : ""}`,
+  }));
+
+  return {
+    openIncidents: openIncidentsData,
+    unconfirmedCleanings: {
+      count: upcomingUnconfirmedCleanings.length,
+      items: allUpcomingUnconfirmedItems.slice(0, 5), // Solo mostrar 5 en la tarjeta
+      allItems: allUpcomingUnconfirmedItems, // Todos los items para el bottom sheet
+    },
+    upcomingCleanings: upcomingCleaningsData,
+    upcomingReservations: upcomingReservationsData,
+  };
+}
+
+/**
+ * Funciones para obtener listas completas (sin límite) para vistas dedicadas
+ */
+
+export async function getAllTodayCleanings(
+  tenantId: string,
+  propertyId?: string
+): Promise<BlockItem[]> {
+  const startOfToday = getStartOfToday();
+  const endOfToday = getEndOfToday();
+  const data = await getTodayCleanings(tenantId, startOfToday, endOfToday, propertyId);
+  return data.allItems || data.items;
+}
+
+export async function getAllUpcomingCleanings(
+  tenantId: string,
+  propertyId?: string
+): Promise<BlockItem[]> {
+  const startOfTomorrow = getStartOfTomorrow();
+  const endOfNext7Days = getEndOfNext7Days();
+  const data = await getUpcomingCleanings(tenantId, startOfTomorrow, endOfNext7Days, propertyId);
+  return data.allItems || data.items;
+}
+
+export async function getAllUnconfirmedCleanings(
+  tenantId: string,
+  propertyId?: string,
+  isUpcoming: boolean = false
+): Promise<BlockItem[]> {
+  const allUnconfirmed = await getCleaningsNeedingAttention(tenantId, isUpcoming);
+  const startOfToday = getStartOfToday();
+  const endOfToday = getEndOfToday();
+  const startOfTomorrow = getStartOfTomorrow();
+  const endOfNext7Days = getEndOfNext7Days();
+
+  const filtered = allUnconfirmed.filter((c) => {
+    const scheduledDate = new Date(c.scheduledDate);
+    if (isUpcoming) {
+      return (
+        scheduledDate >= startOfTomorrow &&
+        scheduledDate <= endOfNext7Days &&
+        (!propertyId || c.propertyId === propertyId)
+      );
+    } else {
+      return (
+        scheduledDate >= startOfToday &&
+        scheduledDate <= endOfToday &&
+        (!propertyId || c.propertyId === propertyId)
+      );
+    }
+  });
+
+  return filtered.map((c) => ({
+    id: c.id,
+    title: `Limpieza sin confirmar`,
+    propertyName: c.property.shortName || c.property.name,
+    date: c.scheduledDate.toISOString(),
+    status: c.status,
+    href: `/host/cleanings/${c.id}${propertyId ? `?propertyId=${propertyId}` : ""}`,
+  }));
+}
+
+export async function getAllTodayReservations(
+  tenantId: string,
+  propertyId?: string
+): Promise<BlockItem[]> {
+  const startOfToday = getStartOfToday();
+  const endOfToday = getEndOfToday();
+  const data = await getTodayReservations(tenantId, startOfToday, endOfToday, propertyId);
+  return data.allItems || data.items;
+}
+
+export async function getAllUpcomingReservations(
+  tenantId: string,
+  propertyId?: string
+): Promise<BlockItem[]> {
+  const startOfTomorrow = getStartOfTomorrow();
+  const endOfNext7Days = getEndOfNext7Days();
+  const data = await getUpcomingReservations(tenantId, startOfTomorrow, endOfNext7Days, propertyId);
+  return data.allItems || data.items;
+}
+
+export async function getAllOpenIncidents(
+  tenantId: string,
+  propertyId?: string
+): Promise<BlockItem[]> {
+  const data = await getOpenIncidents(tenantId, propertyId);
+  return data.allItems || data.items;
+}
+
+/**
+ * Helper: Obtiene incidencias abiertas (InventoryReport con status PENDING)
+ */
+async function getOpenIncidents(
+  tenantId: string,
+  propertyId?: string
+): Promise<BlockData> {
+  // Si hay filtro por propiedad, necesitamos filtrar vía cleaning.propertyId
+  const whereClause: any = {
+    tenantId,
+    status: InventoryReportStatus.PENDING,
+  };
+
+  if (propertyId) {
+    // Filtrar por propiedad vía cleaning o review
+    whereClause.OR = [
+      { cleaning: { propertyId } },
+      { review: { propertyId } },
+    ];
+  }
+
+  const reports = await (prisma as any).inventoryReport.findMany({
+    where: whereClause,
+    include: {
+      cleaning: {
+        include: {
+          property: {
+            select: {
+              id: true,
+              name: true,
+              shortName: true,
+            },
+          },
+        },
+      },
+      review: {
+        include: {
+          property: {
+            select: {
+              id: true,
+              name: true,
+              shortName: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 5,
+  });
+
+  const totalCount = await (prisma as any).inventoryReport.count({
+    where: whereClause,
+  });
+
+  return {
+    count: totalCount,
+    items: reports.map((report: any) => {
+      // Obtener propiedad desde cleaning o review
+      const property =
+        report.cleaning?.property ||
+        report.review?.property ||
+        null;
+      
+      return {
+        id: report.id,
+        title: `Incidencia de inventario`,
+        propertyName: property?.shortName || property?.name || "Sin propiedad",
+        date: report.createdAt.toISOString(),
+        status: report.severity,
+        href: `/host/inventory/inbox${propertyId ? `?propertyId=${propertyId}` : ""}`,
+      };
+    }),
+  };
+}
+
+/**
+ * Helper: Obtiene limpiezas de hoy
+ */
+async function getTodayCleanings(
+  tenantId: string,
+  startOfToday: Date,
+  endOfToday: Date,
+  propertyId?: string
+): Promise<BlockData> {
+  const whereClause: any = {
+    tenantId,
+    scheduledDate: {
+      gte: startOfToday,
+      lte: endOfToday,
+    },
+    status: { not: "CANCELLED" },
+  };
+
+  if (propertyId) {
+    whereClause.propertyId = propertyId;
+  }
+
+  const allCleanings = await (prisma as any).cleaning.findMany({
+    where: whereClause,
+    include: {
+      property: {
+        select: {
+          id: true,
+          name: true,
+          shortName: true,
+        },
+      },
+    },
+    orderBy: {
+      scheduledDate: "asc",
+    },
+    // Sin take: devolver todos para bottom sheet
+  });
+
+  const totalCount = await (prisma as any).cleaning.count({
+    where: whereClause,
+  });
+
+  const allItems = allCleanings.map((c: any) => ({
+    id: c.id,
+    title: `Limpieza programada`,
+    propertyName: c.property.shortName || c.property.name,
+    date: c.scheduledDate.toISOString(),
+    status: c.status,
+    href: `/host/cleanings/${c.id}${propertyId ? `?propertyId=${propertyId}` : ""}`,
+  }));
+
+  return {
+    count: totalCount,
+    items: allItems.slice(0, 5), // Primeros 5 para tarjeta
+    allItems, // Todos para bottom sheet
+  };
+}
+
+/**
+ * Helper: Obtiene próximas limpiezas (mañana hasta +7 días)
+ */
+async function getUpcomingCleanings(
+  tenantId: string,
+  startOfTomorrow: Date,
+  endOfNext7Days: Date,
+  propertyId?: string
+): Promise<BlockData> {
+  const whereClause: any = {
+    tenantId,
+    scheduledDate: {
+      gte: startOfTomorrow,
+      lte: endOfNext7Days,
+    },
+    status: { not: "CANCELLED" },
+  };
+
+  if (propertyId) {
+    whereClause.propertyId = propertyId;
+  }
+
+  const allCleanings = await (prisma as any).cleaning.findMany({
+    where: whereClause,
+    include: {
+      property: {
+        select: {
+          id: true,
+          name: true,
+          shortName: true,
+        },
+      },
+    },
+    orderBy: {
+      scheduledDate: "asc",
+    },
+    // Sin take: devolver todos para bottom sheet
+  });
+
+  const totalCount = await (prisma as any).cleaning.count({
+    where: whereClause,
+  });
+
+  const allItems = allCleanings.map((c: any) => ({
+    id: c.id,
+    title: `Limpieza programada`,
+    propertyName: c.property.shortName || c.property.name,
+    date: c.scheduledDate.toISOString(),
+    status: c.status,
+    href: `/host/cleanings/${c.id}${propertyId ? `?propertyId=${propertyId}` : ""}`,
+  }));
+
+  return {
+    count: totalCount,
+    items: allItems.slice(0, 5), // Primeros 5 para tarjeta
+    allItems, // Todos para bottom sheet
+  };
+}
+
+/**
+ * Helper: Obtiene reservas para hoy
+ * "Reservas para hoy" = SOLO check-ins de hoy (startDate cae hoy)
+ * - startDate >= startOfToday && startDate <= endOfToday
+ * - Excluir CANCELLED
+ * - NO incluir BLOCKED (no es check-in real)
+ */
+async function getTodayReservations(
+  tenantId: string,
+  startOfToday: Date,
+  endOfToday: Date,
+  propertyId?: string
+): Promise<BlockData> {
+  const whereClause: any = {
+    tenantId,
+    status: { notIn: ["CANCELLED", "BLOCKED"] },
+    // Solo check-ins de hoy: startDate cae hoy
+    startDate: {
+      gte: startOfToday,
+      lte: endOfToday,
+    },
+  };
+
+  if (propertyId) {
+    whereClause.propertyId = propertyId;
+  }
+
+  const allReservations = await (prisma as any).reservation.findMany({
+    where: whereClause,
+    include: {
+      property: {
+        select: {
+          id: true,
+          name: true,
+          shortName: true,
+        },
+      },
+    },
+    orderBy: {
+      startDate: "asc",
+    },
+    // Sin take: devolver todos para bottom sheet
+  });
+
+  const totalCount = await (prisma as any).reservation.count({
+    where: whereClause,
+  });
+
+  const allItems = allReservations.map((r: any) => ({
+    id: r.id,
+    title: `Reserva activa`,
+    propertyName: r.property.shortName || r.property.name,
+    date: r.startDate.toISOString(),
+    status: r.status,
+    href: `/host/reservations/${r.id}${propertyId ? `?propertyId=${propertyId}` : ""}`,
+  }));
+
+  return {
+    count: totalCount,
+    items: allItems.slice(0, 5), // Primeros 5 para tarjeta
+    allItems, // Todos para bottom sheet
+  };
+}
+
+/**
+ * Helper: Obtiene próximas reservas (mañana hasta +7 días)
+ */
+async function getUpcomingReservations(
+  tenantId: string,
+  startOfTomorrow: Date,
+  endOfNext7Days: Date,
+  propertyId?: string
+): Promise<BlockData> {
+  const whereClause: any = {
+    tenantId,
+    status: { not: "CANCELLED" },
+    startDate: {
+      gte: startOfTomorrow,
+      lte: endOfNext7Days,
+    },
+  };
+
+  if (propertyId) {
+    whereClause.propertyId = propertyId;
+  }
+
+  const allReservations = await (prisma as any).reservation.findMany({
+    where: whereClause,
+    include: {
+      property: {
+        select: {
+          id: true,
+          name: true,
+          shortName: true,
+        },
+      },
+    },
+    orderBy: {
+      startDate: "asc",
+    },
+    // Sin take: devolver todos para bottom sheet
+  });
+
+  const totalCount = await (prisma as any).reservation.count({
+    where: whereClause,
+  });
+
+  const allItems = allReservations.map((r: any) => ({
+    id: r.id,
+    title: `Reserva próxima`,
+    propertyName: r.property.shortName || r.property.name,
+    date: r.startDate.toISOString(),
+    status: r.status,
+    href: `/host/reservations/${r.id}${propertyId ? `?propertyId=${propertyId}` : ""}`,
+  }));
+
+  return {
+    count: totalCount,
+    items: allItems.slice(0, 5), // Primeros 5 para tarjeta
+    allItems, // Todos para bottom sheet
+  };
+}
+

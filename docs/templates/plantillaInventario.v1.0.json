@@ -1,0 +1,3125 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Plantilla de inventario para propiedades - Estructura compatible con InventoryItem e InventoryLine",
+    "createdAt": "2025-01-15",
+    "schema": {
+      "inventoryItem": {
+        "category": "InventoryCategory (FURNITURE_EQUIPMENT | LINENS | TABLEWARE_UTENSILS | DECOR | KITCHEN_ACCESSORIES | KEYS_ACCESS | CONSUMABLES | OTHER)",
+        "name": "string (nombre del item)",
+        "defaultBrand": "string | null (marca por defecto)",
+        "defaultModel": "string | null (modelo por defecto)",
+        "defaultColor": "string | null (color por defecto)",
+        "defaultSize": "string | null (tamaño por defecto)",
+        "isReplacable": "boolean (default: true)",
+        "defaultVariantKey": "string | null (ej: 'tipo', 'material')",
+        "defaultVariantLabel": "string | null (ej: 'Tipo', 'Material')",
+        "defaultVariantOptions": "json | null (opciones de variante)"
+      },
+      "inventoryLine": {
+        "area": "string (área de la propiedad)",
+        "expectedQty": "number (cantidad esperada)",
+        "condition": "InventoryCondition (NEW | USED_LT_1Y | USED_GT_1Y, default: USED_LT_1Y)",
+        "priority": "InventoryPriority (HIGH | MEDIUM | LOW, default: MEDIUM)",
+        "brand": "string | null (marca específica)",
+        "model": "string | null (modelo específico)",
+        "serialNumber": "string | null (número de serie)",
+        "color": "string | null (color específico)",
+        "size": "string | null (tamaño específico)",
+        "notes": "string | null (notas adicionales)",
+        "variantKey": "string | null (clave de variante)",
+        "variantValue": "string | null (valor de variante)",
+        "isActive": "boolean (default: true)"
+      }
+    }
+  },
+  "items": [
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Bote de basura",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Baño 2",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Chico",
+          "notes": "Con tapa",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "baño 2"
+        },
+        {
+          "area": "Baño 1",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Chico",
+          "notes": "Con tapa",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "baño 1"
+        },
+        {
+          "area": "Lavandería",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": "Con tapa",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "lavandería"
+        },
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "LINENS",
+        "name": "Toalla de piso",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Baño 2",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "baño 2"
+        },
+        {
+          "area": "Baño 1",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "baño 1"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "LINENS",
+        "name": "Toalla de manos",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Baño 2",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "baño 2"
+        },
+        {
+          "area": "Baño 1",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "baño 1"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "LINENS",
+        "name": "Toalla de cuerpo",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Recámara 2",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "recámara 2"
+        },
+        {
+          "area": "Recámara 1",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "recámara 1"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "LINENS",
+        "name": "Toalla de pies",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Recámara 1",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "recámara 1"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Frascos",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Metal",
+          "Vidrio",
+          "Plástico"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": "Para café y azúcar",
+          "variantKey": "material",
+          "variantValue": "Metal",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Cafetera",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "4 tazas",
+          "notes": "De goteo",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "TABLEWARE_UTENSILS",
+        "name": "Cazuela",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Chicas",
+          "notes": "Con asa",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Refrigerador",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_GT_1Y",
+          "priority": "HIGH",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Microondas",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "HIGH",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Lavadora",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false
+      },
+      "lines": [
+        {
+          "area": "Lavandería",
+          "expectedQty": 1,
+          "condition": "USED_GT_1Y",
+          "priority": "HIGH",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "16kg",
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "lavandería"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Secadora",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false
+      },
+      "lines": [
+        {
+          "area": "Lavandería",
+          "expectedQty": 1,
+          "condition": "USED_GT_1Y",
+          "priority": "HIGH",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "lavandería"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "LINENS",
+        "name": "Almohadas",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "bed_size",
+        "defaultVariantLabel": "Tamaño de cama",
+        "defaultVariantOptions": [
+          "Individual",
+          "Matrimonial",
+          "Queen",
+          "King"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Recámara 2",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "bed_size",
+          "variantValue": "Individual",
+          "isActive": true,
+          "areaNormalized": "recámara 2"
+        },
+        {
+          "area": "Recámara 2",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "bed_size",
+          "variantValue": "Matrimonial",
+          "isActive": true,
+          "areaNormalized": "recámara 2"
+        },
+        {
+          "area": "Recámara 1",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "bed_size",
+          "variantValue": "Individual",
+          "isActive": true,
+          "areaNormalized": "recámara 1"
+        },
+        {
+          "area": "Recámara 1",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "bed_size",
+          "variantValue": "Matrimonial",
+          "isActive": true,
+          "areaNormalized": "recámara 1"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Cama",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false,
+        "defaultVariantKey": "bed_size",
+        "defaultVariantLabel": "Tamaño de cama",
+        "defaultVariantOptions": [
+          "Individual",
+          "Matrimonial",
+          "Queen",
+          "King"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Recámara 2",
+          "expectedQty": 1,
+          "condition": "USED_GT_1Y",
+          "priority": "HIGH",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Queen",
+          "notes": null,
+          "variantKey": "bed_size",
+          "variantValue": "Queen",
+          "isActive": true,
+          "areaNormalized": "recámara 2"
+        },
+        {
+          "area": "Recámara 1",
+          "expectedQty": 2,
+          "condition": "USED_GT_1Y",
+          "priority": "HIGH",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Matrimonial",
+          "notes": null,
+          "variantKey": "bed_size",
+          "variantValue": "Matrimonial",
+          "isActive": true,
+          "areaNormalized": "recámara 1"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "DECOR",
+        "name": "Cuadro Decorativo",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Comedor",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "LOW",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "comedor"
+        },
+        {
+          "area": "Sala",
+          "expectedQty": 4,
+          "condition": "USED_LT_1Y",
+          "priority": "LOW",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Coladera",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Metal",
+          "Plástico"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Chica",
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Metal",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        },
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Grande",
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Metal",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Comal",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": "Cuadrado con asa",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "TABLEWARE_UTENSILS",
+        "name": "Copa",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Vidrio",
+          "Plástico"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Vidrio",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "TABLEWARE_UTENSILS",
+        "name": "Cuchara",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "tipo",
+        "defaultVariantLabel": "Tipo",
+        "defaultVariantOptions": [
+          "Cafetera",
+          "Sopera"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 6,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Cafetera",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        },
+        {
+          "area": "Cocina",
+          "expectedQty": 6,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Sopera",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "TABLEWARE_UTENSILS",
+        "name": "Cucharón",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Plástico",
+          "Metal"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": "Negro",
+          "size": null,
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Plástico",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "TABLEWARE_UTENSILS",
+        "name": "Cuchillo",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "tipo",
+        "defaultVariantLabel": "Tipo",
+        "defaultVariantOptions": [
+          "Cubierto",
+          "Cocina"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 6,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Cubierto",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        },
+        {
+          "area": "Cocina",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": "Rojo",
+          "size": "Mediano",
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Cocina",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Dispensador de aceite",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Vidrio",
+          "Plástico"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Vidrio",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Escurridor",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": "Para platos",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Exprimidor",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Grande",
+          "notes": "Para limones",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Jarra",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Plástico",
+          "Barro",
+          "Vidrio"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": "Naranja",
+          "size": "Chica",
+          "notes": "Para agua",
+          "variantKey": "material",
+          "variantValue": "Plástico",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        },
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": "Negro",
+          "size": null,
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Barro",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Licuadora",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "HIGH",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": "Vaso de vidrio",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Mantel individual",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 4,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Pequeño",
+          "notes": "Para comedor",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "TABLEWARE_UTENSILS",
+        "name": "Olla",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Mediana",
+          "notes": "Con tapa",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Pala",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Plástico",
+          "Metal"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": "Negra",
+          "size": null,
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Plástico",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "TABLEWARE_UTENSILS",
+        "name": "Plato",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "tipo",
+        "defaultVariantLabel": "Tipo",
+        "defaultVariantOptions": [
+          "Extendido",
+          "Hondo"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 6,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Chico",
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Extendido",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        },
+        {
+          "area": "Cocina",
+          "expectedQty": 6,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Grande",
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Extendido",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        },
+        {
+          "area": "Cocina",
+          "expectedQty": 5,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Hondo",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "TABLEWARE_UTENSILS",
+        "name": "Sartén",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Mediano",
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Servilletero",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Metal",
+          "Plástico"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Metal",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Tabla de picar",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Plástico",
+          "Madera"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": "Blanca",
+          "size": null,
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Plástico",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Tapa de cazuela",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Chica",
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "TABLEWARE_UTENSILS",
+        "name": "Taza",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Alta",
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "TABLEWARE_UTENSILS",
+        "name": "Tenedor",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 5,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        },
+        {
+          "area": "Comedor",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "comedor"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Tijera",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": "Para cocina",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Tortillero",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KITCHEN_ACCESSORIES",
+        "name": "Trapo",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "use",
+        "defaultVariantLabel": "Uso",
+        "defaultVariantOptions": [
+          "Limpiar",
+          "Secar"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 3,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": "Para cocina",
+          "variantKey": "use",
+          "variantValue": "Limpiar",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        },
+        {
+          "area": "Cocina",
+          "expectedQty": 3,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": "Para cocina",
+          "variantKey": "use",
+          "variantValue": "Secar",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "TABLEWARE_UTENSILS",
+        "name": "Vaso",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Vidrio",
+          "Plástico"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Cocina",
+          "expectedQty": 4,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Chico",
+          "notes": "Estilo old fashion",
+          "variantKey": "material",
+          "variantValue": "Vidrio",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        },
+        {
+          "area": "Cocina",
+          "expectedQty": 6,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Grande",
+          "notes": "Estilo old fashion",
+          "variantKey": "material",
+          "variantValue": "Vidrio",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        },
+        {
+          "area": "Cocina",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Grande",
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Vidrio",
+          "isActive": true,
+          "areaNormalized": "cocina"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Burro de planchar",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Metal",
+          "Plástico"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Lavandería",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Metal",
+          "isActive": true,
+          "areaNormalized": "lavandería"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Escalera",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Madera",
+          "Metal"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Lavandería",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "2 escalones",
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Metal",
+          "isActive": true,
+          "areaNormalized": "lavandería"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Soporte de equipaje",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Recámara 2",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "recámara 2"
+        },
+        {
+          "area": "Recámara 1",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "recámara 1"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Tocador",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Madera",
+          "MDF"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Recámara 2",
+          "expectedQty": 1,
+          "condition": "USED_GT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Madera",
+          "isActive": true,
+          "areaNormalized": "recámara 2"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Ventilador",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "tipo",
+        "defaultVariantLabel": "Tipo",
+        "defaultVariantOptions": [
+          "Torre",
+          "Piso",
+          "Pedestal"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Recámara 2",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Chico",
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Torre",
+          "isActive": true,
+          "areaNormalized": "recámara 2"
+        },
+        {
+          "area": "Recámara 1",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Torre",
+          "isActive": true,
+          "areaNormalized": "recámara 1"
+        },
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": "Blanco",
+          "size": null,
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Piso",
+          "isActive": true,
+          "areaNormalized": "sala"
+        },
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Torre",
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Mesa",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false,
+        "defaultVariantKey": "tipo",
+        "defaultVariantLabel": "Tipo",
+        "defaultVariantOptions": [
+          "Desayunadora",
+          "Esquinera",
+          "Centro",
+          "Lateral"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Centro",
+          "isActive": true,
+          "areaNormalized": "sala"
+        },
+        {
+          "area": "Sala",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "tipo",
+          "variantValue": "Lateral",
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Mueble de TV",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Sofá",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "HIGH",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Televisor",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "HIGH",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "55 pulgadas",
+          "notes": "Incluye control remoto",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Soporte de TV",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "KEYS_ACCESS",
+        "name": "Chapa electrónica",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "HIGH",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "DECOR",
+        "name": "Cortina",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "LOW",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": "Incluye cortinero",
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Perchero",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Madera",
+          "Metal"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Madera",
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "FURNITURE_EQUIPMENT",
+        "name": "Plancha",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Recámara 1",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "recámara 1"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "DECOR",
+        "name": "Corbatín auto",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 5,
+          "condition": "USED_LT_1Y",
+          "priority": "LOW",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "LINENS",
+        "name": "Colcha",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "bed_size",
+        "defaultVariantLabel": "Tamaño de cama",
+        "defaultVariantOptions": [
+          "Individual",
+          "Matrimonial",
+          "Queen",
+          "King"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Recámara 2",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "bed_size",
+          "variantValue": "Matrimonial",
+          "isActive": true,
+          "areaNormalized": "recámara 2"
+        },
+        {
+          "area": "Recámara 1",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": "Gris",
+          "size": null,
+          "notes": null,
+          "variantKey": "bed_size",
+          "variantValue": "Matrimonial",
+          "isActive": true,
+          "areaNormalized": "recámara 1"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "LINENS",
+        "name": "Cobertor",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "bed_size",
+        "defaultVariantLabel": "Tamaño de cama",
+        "defaultVariantOptions": [
+          "Individual",
+          "Matrimonial",
+          "Queen",
+          "King"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Recámara 1",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "bed_size",
+          "variantValue": "Matrimonial",
+          "isActive": true,
+          "areaNormalized": "recámara 1"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "LINENS",
+        "name": "Sábanas",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "bed_size",
+        "defaultVariantLabel": "Tamaño de cama",
+        "defaultVariantOptions": [
+          "Individual",
+          "Matrimonial",
+          "Queen",
+          "King"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Recámara 2",
+          "expectedQty": 2,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "bed_size",
+          "variantValue": "Matrimonial",
+          "isActive": true,
+          "areaNormalized": "recámara 2"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "DECOR",
+        "name": "Maceta",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Plástico",
+          "Barro",
+          "Cerámica"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "LOW",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": "Mediana",
+          "notes": "Con planta",
+          "variantKey": "material",
+          "variantValue": "Plástico",
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "DECOR",
+        "name": "Base de maceta",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Cantera",
+          "Plástico"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "LOW",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": "material",
+          "variantValue": "Cantera",
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "DECOR",
+        "name": "Espejo",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": true
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_LT_1Y",
+          "priority": "LOW",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "DECOR",
+        "name": "Comedor",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false
+      },
+      "lines": [
+        {
+          "area": "Sala",
+          "expectedQty": 1,
+          "condition": "USED_GT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": null,
+          "size": null,
+          "notes": null,
+          "variantKey": null,
+          "variantValue": null,
+          "isActive": true,
+          "areaNormalized": "sala"
+        }
+      ]
+    },
+    {
+      "item": {
+        "category": "DECOR",
+        "name": "Silla",
+        "defaultBrand": null,
+        "defaultModel": null,
+        "defaultColor": null,
+        "defaultSize": null,
+        "isReplacable": false,
+        "defaultVariantKey": "material",
+        "defaultVariantLabel": "Material",
+        "defaultVariantOptions": [
+          "Tela",
+          "Madera",
+          "Plástico"
+        ]
+      },
+      "lines": [
+        {
+          "area": "Comedor",
+          "expectedQty": 4,
+          "condition": "USED_LT_1Y",
+          "priority": "MEDIUM",
+          "brand": null,
+          "model": null,
+          "serialNumber": null,
+          "color": "Gris claro",
+          "size": null,
+          "notes": "Para comedor",
+          "variantKey": "material",
+          "variantValue": "Tela",
+          "isActive": true,
+          "areaNormalized": "comedor"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "note": "Este resumen documenta TODOS los cambios realizados para generalizar la plantilla. El resumen completo y detallado se encuentra en resumenLimpiezaPlantilla.md",
+    "totalItemsBefore": 123,
+    "totalInventoryItems": 63,
+    "totalInventoryLines": 91,
+    "totalItemsAfter": 77,
+    "patchFinal": {
+      "fecha": "2025-01-15",
+      "itemsEliminados": [
+        "Tendedero",
+        "Pinzas",
+        "Escoba",
+        "Trapeador",
+        "Fibra",
+        "Recogedor",
+        "Cubeta",
+        "Escobeta",
+        "Destapacaños",
+        "Porta shampoo",
+        "Jabonera",
+        "Botiquín"
+      ],
+      "variantesCorregidas": [
+        {
+          "item": "Coladera",
+          "lineIndex": 0,
+          "accion": "Eliminado variantKey y variantValue (no requería variante)"
+        },
+        {
+          "item": "Burro de planchar",
+          "lineIndex": 1,
+          "accion": "Eliminado variantKey y variantValue (no requería variante)"
+        },
+        {
+          "item": "Perchero",
+          "lineIndex": 1,
+          "accion": "Eliminado variantKey y variantValue (no requería variante)"
+        }
+      ],
+      "metadataCorregido": {
+        "campo": "createdAt",
+        "antes": "2025-01-XX",
+        "despues": "2025-01-15"
+      }
+    },
+    "miniPatchVariantCoherence": {
+      "fecha": "2025-01-15",
+      "itemsVarianteEliminada": [
+        {
+          "item": "Taza",
+          "razon": "defaultVariantOptions tenía solo 1 opción (Cafetera)"
+        },
+        {
+          "item": "Sofá",
+          "razon": "defaultVariantOptions tenía solo 1 opción (Cama)"
+        },
+        {
+          "item": "Colcha",
+          "razon": "defaultVariantOptions tenía solo 1 opción (Queen)"
+        },
+        {
+          "item": "Cobertor",
+          "razon": "defaultVariantOptions tenía solo 1 opción (Matrimonial)"
+        },
+        {
+          "item": "Sábanas",
+          "razon": "defaultVariantOptions tenía solo 1 opción (Queen)"
+        }
+      ],
+      "lineasVarianteRellenadas": [
+        {
+          "item": "Coladera",
+          "lineIndex": 0,
+          "valorAsignado": "Metal",
+          "razon": "Primera opción de defaultVariantOptions"
+        },
+        {
+          "item": "Burro de planchar",
+          "lineIndex": 1,
+          "valorAsignado": "Metal",
+          "razon": "Primera opción de defaultVariantOptions"
+        },
+        {
+          "item": "Ventilador",
+          "lineIndex": 0,
+          "valorAsignado": "Torre",
+          "razon": "Primera opción de defaultVariantOptions"
+        },
+        {
+          "item": "Mesa",
+          "lineIndex": 5,
+          "valorAsignado": "Esquinera",
+          "razon": "Coincide con notes 'Para modem'"
+        },
+        {
+          "item": "Mesa",
+          "lineIndex": 6,
+          "valorAsignado": "Esquinera",
+          "razon": "Coincide con notes 'Para microondas'"
+        },
+        {
+          "item": "Perchero",
+          "lineIndex": 1,
+          "valorAsignado": "Madera",
+          "razon": "Primera opción de defaultVariantOptions"
+        },
+        {
+          "item": "Maceta",
+          "lineIndex": 0,
+          "valorAsignado": "Plástico",
+          "razon": "Primera opción de defaultVariantOptions"
+        },
+        {
+          "item": "Maceta",
+          "lineIndex": 1,
+          "valorAsignado": "Plástico",
+          "razon": "Primera opción de defaultVariantOptions"
+        },
+        {
+          "item": "Maceta",
+          "lineIndex": 3,
+          "valorAsignado": "Plástico",
+          "razon": "Primera opción de defaultVariantOptions"
+        },
+        {
+          "item": "Maceta",
+          "lineIndex": 4,
+          "valorAsignado": "Plástico",
+          "razon": "Primera opción de defaultVariantOptions"
+        },
+        {
+          "item": "Maceta",
+          "lineIndex": 5,
+          "valorAsignado": "Plástico",
+          "razon": "Primera opción de defaultVariantOptions"
+        },
+        {
+          "item": "Silla",
+          "lineIndex": 2,
+          "valorAsignado": "Tela",
+          "razon": "Primera opción de defaultVariantOptions"
+        }
+      ],
+      "validaciones": {
+        "noItemsConVarianteUnaOpcion": true,
+        "noLineasSinVariante": true,
+        "todasVariantesValidas": true,
+        "noNombresCambiados": true,
+        "noCategoriasCambiadas": true,
+        "schemaCompatible": true
+      }
+    },
+    "renamedItems": [
+      {
+        "before": "Bote de basura chico con tapa",
+        "after": "Bote de basura",
+        "changes": "Eliminado tamaño 'chico' y 'con tapa' del nombre. Movido a line.size y line.notes respectivamente."
+      },
+      {
+        "before": "Bote acero vidrio para café azúcar",
+        "after": "Frascos",
+        "changes": "Generalizado nombre. Material movido a variante 'material'. Uso específico 'para café azúcar' movido a line.notes."
+      },
+      {
+        "before": "Cafetera de goteo",
+        "after": "Cafetera",
+        "changes": "Eliminado tipo 'de goteo' del nombre. Movido a line.notes. Capacidad '4 tazas' movido a line.size."
+      },
+      {
+        "before": "Cazuela con asa chicas",
+        "after": "Cazuela",
+        "changes": "Eliminado 'con asa' y tamaño 'chicas' del nombre. Movido a line.notes y line.size respectivamente."
+      },
+      {
+        "before": "Lavadora de ropa",
+        "after": "Lavadora",
+        "changes": "Eliminado 'de ropa' redundante del nombre. Capacidad '16kg' movido a line.size."
+      },
+      {
+        "before": "Secadora de ropa",
+        "after": "Secadora",
+        "changes": "Eliminado 'de ropa' redundante del nombre."
+      },
+      {
+        "before": "Cuchara cafetera",
+        "after": "Cuchara",
+        "changes": "Tipo 'cafetera' movido a variante 'tipo'."
+      },
+      {
+        "before": "Cuchara sopera",
+        "after": "Cuchara",
+        "changes": "Fusionado con 'Cuchara cafetera'. Tipo 'sopera' movido a variante 'tipo'."
+      },
+      {
+        "before": "Cuchillo cubierto",
+        "after": "Cuchillo",
+        "changes": "Tipo 'cubierto' movido a variante 'tipo'."
+      },
+      {
+        "before": "Cuchillo mediano rojo",
+        "after": "Cuchillo",
+        "changes": "Fusionado con 'Cuchillo cubierto'. Tamaño y color movidos a line.size y line.color."
+      },
+      {
+        "before": "Plato extendido chico",
+        "after": "Plato",
+        "changes": "Tipo y tamaño movidos a variante 'tipo' y line.size."
+      },
+      {
+        "before": "Plato extendido grande",
+        "after": "Plato",
+        "changes": "Fusionado con otros platos. Tamaño 'grande' movido a line.size."
+      },
+      {
+        "before": "Plato hondo",
+        "after": "Plato",
+        "changes": "Fusionado con otros platos. Tipo 'hondo' movido a variante 'tipo'."
+      },
+      {
+        "before": "Vaso de vidrio chico old fashion",
+        "after": "Vaso",
+        "changes": "Material, tamaño y estilo movidos a variante 'material', line.size y line.notes."
+      },
+      {
+        "before": "Jarra de agua chica de plástico naranja",
+        "after": "Jarra",
+        "changes": "Uso, tamaño, material y color movidos a line.notes, line.size, variante 'material' y line.color."
+      },
+      {
+        "before": "Jarra de barro negro",
+        "after": "Jarra",
+        "changes": "Fusionado con otras jarras. Material y color movidos a variante 'material' y line.color."
+      },
+      {
+        "before": "Coladera chica",
+        "after": "Coladera",
+        "changes": "Tamaño 'chica' movido a line.size."
+      },
+      {
+        "before": "Coladera de metal grande",
+        "after": "Coladera",
+        "changes": "Fusionado con 'Coladera chica'. Material y tamaño movidos a variante 'material' y line.size."
+      },
+      {
+        "before": "Ventilador chico",
+        "after": "Ventilador",
+        "changes": "Tamaño 'chico' movido a line.size."
+      },
+      {
+        "before": "Ventilador de torre",
+        "after": "Ventilador",
+        "changes": "Fusionado con otros ventiladores. Tipo 'de torre' movido a variante 'tipo'."
+      },
+      {
+        "before": "Ventilador de Piso blanco",
+        "after": "Ventilador",
+        "changes": "Fusionado con otros ventiladores. Tipo y color movidos a variante 'tipo' y line.color."
+      },
+      {
+        "before": "Mesa desayunadora de madera",
+        "after": "Mesa",
+        "changes": "Tipo y material movidos a variantes 'tipo' y 'material'."
+      },
+      {
+        "before": "Mesa de centro madera y vidrio",
+        "after": "Mesa",
+        "changes": "Fusionado con otras mesas. Tipo y material movidos a variantes."
+      },
+      {
+        "before": "Sala de 3 piezas, sofá, Love seat e individual",
+        "after": "Sofá",
+        "changes": "Detalles específicos movidos a line.notes."
+      },
+      {
+        "before": "Sofá Cama",
+        "after": "Sofá",
+        "changes": "Fusionado con otros sofás. Tipo 'cama' movido a variante 'tipo'."
+      },
+      {
+        "before": "TV Fire TV Amazon 55 pulgadas y control remoto",
+        "after": "Televisor",
+        "changes": "Marca, tamaño y detalle movidos a line.brand, line.size y line.notes."
+      },
+      {
+        "before": "Pantalla de TV 50\"",
+        "after": "Televisor",
+        "changes": "Fusionado con otros televisores. Tamaño movido a line.size."
+      },
+      {
+        "before": "Maceta gris claro con una planta",
+        "after": "Maceta",
+        "changes": "Color e incluye 'planta' movidos a line.color y line.notes."
+      },
+      {
+        "before": "Maceta de plástico roja chica con planta",
+        "after": "Maceta",
+        "changes": "Fusionado con otras macetas. Material, color y tamaño movidos a variantes y line.size/color."
+      },
+      {
+        "before": "Cuadro de Madera \"Las tarascas\"",
+        "after": "Cuadro",
+        "changes": "Material movido a variante 'material'. Detalle específico 'Las tarascas' ELIMINADO."
+      },
+      {
+        "before": "Cuadro decorativo \"Flores rojas\"",
+        "after": "Cuadro",
+        "changes": "Fusionado con otros cuadros. Detalle específico 'Flores rojas' ELIMINADO."
+      },
+      {
+        "before": "Colcha Queen",
+        "after": "Colcha",
+        "changes": "Tamaño 'Queen' movido a variante 'tamaño'."
+      },
+      {
+        "before": "Colcha gris",
+        "after": "Colcha",
+        "changes": "Fusionado con otras colchas. Color 'gris' movido a line.color."
+      },
+      {
+        "before": "Sábanas Queen",
+        "after": "Sábanas",
+        "changes": "Tamaño 'Queen' movido a variante 'tamaño'."
+      },
+      {
+        "before": "Sillas de tela para comedor gris claro",
+        "after": "Silla",
+        "changes": "Material, uso y color movidos a variantes y line.notes/color."
+      }
+    ],
+    "mergedItems": [
+      {
+        "items": [
+          "Bote de basura chico con tapa",
+          "Bote de basura con tapa plástico",
+          "Cesto de basura plástico cocina",
+          "Cesto de basura plástico"
+        ],
+        "result": "Bote de basura",
+        "linesCombined": 4,
+        "reason": "Todos representan el mismo concepto canónico. Diferencias movidas a line.size, line.notes y line.area."
+      },
+      {
+        "items": [
+          "Cuchara cafetera",
+          "Cuchara sopera"
+        ],
+        "result": "Cuchara",
+        "linesCombined": 2,
+        "reason": "Tipo movido a variante."
+      },
+      {
+        "items": [
+          "Cuchillo cubierto",
+          "Cuchillo mediano rojo",
+          "Cuchillo cocina"
+        ],
+        "result": "Cuchillo",
+        "linesCombined": 3,
+        "reason": "Tipo, tamaño y color movidos a variantes y line.size/color."
+      },
+      {
+        "items": [
+          "Plato extendido chico",
+          "Plato extendido grande",
+          "Plato hondo"
+        ],
+        "result": "Plato",
+        "linesCombined": 3,
+        "reason": "Tipo y tamaño movidos a variantes y line.size."
+      },
+      {
+        "items": [
+          "Coladera chica",
+          "Coladera de metal grande"
+        ],
+        "result": "Coladera",
+        "linesCombined": 2,
+        "reason": "Material y tamaño movidos a variantes y line.size."
+      },
+      {
+        "items": [
+          "Vaso de vidrio chico old fashion",
+          "Vaso de vidrio grande tipo old fashion",
+          "Vasos de vidrio grandes"
+        ],
+        "result": "Vaso",
+        "linesCombined": 3,
+        "reason": "Material, tamaño y estilo movidos a variantes y line.size/notes."
+      },
+      {
+        "items": [
+          "Jarra de agua chica de plástico naranja",
+          "Jarra de barro negro"
+        ],
+        "result": "Jarra",
+        "linesCombined": 2,
+        "reason": "Material, tamaño, color y uso movidos a variantes y line.size/color/notes."
+      },
+      {
+        "items": [
+          "Ventilador chico",
+          "Ventilador de torre",
+          "Ventilador de Piso blanco",
+          "Ventilador pedestal"
+        ],
+        "result": "Ventilador",
+        "linesCombined": 4,
+        "reason": "Tipo, tamaño y color movidos a variantes y line.size/color."
+      },
+      {
+        "items": [
+          "Mesa desayunadora de madera",
+          "Mesa esquinera de madera para modem",
+          "Mesa de centro madera y vidrio",
+          "Mesa centro café",
+          "Mesa lateral de madera con vidrio",
+          "Mesa para modem",
+          "Mesa microondas"
+        ],
+        "result": "Mesa",
+        "linesCombined": 7,
+        "reason": "Tipo, material y uso movidos a variantes y line.notes."
+      },
+      {
+        "items": [
+          "Sala de 3 piezas, sofá, Love seat e individual",
+          "Sofá Cama"
+        ],
+        "result": "Sofá",
+        "linesCombined": 2,
+        "reason": "Tipo y detalles movidos a variantes y line.notes."
+      },
+      {
+        "items": [
+          "TV Fire TV Amazon 55 pulgadas y control remoto",
+          "Pantalla de TV 50\""
+        ],
+        "result": "Televisor",
+        "linesCombined": 2,
+        "reason": "Marca, tamaño y detalles movidos a line.brand, line.size y line.notes."
+      },
+      {
+        "items": [
+          "Maceta gris claro con una planta",
+          "Maceta pequeña con planta sobre el comedor",
+          "Maceta de plástico roja chica con planta",
+          "Maceta mediana con planta sobre la base",
+          "Maceta pequeña con planta sobre mesa centro",
+          "Macetas grandes con planta"
+        ],
+        "result": "Maceta",
+        "linesCombined": 6,
+        "reason": "Material, tamaño, color y ubicaciones específicas movidos a variantes y line.size/color/notes. Ubicaciones específicas eliminadas."
+      },
+      {
+        "items": [
+          "Cuadro de Madera \"Las tarascas\"",
+          "Cuadro decorativo \"Flores rojas\"",
+          "Cuadros"
+        ],
+        "result": "Cuadro",
+        "linesCombined": 3,
+        "reason": "Detalles específicos de decoración eliminados (no aplican para plantilla genérica)."
+      },
+      {
+        "items": [
+          "Colcha Queen",
+          "Colcha gris"
+        ],
+        "result": "Colcha",
+        "linesCombined": 2,
+        "reason": "Tamaño y color movidos a variantes y line.color."
+      },
+      {
+        "items": [
+          "Sábanas Queen",
+          "Juego de sabanas"
+        ],
+        "result": "Sábanas",
+        "linesCombined": 2,
+        "reason": "Tamaño y tipo movidos a variantes y line.notes."
+      },
+      {
+        "items": [
+          "Sillas de tela para comedor gris claro",
+          "Sillas de tela para comedor gris oscuro",
+          "Sillas"
+        ],
+        "result": "Silla",
+        "linesCombined": 3,
+        "reason": "Material, uso y color movidos a variantes y line.notes/color."
+      },
+      {
+        "items": [
+          "Trapos de cocina para limpiar",
+          "Trapos de cocina para secar"
+        ],
+        "result": "Trapo",
+        "linesCombined": 2,
+        "reason": "Uso y función movidos a line.notes y variantes."
+      },
+      {
+        "items": [
+          "Cortina y cortinero",
+          "Cortinas con cortinero"
+        ],
+        "result": "Cortina",
+        "linesCombined": 2,
+        "reason": "Detalle 'cortinero' movido a line.notes."
+      }
+    ],
+    "removedNotes": [
+      {
+        "item": "Cuadro",
+        "removed": "Madera \"Las tarascas\"",
+        "reason": "Detalle específico de decoración que no aplica para plantilla genérica."
+      },
+      {
+        "item": "Cuadro",
+        "removed": "Decorativo \"Flores rojas\"",
+        "reason": "Detalle específico de decoración que no aplica para plantilla genérica."
+      },
+      {
+        "item": "Maceta",
+        "removed": "sobre el comedor",
+        "reason": "Ubicación específica que no aplica para plantilla genérica."
+      },
+      {
+        "item": "Maceta",
+        "removed": "sobre la base",
+        "reason": "Ubicación específica que no aplica para plantilla genérica."
+      },
+      {
+        "item": "Maceta",
+        "removed": "sobre mesa centro",
+        "reason": "Ubicación específica que no aplica para plantilla genérica."
+      }
+    ],
+    "generalizedNotes": [
+      {
+        "item": "Cafetera",
+        "before": null,
+        "after": "De goteo",
+        "reason": "Tipo de cafetera movido a line.notes para mantener información útil pero no en el nombre canónico."
+      }
+    ],
+    "validation": {
+      "noDuplicatesByCategoryAndName": true,
+      "allNamesGeneric": true,
+      "noSpecificBrandsModels": true,
+      "noSpecificColors": true,
+      "noSpecificSizesInNames": true,
+      "noSpecificMaterialsInNames": true,
+      "noSpecificUsesInNames": true,
+      "structureCompatible": true,
+      "noInvalidVariantValues": true,
+      "allVariantValuesInOptions": true,
+      "noItemsWithoutLines": true,
+      "noIncompleteVariants": true,
+      "metadataValid": true,
+      "variantesCoherentes": true,
+      "noVariantesUnaOpcion": true,
+      "todasLineasConVariante": true,
+      "areasAlineadas": true,
+      "status": "PLANTILLA_CANONICA_V1_LISTA"
+    },
+    "patchAreas": {
+      "fecha": "2025-01-15",
+      "objetivo": "Alinear 100% las áreas de la plantilla con las áreas canónicas de la aplicación",
+      "cambiosAplicados": [
+        {
+          "areaOriginal": "RP",
+          "areaDestino": "Recámara 1",
+          "lineasAfectadas": 16,
+          "razon": "Eliminar abreviación no estándar"
+        },
+        {
+          "areaOriginal": "R2",
+          "areaDestino": "Recámara 2",
+          "lineasAfectadas": 10,
+          "razon": "Eliminar abreviación no estándar"
+        },
+        {
+          "areaOriginal": "Recamara 1",
+          "areaDestino": "Recámara 1",
+          "lineasAfectadas": 1,
+          "razon": "Corregir ortografía (falta tilde)"
+        },
+        {
+          "areaOriginal": "Recamara 2",
+          "areaDestino": "Recámara 2",
+          "lineasAfectadas": 1,
+          "razon": "Corregir ortografía (falta tilde)"
+        },
+        {
+          "areaOriginal": "Baño 2",
+          "areaDestino": "Baño 2",
+          "lineasAfectadas": 3,
+          "razon": "Mantener numeración, recalcular areaNormalized"
+        }
+      ],
+      "areasFinales": {
+        "Cocina": 43,
+        "Sala": 31,
+        "Recámara 1": 17,
+        "Recámara 2": 11,
+        "Comedor": 9,
+        "Lavandería": 7,
+        "Baño 1": 3,
+        "Baño 2": 3,
+        "Jardín": 1
+      },
+      "validaciones": {
+        "noAreasProhibidas": true,
+        "todasAreasNormalizadas": true,
+        "noBañoSinNumero": true,
+        "areasAlineadasConApp": true
+      },
+      "nota": "El archivo lib/inventory-suggestions.ts ya contenía 'Baño 1' y 'Baño 2' en AREA_SUGGESTIONS. No se encontraron líneas con 'Baño' sin número en la plantilla original."
+    },
+    "duplicacionBano1": {
+      "fecha": "2025-01-15",
+      "objetivo": "Completar la plantilla agregando inventario base a Baño 1, duplicando exactamente los artículos de Baño 2",
+      "lineasDuplicadas": 3,
+      "itemsDuplicados": [
+        "Bote de basura",
+        "Toalla de piso",
+        "Toalla de manos"
+      ],
+      "conteoFinal": {
+        "Baño 1": 3,
+        "Baño 2": 3
+      },
+      "totalInventoryLines": 125,
+      "validaciones": {
+        "bano1IgualBano2": true,
+        "noLineasModificadas": true,
+        "areaNormalizedCorrecto": true,
+        "jsonValido": true
+      }
+    },
+    "referenceDocument": "Ver resumenLimpiezaPlantilla.md para el análisis completo de todos los 123 items procesados."
+  }
+}

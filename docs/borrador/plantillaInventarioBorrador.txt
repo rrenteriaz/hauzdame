@@ -1,0 +1,181 @@
+Cantidad	Descripción	Ubicación
+1	Bote de basura chico con tapa	Baño 2
+1	Toalla de piso	Baño 2
+1	Toalla de manos	Baño 2
+2	Bote acero vidrio para café azúcar	Cocina
+1	Cafetera de goteo 4 tazas	Cocina
+2	Cazuela con asa chicas	Cocina
+1	Cesto de basura plástico cocina	Cocina
+1	Coladera chica	Cocina
+1	Coladera de metal grande	Cocina
+1	Comal cuadrado con asa	Cocina
+1	Copa de vidrio	Cocina
+6	Cuchara cafetera	Cocina
+6	Cuchara sopera	Cocina
+1	Cucharón plástico negro	Cocina
+6	Cuchillo cubierto	Cocina
+2	Cuchillo mediano rojo	Cocina
+1	Dispensador de aceite de vidrio	Cocina
+1	Escurridor de platos	Cocina
+1	Exprimidor de limones grande	Cocina
+1	Jarra de agua chica de plástico naranja	Cocina
+1	Jarra de barro negro	Cocina
+1	Licuadora vaso vidrio	Cocina
+4	Mantelitos de comedor	Cocina
+1	Microondas	Cocina
+1	Olla mediana con tapa	Cocina
+1	Pala plástica negra	Cocina
+6	Plato extendido chico	Cocina
+6	Plato extendido grande	Cocina
+5	Plato hondo	Cocina
+1	Pocillo mediano con asa	Cocina
+3	Cuarzo decorativo	Cocina
+1	Refrigerador	Cocina
+2	Sartén mediano	Cocina
+1	Servilletero de metal	Cocina
+1	Tabla de picar de plástico blanca	Cocina
+1	Tapa de cazuela chica	Cocina
+1	Tarro cervecero grande	Cocina
+2	Taza cafetera alta	Cocina
+5	Tenedor	Cocina
+1	Tijera de cocina	Cocina
+1	Tortillero	Cocina
+3	Trapos de cocina para limpiar	Cocina
+3	Trapos de cocina para secar	Cocina
+4	Vaso de vidrio chico old fashion	Cocina
+6	Vaso de vidrio grande tipo old fashion	Cocina
+2	Vasos de vidrio grandes	Cocina
+1	Cuadro de Madera "Las tarascas"	Comedor
+1	Extensión eléctrica de 2 metros	Comedor
+1	Maceta gris claro con una planta	Comedor
+1	Maceta pequeña con planta sobre el comedor	Comedor
+1	Mesa desayunadora de madera	Comedor
+1	Mesa esquinera de madera para modem	Comedor
+4	Sillas de tela para comedor gris claro	Comedor
+2	Sillas de tela para comedor gris oscuro	Comedor
+2	Tenedores	Comedor
+1	Manguera de Jardín	Jardín
+1	Boiler de depósito	Lavandería
+1	Bote de basura con tapa plástico	Lavandería
+1	Burro de planchar de metal	Lavandería
+1	Escalera de 2 escalones de madera	Lavandería
+1	Escalera de 2 escalones de metal	Lavandería
+1	Lavadora de ropa 16kg	Lavandería
+1	Secadora de ropa	Lavandería
+3	Almohadas	R2
+1	Archivero metálico negro	R2
+1	Cama Queen Size	R2
+1	Colcha Queen	R2
+1	Recámara King size, cabecera y 2 burós	R2
+2	Sábanas Queen	R2
+1	Soporte de equipaje	R2
+2	Toallas de cuerpo	R2
+1	Tocador de madera de recámara	R2
+1	Ventilador chico	R2
+1	Zapatera de bambú	R2
+6	Almohadas	RP
+1	Bote de basura chico con tapa	RP
+1	Burro de planchar pequeño	RP
+2	Cabecera de Melamina Matrimonial	RP
+2	Cama matrimonial	RP
+1	Camino de mesa decorativo	RP
+1	Cesto de basura plástico	RP
+1	Cobertor matrimonial	RP
+1	Mueble de Madera cajonera	RP
+1	Perchero de madera	RP
+1	Plancha	RP
+1	Soporte de equipaje	RP
+1	Toalla de pies	RP
+1	Toalla de manos	RP
+2	Toallas de cuerpo	RP
+1	Ventilador de torre	RP
+1	Zapatera de bambú	RP
+1	Base de maceta de cantera	Sala
+7	Cojines de tela	Sala
+1	Cuadro decorativo "Flores rojas"	Sala
+1	Extensión eléctrica de 4 metros	Sala
+1	Maceta de plástico roja chica con planta	Sala
+1	Maceta mediana con planta sobre la base	Sala
+1	Maceta pequeña con planta sobre mesa centro	Sala
+2	Macetas grandes con planta	Sala
+1	Mesa de centro madera y vidrio	Sala
+2	Mesa lateral de madera con vidrio	Sala
+1	Mueble de TV con 8 cestas de tela	Sala
+5	Muñecas de tela	Sala
+1	Porta pies de tela	Sala
+1	Repisa decorativa de madera para muñecas	Sala
+1	Sala de 3 piezas, sofá, Love seat e individual	Sala
+1	TV Fire TV Amazon 55 pulgadas y control remoto	Sala
+1	Ventilador de Piso blanco	Sala
+1	Mesa para modem	Sala
+1	Sofá Cama	Sala
+1	Mesa centro café	Sala
+1	Pantalla de TV 50"	Sala
+1	Soporte de TV	Sala
+3	Cuadros	Sala
+1	Espejo completo	Sala
+1	Antecomedor	Sala
+4	Sillas	Sala
+1	Mesa microondas	Sala
+1	Ventilador de torre	Sala
+1	Chapa electrónica	Sala
+1	Cortina y cortinero	Sala
+1	Perchero de pared	Sala
+5	Corbata auto	Sala
+// DUPLICADOS COMENTADOS (mismo nombre o significado similar en la misma área):
+// Cocina - Línea 125: Refrigerador (duplicado de línea 33)
+// Cocina - Línea 126: Licuadora (duplicado de línea 23 "Licuadora vaso vidrio")
+// Cocina - Línea 127: Extractor de jugos (nuevo, mantener)
+// Cocina - Línea 128: Cafetera (duplicado de línea 6 "Cafetera de goteo 4 tazas")
+// Cocina - Línea 129: Cuchillos (duplicado de línea 16 "Cuchillo cubierto")
+// Cocina - Línea 130: Tenedores (duplicado de línea 40 "Tenedor")
+// Cocina - Línea 131: Cuchara sopera (duplicado de línea 14)
+// Cocina - Línea 132: Cuchara cafetera (duplicado de línea 13)
+// Cocina - Línea 133: Mantel individual (duplicado de línea 24 "Mantelitos de comedor")
+// Cocina - Línea 134: Vajilla 6 personas (nuevo concepto, mantener)
+// Cocina - Línea 135: Sacacorchos (nuevo, mantener)
+// Cocina - Línea 136: Bote basura (duplicado de línea 8 "Cesto de basura plástico cocina")
+// Cocina - Línea 137: Organizador de cubiertos (nuevo, mantener)
+// Cocina - Línea 138: Encendedor (nuevo, mantener)
+// Cocina - Línea 139: Tijeras (duplicado de línea 41 "Tijera de cocina")
+// Cocina - Línea 140: Cucharón (duplicado de línea 15)
+// Cocina - Línea 141: Volteador (nuevo, mantener)
+// Cocina - Línea 142: Tabla de picar (duplicado de línea 36)
+// Cocina - Línea 143: Destapador (nuevo, mantener)
+// Cocina - Línea 144: Horno microondas (duplicado de línea 25 "Microondas")
+// Cocina - Línea 145: Salero (nuevo, mantener)
+// Cocina - Línea 146: Servilletero (duplicado de línea 35)
+// Cocina - Línea 147: Azucarera (nuevo, mantener)
+// Cocina - Línea 148: Frasco para café (nuevo, mantener)
+// Cocina - Línea 149: Sartenes (duplicado de línea 34 "Sartén mediano")
+// Cocina - Línea 150: Cacerolas con tapa (duplicado de línea 7 "Cazuela con asa chicas")
+// Cocina - Línea 151: Cuchillo cocina (duplicado de línea 16)
+// Cocina - Línea 152: Exprimidor limones (duplicado de línea 20)
+// Cocina - Línea 153: Jarra (duplicado de líneas 21-22)
+// Cocina - Línea 154: Vasos (duplicado de líneas 45-47)
+// Cocina - Línea 155: Tazas (duplicado de línea 39 "Taza cafetera alta")
+// Cocina - Línea 156: Escurridor de trastes (duplicado de línea 19 "Escurridor de platos")
+// Baño - Línea 157: Toalla manos (duplicado de línea 4 "Toalla de manos")
+// Baño - Línea 158: Espejo (nuevo, mantener)
+// Baño - Línea 159: Bote basura (duplicado de línea 2 "Bote de basura chico con tapa")
+// Baño - Línea 160: Secadora (nuevo concepto, mantener si es diferente a Lavandería)
+// Baño - Línea 161: Escobeta (nuevo, mantener)
+// Baño - Línea 162: Destapacaños (nuevo, mantener)
+// Baño - Línea 163: Porta shampoo (nuevo, mantener)
+// Baño - Línea 164: Toalla cuerpo (duplicado de línea 3 "Toalla de piso" - verificar si es diferente)
+// Baño - Línea 165: Jabonera (nuevo, mantener)
+// Lavandería - Línea 166: Lavadora (duplicado de línea 63 "Lavadora de ropa 16kg")
+// Lavandería - Línea 167: Bote basura (duplicado de línea 59)
+// Lavandería - Línea 168: Tendedero (nuevo, mantener)
+// Lavandería - Línea 169: Pinzas ropa (nuevo, mantener)
+// Lavandería - Línea 170: Escoba (nuevo, mantener)
+// Lavandería - Línea 171: Trapeador (nuevo, mantener)
+// Lavandería - Línea 172: Fibra (nuevo, mantener)
+// Lavandería - Línea 173: Recogedor (nuevo, mantener)
+// Lavandería - Línea 174: Cubeta (nuevo, mantener)
+// Lavandería - Línea 175: Trapos limpiar (duplicado de línea 43 "Trapos de cocina para limpiar" - diferente área)
+// Lavandería - Línea 176: Trapos secar (duplicado de línea 44 "Trapos de cocina para secar" - diferente área)
+// Sala - Línea 120: Ventilador de torre (duplicado de línea 91 "Ventilador de torre" en RP)
+// Sala - Línea 113: Pantalla de TV 50" (duplicado de línea 108 "TV Fire TV Amazon 55 pulgadas")
+// Sala - Línea 112: Mesa centro café (duplicado de línea 101 "Mesa de centro madera y vidrio")
+// Sala - Línea 111: Sofá Cama (duplicado de línea 107 "Sala de 3 piezas, sofá, Love seat e individual")

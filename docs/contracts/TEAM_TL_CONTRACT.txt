@@ -1,0 +1,183 @@
+HAUSDAME — CONTRATO DEFINITIVO (LEY DEL SISTEMA)
+PÁGINA: EQUIPO (TEAM DETAIL — TL / SM)
+
+VERSIÓN: 1.1
+ESTADO: ACTIVO — OBLIGATORIO
+ALCANCE: Vista de Equipo de Limpieza (Service)
+
+══════════════════════════════════════════════
+0) PROPÓSITO
+══════════════════════════════════════════════
+Este contrato define el comportamiento FINAL y OBLIGATORIO de la página
+Equipo (Detalle de Team) para Team Leader (TL) y Service Members (SM).
+Cualquier refactor, migración o cambio de UI que viole este contrato
+constituye una REGRESIÓN.
+
+══════════════════════════════════════════════
+1) IDENTIDAD, RUTAS Y SCOPE
+══════════════════════════════════════════════
+- Rutas:
+  - UX Canónica (TL): /cleaner/team  → “Mi equipo”
+  - Técnica Detalle: /cleaner/teams/[teamId]
+- Acceso:
+  - Requiere usuario autenticado con rol CLEANER
+  - Requiere TeamMembership ACTIVE para el team
+- Resolución de teamId:
+  - /cleaner/team: desde sesión/membership del usuario
+  - /cleaner/teams/[teamId]: desde params + validación estricta de pertenencia
+- Acceso inválido:
+  - Sin membership → 404 / redirect seguro
+
+══════════════════════════════════════════════
+2) ROLES Y DEFINICIÓN DE TL
+══════════════════════════════════════════════
+- Regla invariante:
+  - Al crear un usuario Service (Cleaner), se crea:
+    - 1 Team propio
+    - 1 TeamMembership con role = TEAM_LEADER y status = ACTIVE
+- El TL:
+  - Es EXPLÍCITO en datos (TeamMembership.role = TEAM_LEADER)
+  - Es ÚNICO por team
+  - NO puede cambiarse
+- Prohibido:
+  - Inferir TL por orden (createdAt)
+  - Promover/destituir TL
+
+══════════════════════════════════════════════
+3) ESTADO DEL TEAM
+══════════════════════════════════════════════
+- Estado explícito en datos: team.status
+- Estados:
+  - ACTIVE (default)
+  - PAUSED
+- Comportamiento:
+  - ACTIVE:
+    - Visible para Owners
+    - Recibe alertas
+  - PAUSED:
+    - No visible para Owners
+    - No recibe nuevas alertas
+    - Mantiene acceso a histórico
+- Control:
+  - Solo TL puede pausar/reactivar
+  - Requiere confirmación (warning de repercusiones)
+
+══════════════════════════════════════════════
+4) NAMING / UX (CRÍTICO)
+══════════════════════════════════════════════
+- Para TL:
+  - Su team se muestra como: “Mi equipo”
+- Para SM:
+  - El team del TL se muestra como: “<Nombre TL>’s Team”
+  - El SM SIEMPRE ve también su propio team personal como “Mi equipo”
+- Regla canónica:
+  - NO usar Team.name como label visible en UI
+  - Helper canónico: Mi equipo vs <TL>’s Team
+- Objetivo:
+  - Evitar confusión entre teams propios y teams colaborativos
+
+══════════════════════════════════════════════
+5) MIEMBROS (MEMBERSHIPS)
+══════════════════════════════════════════════
+- Estados de membership:
+  - ACTIVE
+  - REMOVED (UX: “Inactivo”)
+  - PENDING (invitación)
+- Visualización:
+  - Lista de miembros con nombre, rol y estado
+  - Invitaciones PENDING visibles
+- Acciones TL:
+  - Invitar Cleaners (solo SM)
+- Activar / Inactivar SM (ACTIVE <-> REMOVED)
+- Prohibiciones:
+  - TL no puede inactivarse
+  - TL no puede cambiar roles
+  - TL no puede eliminar el team
+
+══════════════════════════════════════════════
+6) INVITACIONES (SOLO TL)
+══════════════════════════════════════════════
+- A quién:
+  - Solo Cleaners
+- Mecanismo:
+  - Solo por link (token)
+  - Sin envío automático de email (por ahora)
+- Expiración:
+  - Default: 7 días
+  - Editable por TL
+- Estados:
+  - PENDING → ACCEPTED | EXPIRED
+- Aceptación:
+  - Crea TeamMembership adicional como SM
+  - El invitado mantiene su propio team personal intacto
+
+══════════════════════════════════════════════
+7) PROPIEDADES (DOBLE CAPA)
+══════════════════════════════════════════════
+A) Organización (TL):
+- Asignar/quitar SM a propiedades
+- Solo miembros del team
+
+B) Operación (TL y SM):
+- Acceso a:
+  - Limpiezas
+  - Incidencias
+  - Chats por propiedad
+- Prohibido:
+  - Editar datos base de la propiedad
+  - Cambiar relación team↔property
+
+══════════════════════════════════════════════
+8) PERMISOS POR ROL
+══════════════════════════════════════════════
+TL:
+- Ver y operar “Mi equipo”
+- Invitar Cleaners
+- Pausar/reactivar team
+- Activar/inactivar SM
+- Asignar miembros a propiedades
+- Ver histórico completo
+
+SM ACTIVE:
+- Ver “<TL>’s Team”
+- Ver miembros y propiedades
+- Ver limpiezas asignadas
+- Participar en chats del team
+- Solo lectura (sin acciones admin)
+
+SM REMOVED:
+- Sin acceso al detalle /cleaner/teams/[teamId]
+- Acceso histórico PERSONAL fuera del detalle:
+  - Ver solo limpiezas donde estuvo asignado
+  - Ver solo chats donde participó
+- Sin nuevas asignaciones
+- Sin notificaciones
+- Sin acceso operativo actual
+
+══════════════════════════════════════════════
+9) SEPARACIÓN DE VISTAS (ANTI-REGRESIÓN)
+══════════════════════════════════════════════
+- /cleaner/teams (listado):
+  - Read-only
+  - Sin CTAs
+  - Solo TeamMembership ACTIVE
+  - Badge:
+    - Pausado si team.status = PAUSED
+    - Sin propiedades si propertiesCount = 0
+    - Activo en cualquier otro caso
+  - Counts desde TeamMembership ACTIVE / PropertyTeam
+- Detalle del team:
+  - Operativo según rol
+- Prohibido aplicar reglas del listado al detalle
+
+══════════════════════════════════════════════
+10) CHECKLIST OBLIGATORIO POST-CAMBIO
+══════════════════════════════════════════════
+- [ ] TL ve “Mi equipo”
+- [ ] SM ve “<TL>’s Team” + su “Mi equipo”
+- [ ] TL puede invitar (link) y ver PENDING
+- [ ] TL puede pausar/reactivar team
+- [ ] Propiedades: operación + asignación
+- [ ] SM REMOVED ve solo su histórico personal (fuera del detalle)
+- [ ] Listado sigue read-only
+- [ ] Badge: Pausado / Sin propiedades / Activo

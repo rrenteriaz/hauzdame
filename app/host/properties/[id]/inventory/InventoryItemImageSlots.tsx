@@ -1,0 +1,204 @@
+// app/host/properties/[id]/inventory/InventoryItemImageSlots.tsx
+"use client";
+
+import { useState, useRef } from "react";
+import {
+  uploadInventoryItemImageAction,
+  deleteInventoryItemImageAction,
+} from "@/app/host/inventory/image-actions";
+import Image from "next/image";
+
+interface InventoryItemImageSlotsProps {
+  itemId: string;
+  initialThumbs: Array<string | null>; // [thumb1, thumb2, thumb3] o null
+  onThumbsChange?: (thumbs: Array<string | null>) => void; // Callback opcional para notificar cambios
+}
+
+export default function InventoryItemImageSlots({
+  itemId,
+  initialThumbs,
+  onThumbsChange,
+}: InventoryItemImageSlotsProps) {
+  const [thumbs, setThumbs] = useState<Array<string | null>>(initialThumbs);
+  const [uploadingPosition, setUploadingPosition] = useState<number | null>(null);
+  const [deletingPosition, setDeletingPosition] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRefs = useRef<Array<HTMLInputElement | null>>([null, null, null]);
+
+  const handleFileSelect = async (position: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validación cliente
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setError("El archivo es demasiado grande. Máximo 5MB.");
+      setTimeout(() => setError(null), 5000);
+      return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Tipo de archivo no permitido. Use JPG, PNG o WebP.");
+      setTimeout(() => setError(null), 5000);
+      return;
+    }
+
+    setUploadingPosition(position);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("itemId", itemId);
+      formData.append("position", position.toString());
+      formData.append("file", file);
+
+      const result = await uploadInventoryItemImageAction(formData);
+
+      // Actualizar el thumb en la posición correspondiente
+      const newThumbs = [...thumbs];
+      newThumbs[position - 1] = result.thumbUrl;
+      setThumbs(newThumbs);
+      onThumbsChange?.(newThumbs);
+    } catch (error: any) {
+      console.error("Error uploading image:", error);
+      setError(error?.message || "Error al subir la imagen. Por favor, intente nuevamente.");
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setUploadingPosition(null);
+      // Limpiar el input para permitir seleccionar el mismo archivo de nuevo
+      if (fileInputRefs.current[position - 1]) {
+        fileInputRefs.current[position - 1]!.value = "";
+      }
+    }
+  };
+
+  const handleDelete = async (position: number) => {
+    if (!confirm("¿Está seguro de que desea eliminar esta imagen?")) {
+      return;
+    }
+
+    setDeletingPosition(position);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("itemId", itemId);
+      formData.append("position", position.toString());
+
+      await deleteInventoryItemImageAction(formData);
+
+      // Limpiar el thumb en la posición correspondiente
+      const newThumbs = [...thumbs];
+      newThumbs[position - 1] = null;
+      setThumbs(newThumbs);
+      onThumbsChange?.(newThumbs);
+    } catch (error: any) {
+      console.error("Error deleting image:", error);
+      setError(error?.message || "Error al eliminar la imagen. Por favor, intente nuevamente.");
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setDeletingPosition(null);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-neutral-700">
+        Fotos
+      </label>
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs text-red-700">
+          {error}
+        </div>
+      )}
+      <div className="flex gap-3">
+        {(() => {
+          // Determinar cuántos slots mostrar
+          const imagesCount = thumbs.filter(thumb => thumb !== null).length;
+          const maxSlotsToShow = Math.min(imagesCount + 1, 3); // Mostrar slots ocupados + 1 vacío (hasta 3)
+          
+          return [1, 2, 3].slice(0, maxSlotsToShow).map((position) => {
+            const thumbUrl = thumbs[position - 1];
+            const isUploading = uploadingPosition === position;
+            const isDeleting = deletingPosition === position;
+            const isLoading = isUploading || isDeleting;
+
+            return (
+              <div key={position} className="flex flex-col gap-1.5 flex-shrink-0">
+                <div className="relative w-28 h-28 rounded-lg border border-neutral-300 bg-neutral-50 overflow-hidden">
+                  {thumbUrl ? (
+                    <>
+                      <Image
+                        src={thumbUrl}
+                        alt={`Foto ${position}`}
+                        fill
+                        className="object-cover"
+                        sizes="112px"
+                      />
+                    </>
+                  ) : (
+                    <label className="w-full h-full flex items-center justify-center cursor-pointer hover:bg-neutral-100 transition">
+                      <input
+                        ref={(el) => {
+                          fileInputRefs.current[position - 1] = el;
+                        }}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        onChange={(e) => handleFileSelect(position, e)}
+                        disabled={isLoading}
+                        className="hidden"
+                      />
+                      <div className="text-center">
+                        {isUploading ? (
+                          <span className="text-xs text-neutral-500">Subiendo...</span>
+                        ) : (
+                          <span className="text-xs text-neutral-600">Agregar</span>
+                        )}
+                      </div>
+                    </label>
+                  )}
+                </div>
+                {thumbUrl && (
+                  <div className="flex flex-col items-center justify-center gap-1.5">
+                    <label className="cursor-pointer w-full">
+                      <input
+                        ref={(el) => {
+                          fileInputRefs.current[position - 1] = el;
+                        }}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        onChange={(e) => handleFileSelect(position, e)}
+                        disabled={isLoading}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        disabled={isLoading}
+                        className="px-2.5 py-1 text-xs font-medium text-white bg-black hover:bg-neutral-800 rounded transition disabled:opacity-50 shadow-sm w-full"
+                        onClick={() => fileInputRefs.current[position - 1]?.click()}
+                      >
+                        {isUploading ? "Subiendo..." : "Reemplazar"}
+                      </button>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(position)}
+                      disabled={isLoading}
+                      className="px-2.5 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded transition disabled:opacity-50 shadow-sm w-full"
+                    >
+                      {isDeleting ? "Eliminando..." : "Eliminar"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          });
+        })()}
+      </div>
+      <p className="text-xs text-neutral-500">
+        Máximo 3 imágenes por item
+      </p>
+    </div>
+  );
+}
