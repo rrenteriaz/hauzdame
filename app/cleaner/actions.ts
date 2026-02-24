@@ -1,7 +1,7 @@
 // app/cleaner/actions.ts
 "use server";
 
-import prisma from "@/lib/prisma";
+import prisma from "../../lib/prisma";
 import { getDefaultTenant } from "@/lib/tenant";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
