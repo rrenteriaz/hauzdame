@@ -17,7 +17,7 @@
     "db:dev": "prisma migrate dev",
     "db:sanity": "node scripts/db-sanity-check.mjs",
     "db:pull:audit": "prisma db pull",
-    "postinstall": "node -e \"console.log('💡 Tip: Ejecuta \\'npm run db:sanity\\' para validar el estado de la DB')\""
+    "postinstall": "prisma generate && node -e \"console.log('💡 Tip: Ejecuta \\'npm run db:sanity\\' para validar el estado de la DB')\""
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
