@@ -22,7 +22,7 @@ export async function updateCleaningChecklistItem(
       where: {
         id: itemId,
         cleaningId,
-        tenantId: tenant.id,
+        tenantId,
       },
       data: {
         title: title.trim(),
@@ -50,7 +50,7 @@ export async function deleteCleaningChecklistItem(
       where: {
         id: itemId,
         cleaningId,
-        tenantId: tenant.id,
+        tenantId,
       },
     });
 
@@ -76,7 +76,7 @@ export async function addCleaningChecklistItem(
     await (prisma as any).cleaningChecklistItem.create({
       data: {
         cleaningId,
-        tenantId: tenant.id,
+        tenantId,
         area,
         title: title.trim(),
         sortOrder,
@@ -109,7 +109,7 @@ export async function reorderCleaningChecklistItems(
           where: {
             id: itemId,
             cleaningId,
-            tenantId: tenant.id,
+            tenantId,
           },
           data: {
             sortOrder: index,
@@ -138,7 +138,7 @@ export async function deleteCleaningChecklistArea(
     await (prisma as any).cleaningChecklistItem.deleteMany({
       where: {
         cleaningId,
-        tenantId: tenant.id,
+        tenantId,
         area,
       },
     });
@@ -165,7 +165,7 @@ export async function toggleCleaningChecklistItem(
       where: {
         id: itemId,
         cleaningId,
-        tenantId: tenant.id,
+        tenantId,
       },
       data: {
         isCompleted,
