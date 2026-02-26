@@ -306,7 +306,7 @@ export async function applyInventoryChange(changeId: string) {
     throw new Error("Cambio no encontrado");
   }
 
-  if (change.tenantId !== tenant.id) {
+  if (change.tenantId !== tenantId) {
     throw new Error("No tienes permiso para este cambio");
   }
 
