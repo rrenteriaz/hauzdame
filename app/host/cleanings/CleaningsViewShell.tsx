@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import DailyCleaningsViewWithModal from "./DailyCleaningsViewWithModal";
 import { Cleaning, Property } from "@prisma/client";
 
@@ -38,12 +39,19 @@ export default function CleaningsViewShell({
   MonthlyCleaningsCalendar,
   WeeklyCleaningsView,
 }: CleaningsViewShellProps) {
-  const [viewMode, setViewMode] = useState<"day" | "week" | "month">(initialView);
+  const searchParams = useSearchParams();
+  const viewFromUrl = searchParams.get("view");
+  const syncedView: "day" | "week" | "month" =
+    viewFromUrl === "day" || viewFromUrl === "week" || viewFromUrl === "month"
+      ? viewFromUrl
+      : initialView;
+
+  const [viewMode, setViewMode] = useState<"day" | "week" | "month">(syncedView);
 
   // Sincronizar viewMode cuando la URL cambia (ej: click en un día del calendario)
   useEffect(() => {
-    setViewMode(initialView);
-  }, [initialView]);
+    setViewMode(syncedView);
+  }, [syncedView]);
 
   return (
     <section className="space-y-3">

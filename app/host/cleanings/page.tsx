@@ -1,4 +1,5 @@
 // app/host/cleanings/page.tsx
+import { Suspense } from "react";
 import prisma from "@/lib/prisma";
 import { requireHostUser } from "@/lib/auth/requireUser";
 import { CleaningStatus, Cleaning, Property } from "@prisma/client";
@@ -253,29 +254,32 @@ export default async function CleaningsPage({
         )}
 
         {/* Calendario / vistas - Usar shell cliente para cambios instantáneos */}
-        <CleaningsViewShell
-          cleanings={cleanings as CleaningWithProperty[]}
-          properties={properties}
-          referenceDate={referenceDate}
-          monthDate={monthDate}
-          monthParamForLinks={monthParamForLinks}
-          dateParamForLinks={dateParamForLinks}
-          initialView={initialView}
-          MonthlyCleaningsCalendar={
-            <MonthlyCleaningsCalendar
-              cleanings={cleanings as CleaningWithProperty[]}
-              properties={properties}
-              monthDate={monthDate}
-            />
-          }
-          WeeklyCleaningsView={
-            <WeeklyCleaningsView
-              cleanings={cleanings as CleaningWithProperty[]}
-              properties={properties}
-              referenceDate={referenceDate}
-            />
-          }
-        />
+        <Suspense fallback={<div className="min-h-[400px] animate-pulse rounded-2xl bg-neutral-100" />}>
+          <CleaningsViewShell
+            key={`${initialView}-${dateParamForLinks}`}
+            cleanings={cleanings as CleaningWithProperty[]}
+            properties={properties}
+            referenceDate={referenceDate}
+            monthDate={monthDate}
+            monthParamForLinks={monthParamForLinks}
+            dateParamForLinks={dateParamForLinks}
+            initialView={initialView}
+            MonthlyCleaningsCalendar={
+              <MonthlyCleaningsCalendar
+                cleanings={cleanings as CleaningWithProperty[]}
+                properties={properties}
+                monthDate={monthDate}
+              />
+            }
+            WeeklyCleaningsView={
+              <WeeklyCleaningsView
+                cleanings={cleanings as CleaningWithProperty[]}
+                properties={properties}
+                referenceDate={referenceDate}
+              />
+            }
+          />
+        </Suspense>
 
         {/* KPI Cards (solo web) */}
         <section className="hidden lg:grid grid-cols-2 gap-4">
