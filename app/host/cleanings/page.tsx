@@ -751,6 +751,9 @@ function WeeklyCleaningsView({
     days.push(d);
   }
 
+  const formatDateParam = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
   const cleaningsByDay = new Map<string, CleaningWithProperty[]>();
   cleanings.forEach((c) => {
     const d = c.scheduledDate;
@@ -783,9 +786,10 @@ function WeeklyCleaningsView({
             date.toDateString() === new Date().toDateString();
 
           return (
-            <div
+            <Link
               key={i}
-              className={`rounded-xl border p-2 flex flex-col gap-1 ${
+              href={`/host/cleanings?view=day&date=${formatDateParam(date)}`}
+              className={`block rounded-xl border p-2 flex flex-col gap-1 transition-colors hover:bg-neutral-50 hover:border-neutral-300 ${
                 isToday ? "border-black bg-neutral-50" : "border-neutral-200 bg-white"
               }`}
             >
@@ -838,7 +842,7 @@ function WeeklyCleaningsView({
                   })}
                 </ul>
               )}
-            </div>
+            </Link>
           );
         })}
       </div>
