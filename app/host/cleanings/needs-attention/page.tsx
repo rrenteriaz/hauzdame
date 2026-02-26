@@ -166,7 +166,7 @@ export default async function CleaningsNeedingAttentionPage() {
       
       // Calcular hasAvailableTeams usando helper canónico
       const { teamIds } = await resolveAvailableTeamsForProperty(
-        tenant.id,
+        tenantId,
         cleaning.propertyId
       );
       const hasAvailableTeams = teamIds.length > 0;
