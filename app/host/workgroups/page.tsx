@@ -1,6 +1,6 @@
 // app/host/workgroups/page.tsx
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import Link from "next/link";
 import CreateWorkGroupForm from "./CreateWorkGroupForm";
 import WorkGroupActions from "./WorkGroupActions";
@@ -15,23 +15,15 @@ export default async function WorkGroupsPage({
 }: {
   searchParams?: Promise<{ returnTo?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
+
   const params = searchParams ? await searchParams : {};
   const returnTo = safeReturnTo(params?.returnTo, "/host/menu");
 
-  if (!tenant) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-semibold">Configura tu cuenta</h1>
-        <p className="text-base text-neutral-600">
-          No se encontró ningún tenant. Crea uno en Prisma Studio para continuar.
-        </p>
-      </div>
-    );
-  }
-
   const workGroups = await prisma.hostWorkGroup.findMany({
-    where: { tenantId: tenant.id },
+    where: { tenantId },
     select: {
       id: true,
       name: true,

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { Cleaning, Property } from "@prisma/client";
 import { getExecutorsForWorkGroups } from "@/lib/workgroups/resolveWorkGroupsForProperty";
 import CleaningHistory from "./CleaningHistory";
@@ -70,8 +70,9 @@ export default async function PropertyDetailPage({
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ returnTo?: string; action?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) notFound();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) notFound();
 
   const resolvedParams = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -80,7 +81,7 @@ export default async function PropertyDetailPage({
   const property = await (prisma.property.findFirst({
     where: {
       id: resolvedParams.id,
-      tenantId: tenant.id,
+      tenantId,
     },
     include: {
       user: {
@@ -101,7 +102,7 @@ export default async function PropertyDetailPage({
   const [workGroups, assignedWorkGroups, checklistItems, allProperties, openings] = await Promise.all([
     prisma.hostWorkGroup.findMany({
       where: { 
-        tenantId: tenant.id,
+        tenantId: tenantId,
         status: "ACTIVE", // Solo grupos activos
       },
       orderBy: { name: "asc" },
@@ -113,7 +114,7 @@ export default async function PropertyDetailPage({
     prisma.hostWorkGroupProperty.findMany({
       where: {
         propertyId: property.id,
-        tenantId: tenant.id,
+        tenantId: tenantId,
       },
       include: {
         workGroup: {
@@ -129,7 +130,7 @@ export default async function PropertyDetailPage({
     (prisma as any).propertyChecklistItem.findMany({
       where: {
         propertyId: property.id, // FASE 4: propertyId ahora apunta directamente a Property.id
-        tenantId: tenant.id,
+        tenantId: tenantId,
       },
       orderBy: [
         { area: "asc" },
@@ -138,7 +139,7 @@ export default async function PropertyDetailPage({
     }),
     prisma.property.findMany({
       where: {
-        tenantId: tenant.id,
+        tenantId: tenantId,
         id: { not: resolvedParams.id }, // Excluir la propiedad actual
       },
       select: {
@@ -152,7 +153,7 @@ export default async function PropertyDetailPage({
     (prisma as any).propertyOpening.findMany({
       where: {
         propertyId: property.id,
-        tenantId: tenant.id,
+        tenantId: tenantId,
       },
       select: {
         id: true,
@@ -210,7 +211,7 @@ export default async function PropertyDetailPage({
 
   // Obtener ejecutores (WorkGroupExecutor) para los WorkGroups asignados (read-only)
   const executors = assignedWorkGroupIds.size > 0
-    ? await getExecutorsForWorkGroups(tenant.id, Array.from(assignedWorkGroupIds))
+    ? await getExecutorsForWorkGroups(tenantId, Array.from(assignedWorkGroupIds))
     : [];
 
   // Obtener información de los teams ejecutores (solo lectura)
@@ -284,7 +285,7 @@ export default async function PropertyDetailPage({
   const cleanings = await (prisma as any).cleaning.findMany({
     where: {
       propertyId: property.id, // FASE 4: propertyId ahora apunta directamente a Property.id
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     orderBy: {
       scheduledDate: "desc",
@@ -299,7 +300,7 @@ export default async function PropertyDetailPage({
   const allReservations = await (prisma as any).reservation.findMany({
     where: {
       propertyId: property.id,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     include: {
       cleanings: {

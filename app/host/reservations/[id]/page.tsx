@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import PageHeader from "@/lib/ui/PageHeader";
 import HostWebContainer from "@/lib/ui/HostWebContainer";
 import { safeReturnTo } from "@/lib/navigation/safeReturnTo";
@@ -100,8 +100,9 @@ export default async function ReservationDetailPage({
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ returnTo?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) notFound();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) notFound();
 
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
@@ -110,7 +111,7 @@ export default async function ReservationDetailPage({
   const reservation = await prisma.reservation.findFirst({
     where: {
       id: resolvedParams.id,
-      tenantId: tenant.id,
+      tenantId,
     },
     include: {
       property: {

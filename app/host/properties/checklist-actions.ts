@@ -5,7 +5,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import { ChecklistArea } from "@prisma/client";
 import { getChecklistItemImageThumbs } from "@/lib/media/getChecklistItemImageThumbs";
@@ -13,8 +13,9 @@ import { getChecklistItemImageThumbs } from "@/lib/media/getChecklistItemImageTh
 // Nota: estas actions se usan desde UI client-side (optimistic) y NO deben redirigir.
 
 export async function createChecklistItem(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) throw new Error("No se encontró tenant.");
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado.");
 
   const propertyId = formData.get("propertyId")?.toString();
   const area = formData.get("area")?.toString() as ChecklistArea | null;
@@ -26,9 +27,9 @@ export async function createChecklistItem(formData: FormData) {
     throw new Error("Faltan datos para crear el item.");
   }
 
-  // Verificar que la propiedad existe (propertyId ahora es el nuevo PK)
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
+  // Verificar que la propiedad existe y pertenece al tenant
+  const property = await prisma.property.findFirst({
+    where: { id: propertyId, tenantId },
     select: { id: true },
   });
   
@@ -41,7 +42,7 @@ export async function createChecklistItem(formData: FormData) {
   const maxSortOrder = await (prisma as any).propertyChecklistItem.findFirst({
     where: {
       propertyId: property.id,
-      tenantId: tenant.id,
+      tenantId,
     },
     orderBy: {
       sortOrder: "desc",
@@ -55,7 +56,7 @@ export async function createChecklistItem(formData: FormData) {
 
   const created = await (prisma as any).propertyChecklistItem.create({
     data: {
-      tenantId: tenant.id,
+      tenantId,
       propertyId: property.id,
       area,
       title,
@@ -90,8 +91,9 @@ export async function createChecklistItem(formData: FormData) {
 }
 
 export async function updateChecklistItem(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) throw new Error("No se encontró tenant.");
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado.");
 
   const id = formData.get("id")?.toString();
   const propertyId = formData.get("propertyId")?.toString();
@@ -108,7 +110,7 @@ export async function updateChecklistItem(formData: FormData) {
   const item = await (prisma as any).propertyChecklistItem.findFirst({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
       propertyId,
     },
   });
@@ -120,7 +122,7 @@ export async function updateChecklistItem(formData: FormData) {
   const updated = await (prisma as any).propertyChecklistItem.updateMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
       propertyId,
     },
     data: {
@@ -157,8 +159,9 @@ export async function updateChecklistItem(formData: FormData) {
 }
 
 export async function toggleChecklistItemActive(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) throw new Error("No se encontró tenant.");
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado.");
 
   const id = formData.get("id")?.toString();
   const propertyId = formData.get("propertyId")?.toString();
@@ -173,7 +176,7 @@ export async function toggleChecklistItemActive(formData: FormData) {
   await (prisma as any).propertyChecklistItem.updateMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
       propertyId,
     },
     data: {
@@ -185,8 +188,9 @@ export async function toggleChecklistItemActive(formData: FormData) {
 }
 
 export async function deleteChecklistItem(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) throw new Error("No se encontró tenant.");
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado.");
 
   const id = formData.get("id")?.toString();
   const propertyId = formData.get("propertyId")?.toString();
@@ -198,7 +202,7 @@ export async function deleteChecklistItem(formData: FormData) {
   const deleted = await (prisma as any).propertyChecklistItem.deleteMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
       propertyId,
     },
   });
@@ -211,13 +215,14 @@ export async function deleteChecklistItem(formData: FormData) {
 }
 
 export async function deleteChecklistArea(propertyId: string, area: ChecklistArea) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) throw new Error("No se encontró tenant.");
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado.");
 
   const deleted = await (prisma as any).propertyChecklistItem.deleteMany({
     where: {
       propertyId,
-      tenantId: tenant.id,
+      tenantId,
       area,
     },
   });
@@ -229,8 +234,9 @@ export async function copyChecklistToProperties(
   sourcePropertyId: string,
   targetPropertyIds: string[]
 ): Promise<{ copied: number; errors: string[] }> {
-  const tenant = await getDefaultTenant();
-  if (!tenant) throw new Error("No se encontró tenant.");
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado.");
 
   const errors: string[] = [];
   let copied = 0;
@@ -239,7 +245,7 @@ export async function copyChecklistToProperties(
   const sourceProperty = await prisma.property.findFirst({
     where: {
       id: sourcePropertyId,
-      tenantId: tenant.id,
+      tenantId,
     },
     select: { id: true },
   });
@@ -252,7 +258,7 @@ export async function copyChecklistToProperties(
   const sourceItems = await (prisma as any).propertyChecklistItem.findMany({
     where: {
       propertyId: sourceProperty.id,
-      tenantId: tenant.id,
+      tenantId,
       isActive: true,
     },
     orderBy: {
@@ -271,7 +277,7 @@ export async function copyChecklistToProperties(
       const targetProperty = await prisma.property.findFirst({
         where: {
           id: targetPropertyId,
-          tenantId: tenant.id,
+          tenantId,
         },
         select: { id: true },
       });
@@ -285,7 +291,7 @@ export async function copyChecklistToProperties(
       await (prisma as any).propertyChecklistItem.deleteMany({
         where: {
           propertyId: targetProperty.id,
-          tenantId: tenant.id,
+          tenantId,
         },
       });
 
@@ -293,7 +299,7 @@ export async function copyChecklistToProperties(
       for (const item of sourceItems) {
         await (prisma as any).propertyChecklistItem.create({
           data: {
-            tenantId: tenant.id,
+            tenantId,
             propertyId: targetProperty.id,
             area: item.area,
             title: item.title,
@@ -329,8 +335,9 @@ export async function createBaseChecklistTemplate(formData: FormData): Promise<{
     valueLabel: string | null;
   }>;
 }> {
-  const tenant = await getDefaultTenant();
-  if (!tenant) throw new Error("No se encontró tenant.");
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado.");
 
   const propertyId = formData.get("propertyId")?.toString();
 
@@ -338,9 +345,9 @@ export async function createBaseChecklistTemplate(formData: FormData): Promise<{
     return { created: 0, message: "No se pudo crear la plantilla (propiedad inválida).", items: [] };
   }
 
-  // Verificar que la propiedad existe
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
+  // Verificar que la propiedad existe y pertenece al tenant
+  const property = await prisma.property.findFirst({
+    where: { id: propertyId, tenantId },
     select: { id: true },
   });
 
@@ -352,7 +359,7 @@ export async function createBaseChecklistTemplate(formData: FormData): Promise<{
   const existingActive = await (prisma as any).propertyChecklistItem.count({
     where: {
       propertyId: property.id,
-      tenantId: tenant.id,
+      tenantId,
       isActive: true,
     },
   });
@@ -388,7 +395,7 @@ export async function createBaseChecklistTemplate(formData: FormData): Promise<{
   for (const templateItem of baseTemplate) {
     const created = await (prisma as any).propertyChecklistItem.create({
       data: {
-        tenantId: tenant.id,
+        tenantId,
         propertyId: property.id,
         area: templateItem.area,
         title: templateItem.title,
@@ -424,16 +431,15 @@ export async function createBaseChecklistTemplate(formData: FormData): Promise<{
  * (equivalente a getInventoryItemThumbsAction)
  */
 export async function getChecklistItemThumbsAction(checklistItemId: string): Promise<Array<string | null>> {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   // Verificar que el item existe y pertenece al tenant
   const item = await (prisma as any).propertyChecklistItem.findFirst({
     where: {
       id: checklistItemId,
-      tenantId: tenant.id,
+      tenantId,
     },
   });
 

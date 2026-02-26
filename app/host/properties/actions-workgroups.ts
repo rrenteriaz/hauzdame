@@ -3,7 +3,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -16,8 +16,9 @@ function redirectBack(formData: FormData) {
 }
 
 export async function assignWorkGroupToProperty(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     const skipRedirect = formData.get("skipRedirect")?.toString() === "true";
     if (!skipRedirect) {
       redirectBack(formData);
@@ -37,9 +38,9 @@ export async function assignWorkGroupToProperty(formData: FormData) {
     throw new Error("propertyId y workGroupId son requeridos");
   }
 
-  // Verificar que la propiedad existe
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
+  // Verificar que la propiedad existe y pertenece al tenant
+  const property = await prisma.property.findFirst({
+    where: { id: propertyId, tenantId },
     select: { id: true },
   });
   
@@ -53,7 +54,7 @@ export async function assignWorkGroupToProperty(formData: FormData) {
 
   // Verificar que el WorkGroup existe
   const workGroup = await prisma.hostWorkGroup.findFirst({
-    where: { id: workGroupId, tenantId: tenant.id },
+    where: { id: workGroupId, tenantId },
     select: { id: true },
   });
 
@@ -68,7 +69,7 @@ export async function assignWorkGroupToProperty(formData: FormData) {
   // Verificar si la relación ya existe (idempotencia sin depender de P2002)
   const existingRelation = await prisma.hostWorkGroupProperty.findFirst({
     where: {
-      tenantId: tenant.id,
+      tenantId,
       workGroupId,
       propertyId: property.id,
     },
@@ -93,7 +94,7 @@ export async function assignWorkGroupToProperty(formData: FormData) {
   try {
     await prisma.hostWorkGroupProperty.create({
       data: {
-        tenantId: tenant.id,
+        tenantId,
         workGroupId,
         propertyId: property.id,
       },
@@ -122,13 +123,14 @@ export async function assignWorkGroupToProperty(formData: FormData) {
 }
 
 export async function removeWorkGroupFromProperty(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     const skipRedirect = formData.get("skipRedirect")?.toString() === "true";
     if (!skipRedirect) {
       redirectBack(formData);
     }
-    throw new Error("Tenant no encontrado");
+    throw new Error("Usuario sin tenant asociado");
   }
 
   const propertyId = String(formData.get("propertyId") || "");
@@ -143,9 +145,9 @@ export async function removeWorkGroupFromProperty(formData: FormData) {
     throw new Error("propertyId y workGroupId son requeridos");
   }
 
-  // Verificar que la propiedad existe
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
+  // Verificar que la propiedad existe y pertenece al tenant
+  const property = await prisma.property.findFirst({
+    where: { id: propertyId, tenantId },
     select: { id: true },
   });
   
@@ -162,7 +164,7 @@ export async function removeWorkGroupFromProperty(formData: FormData) {
     where: {
       propertyId: property.id,
       workGroupId,
-      tenantId: tenant.id,
+      tenantId,
     },
   });
 

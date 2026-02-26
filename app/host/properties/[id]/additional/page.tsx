@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { Property } from "@prisma/client";
 import Page from "@/lib/ui/Page";
 import PageHeader from "@/lib/ui/PageHeader";
@@ -17,8 +17,9 @@ export default async function PropertyAdditionalInfoPage({
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ returnTo?: string; action?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) notFound();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) notFound();
 
   const resolvedParams = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -26,7 +27,7 @@ export default async function PropertyAdditionalInfoPage({
   const property = await prisma.property.findFirst({
     where: {
       id: resolvedParams.id,
-      tenantId: tenant.id,
+      tenantId,
     },
     include: {
       user: {

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import ChecklistManager from "./ChecklistManager";
 import Page from "@/lib/ui/Page";
 import PageHeader from "@/lib/ui/PageHeader";
@@ -17,8 +17,9 @@ export default async function PropertyChecklistPage({
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ returnTo?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) notFound();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) notFound();
 
   const resolvedParams = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -26,7 +27,7 @@ export default async function PropertyChecklistPage({
   const property = await prisma.property.findFirst({
     where: {
       id: resolvedParams.id,
-      tenantId: tenant.id,
+      tenantId,
     },
     select: {
       id: true,
@@ -41,7 +42,7 @@ export default async function PropertyChecklistPage({
   const checklistItems = await (prisma as any).propertyChecklistItem.findMany({
     where: {
       propertyId: property.id, // FASE 4: propertyId ahora apunta directamente a Property.id
-      tenantId: tenant.id,
+      tenantId,
     },
     orderBy: [
       { area: "asc" },
@@ -51,7 +52,7 @@ export default async function PropertyChecklistPage({
 
   const allProperties = await prisma.property.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId,
       id: { not: resolvedParams.id },
     },
     select: {

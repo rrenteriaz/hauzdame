@@ -5,7 +5,7 @@
 //
 // Esta página muestra limpiezas que requieren atención usando copy canónico según assignmentLevel.
 // NO inventar textos nuevos. Usar SOLO los 7 mensajes canónicos definidos en ASSIGNMENT_COPY_V1.md.
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { getCleaningsNeedingAttention } from "@/lib/cleaning-needs-attention";
 import { getEligibleMembersForCleaning } from "@/lib/cleaning-eligibility";
 import { getCoverThumbUrlsBatch } from "@/lib/media/getCoverThumbUrl";
@@ -77,21 +77,12 @@ function getAssignmentCopy(level: number, data: {
 }
 
 export default async function CleaningsNeedingAttentionPage() {
-  const tenant = await getDefaultTenant();
-
-  if (!tenant) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-semibold">Configura tu cuenta</h1>
-        <p className="text-base text-neutral-600">
-          No se encontró ningún tenant. Crea uno en Prisma Studio para continuar.
-        </p>
-      </div>
-    );
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const cleaningsNeedingAttention = await getCleaningsNeedingAttention(
-    tenant.id,
+    tenantId,
     true
   );
 
@@ -110,7 +101,7 @@ export default async function CleaningsNeedingAttentionPage() {
   const cleaningIds = cleaningsNeedingAttention.map((c) => c.id);
   const cleaningsWithDetails = cleaningIds.length > 0
     ? await prisma.cleaning.findMany({
-        where: { id: { in: cleaningIds } },
+        where: { id: { in: cleaningIds }, tenantId },
         select: {
           id: true,
           teamId: true,
@@ -205,7 +196,7 @@ export default async function CleaningsNeedingAttentionPage() {
 
       // Obtener miembros elegibles
       const eligibleMembers = await getEligibleMembersForCleaning(
-        tenant.id,
+        tenantId,
         cleaning.propertyId,
         cleaning.scheduledDate
       );

@@ -1,6 +1,6 @@
 // app/host/properties/page.tsx
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import Link from "next/link";
 import CreatePropertyForm from "./CreatePropertyForm";
 import SyncAllIcalButton from "./SyncAllIcalButton";
@@ -17,26 +17,20 @@ export default async function PropertiesPage({
 }: {
   searchParams?: Promise<{ returnTo?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
+    throw new Error("Usuario sin tenant asociado");
+  }
+
   const params = searchParams ? await searchParams : {};
   // Usar safeReturnTo común con fallback explícito para el back del Page
   const returnTo = safeReturnTo(params?.returnTo, "/host/menu");
 
-  if (!tenant) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-semibold">Configura tu cuenta</h1>
-        <p className="text-base text-neutral-600">
-          No se encontró ningún tenant. Crea uno en Prisma Studio para continuar.
-        </p>
-      </div>
-    );
-  }
-
   const [properties, inactivePropertiesCount] = await Promise.all([
     prisma.property.findMany({
       where: { 
-        tenantId: tenant.id,
+        tenantId,
         ...({ isActive: true } as any), // Solo mostrar propiedades activas - Temporal hasta que TypeScript reconozca el campo
       },
       select: {
@@ -52,7 +46,7 @@ export default async function PropertiesPage({
     }),
     (prisma.property as any).count({
       where: {
-        tenantId: tenant.id,
+        tenantId,
         ...({ isActive: false } as any), // Contar propiedades inactivas
       },
     }),

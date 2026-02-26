@@ -1,6 +1,6 @@
 // app/host/cleanings/page.tsx
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { CleaningStatus, Cleaning, Property } from "@prisma/client";
 import Link from "next/link";
 import { getCleaningUi, getPropertyColor } from "@/lib/cleaning-ui";
@@ -25,18 +25,9 @@ export default async function CleaningsPage({
     searchParams?: Promise<{ month?: string; view?: string; date?: string; confirm?: string; cleaningId?: string }>;
   }) {
   
-  const tenant = await getDefaultTenant();
-
-  if (!tenant) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-semibold">Configura tu cuenta</h1>
-        <p className="text-base text-neutral-600">
-          No se encontró ningún tenant. Crea uno en Prisma Studio para continuar.
-        </p>
-      </div>
-    );
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   // Manejar searchParams como Promise
   const params = searchParams ? await searchParams : undefined;
@@ -102,7 +93,7 @@ export default async function CleaningsPage({
   const [properties, cleaningsRaw] = await Promise.all([
     prisma.property.findMany({
       where: { 
-        tenantId: tenant.id,
+        tenantId,
         ...({ isActive: true } as any), // Solo propiedades activas
       },
       select: {
@@ -115,7 +106,7 @@ export default async function CleaningsPage({
     }),
     (prisma as any).cleaning.findMany({
       where: { 
-        tenantId: tenant.id,
+        tenantId,
         scheduledDate: {
           gte: rangeStart,
           lt: rangeEndExclusive,
@@ -151,7 +142,7 @@ export default async function CleaningsPage({
       const viewCounts = await (prisma as any).cleaningView.groupBy({
         by: ["cleaningId"],
         where: {
-          tenantId: tenant.id,
+          tenantId,
           cleaningId: { in: cleaningIds },
         },
         _count: {
@@ -207,7 +198,7 @@ export default async function CleaningsPage({
   );
 
   // Limpiezas que requieren atención (usar función helper centralizada)
-  const cleaningsNeedingAttentionCount = await getCleaningsNeedingAttentionCount(tenant.id);
+  const cleaningsNeedingAttentionCount = await getCleaningsNeedingAttentionCount(tenantId);
 
   const hasProperties = properties.length > 0;
 

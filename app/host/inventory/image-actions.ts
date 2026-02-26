@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import storageProvider from "@/lib/storage";
 import { generateThumbnail, getOutputMimeType } from "@/lib/media/thumbnail";
@@ -20,10 +20,9 @@ const BUCKET_NAME = "inventory-item-images";
  * @returns { position, groupId, thumbUrl, originalUrl, assetIds: [originalId, thumbId] }
  */
 export async function uploadInventoryItemImageAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No tenant found");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const itemId = formData.get("itemId")?.toString();
   const positionStr = formData.get("position")?.toString();
@@ -64,7 +63,7 @@ export async function uploadInventoryItemImageAction(formData: FormData) {
   const item = await prisma.inventoryItem.findFirst({
     where: {
       id: itemId,
-      tenantId: tenant.id,
+      tenantId,
     },
   });
 
@@ -75,7 +74,7 @@ export async function uploadInventoryItemImageAction(formData: FormData) {
   // Si ya existe una imagen en esta posición, obtener el assetId actual para referencia
   const existingItemAsset = await prisma.inventoryItemAsset.findFirst({
     where: {
-      tenantId: tenant.id,
+      tenantId,
       itemId,
       position,
     },
@@ -97,8 +96,8 @@ export async function uploadInventoryItemImageAction(formData: FormData) {
 
   // Construir keys para storage
   const fileExtension = file.name.split(".").pop() || "jpg";
-  const originalKey = `${tenant.id}/inventory-items/${itemId}/${groupId}/original.${fileExtension}`;
-  const thumbKey = `${tenant.id}/inventory-items/${itemId}/${groupId}/thumb_256.${thumbnailResult.format}`;
+  const originalKey = `${tenantId}/inventory-items/${itemId}/${groupId}/original.${fileExtension}`;
+  const thumbKey = `${tenantId}/inventory-items/${itemId}/${groupId}/thumb_256.${thumbnailResult.format}`;
 
   try {
     // Subir original
@@ -122,7 +121,7 @@ export async function uploadInventoryItemImageAction(formData: FormData) {
       // Crear Asset original
       const originalAsset = await tx.asset.create({
         data: {
-          tenantId: tenant.id,
+          tenantId,
           type: "IMAGE",
           provider: "SUPABASE",
           variant: "ORIGINAL",
@@ -140,7 +139,7 @@ export async function uploadInventoryItemImageAction(formData: FormData) {
       // Crear Asset thumbnail
       const thumbAsset = await tx.asset.create({
         data: {
-          tenantId: tenant.id,
+          tenantId,
           type: "IMAGE",
           provider: "SUPABASE",
           variant: "THUMB_256",
@@ -160,13 +159,13 @@ export async function uploadInventoryItemImageAction(formData: FormData) {
       await tx.inventoryItemAsset.upsert({
         where: {
           tenantId_itemId_position: {
-            tenantId: tenant.id,
+            tenantId,
             itemId,
             position,
           },
         },
         create: {
-          tenantId: tenant.id,
+          tenantId,
           itemId,
           assetId: thumbAsset.id, // Apuntar al thumb para listas
           position,
@@ -214,10 +213,9 @@ export async function uploadInventoryItemImageAction(formData: FormData) {
  * Esto permite recuperación si es necesario. Se puede implementar cleanup después.
  */
 export async function deleteInventoryItemImageAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No tenant found");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const itemId = formData.get("itemId")?.toString();
   const positionStr = formData.get("position")?.toString();
@@ -239,7 +237,7 @@ export async function deleteInventoryItemImageAction(formData: FormData) {
   const item = await prisma.inventoryItem.findFirst({
     where: {
       id: itemId,
-      tenantId: tenant.id,
+      tenantId,
     },
   });
 
@@ -251,7 +249,7 @@ export async function deleteInventoryItemImageAction(formData: FormData) {
   // Los Assets quedan huérfanos por ahora (no se borran)
   await prisma.inventoryItemAsset.deleteMany({
     where: {
-      tenantId: tenant.id,
+      tenantId,
       itemId,
       position,
     },

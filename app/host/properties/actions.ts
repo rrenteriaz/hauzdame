@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { getOrCreateDefaultOwner } from "@/lib/users";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -21,8 +21,9 @@ function redirectBack(formData: FormData) {
 }
 
 export async function updateProperty(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -88,7 +89,7 @@ export async function updateProperty(formData: FormData) {
   await prisma.property.updateMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
     },
     data: {
       name,
@@ -121,8 +122,9 @@ export async function updateProperty(formData: FormData) {
 }
 
 export async function deleteProperty(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -135,7 +137,7 @@ export async function deleteProperty(formData: FormData) {
   await prisma.property.deleteMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
     },
   });
 
@@ -144,8 +146,9 @@ export async function deleteProperty(formData: FormData) {
 }
 
 export async function deactivateProperty(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -157,7 +160,7 @@ export async function deactivateProperty(formData: FormData) {
   await prisma.property.updateMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
     },
     data: {
       isActive: false,
@@ -170,8 +173,9 @@ export async function deactivateProperty(formData: FormData) {
 }
 
 export async function activateProperty(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -183,7 +187,7 @@ export async function activateProperty(formData: FormData) {
   await prisma.property.updateMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
     },
     data: {
       isActive: true,
@@ -196,8 +200,9 @@ export async function activateProperty(formData: FormData) {
 }
 
 export async function assignTeamToProperty(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -210,10 +215,9 @@ export async function assignTeamToProperty(formData: FormData) {
     return;
   }
 
-  // FASE 4: propertyId ahora es el nuevo PK directamente
-  // Verificar que la propiedad existe
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
+  // Verificar que la propiedad existe y pertenece al tenant del host
+  const property = await prisma.property.findFirst({
+    where: { id: propertyId, tenantId },
     select: { id: true },
   });
   
@@ -226,12 +230,12 @@ export async function assignTeamToProperty(formData: FormData) {
   await (prisma as any).propertyTeam.upsert({
     where: {
       propertyId_teamId: {
-        propertyId: property.id, // FASE 4: propertyId es el nuevo PK
+        propertyId: property.id,
         teamId,
       },
     },
     create: {
-      tenantId: tenant.id,
+      tenantId,
       propertyId: property.id, // FASE 4: propertyId es el nuevo PK
       teamId,
     },
@@ -245,8 +249,9 @@ export async function assignTeamToProperty(formData: FormData) {
 }
 
 export async function removeTeamFromProperty(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -259,10 +264,9 @@ export async function removeTeamFromProperty(formData: FormData) {
     return;
   }
 
-  // FASE 4: propertyId ahora es el nuevo PK directamente
-  // Verificar que la propiedad existe
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
+  // Verificar que la propiedad existe y pertenece al tenant del host
+  const property = await prisma.property.findFirst({
+    where: { id: propertyId, tenantId },
     select: { id: true },
   });
   
@@ -274,9 +278,9 @@ export async function removeTeamFromProperty(formData: FormData) {
 
   await (prisma as any).propertyTeam.deleteMany({
     where: {
-      propertyId: property.id, // FASE 4: propertyId es el nuevo PK
+      propertyId: property.id,
       teamId,
-      tenantId: tenant.id,
+      tenantId,
     },
   });
 
@@ -287,8 +291,9 @@ export async function removeTeamFromProperty(formData: FormData) {
 }
 
 export async function createProperty(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     revalidatePath("/host/properties");
     return;
   }
@@ -309,14 +314,14 @@ export async function createProperty(formData: FormData) {
   }
 
   // Aseguramos un OWNER para usarlo como userId de la propiedad
-  const owner = await getOrCreateDefaultOwner(tenant.id);
+  const owner = await getOrCreateDefaultOwner(tenantId);
 
   try {
     // Usar relaciones anidadas que Prisma acepta en runtime
     await prisma.property.create({
       data: {
         tenant: {
-          connect: { id: tenant.id },
+          connect: { id: tenantId },
         },
         user: {
           connect: { id: owner.id },

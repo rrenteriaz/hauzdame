@@ -1,7 +1,7 @@
 // app/host/workgroups/[id]/teams/[teamId]/page.tsx
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { getCurrentUser } from "@/lib/auth/session";
 import Page from "@/lib/ui/Page";
 import { getTeamDisplayNameForHost } from "@/lib/host/teamDisplayName";
@@ -20,8 +20,9 @@ export default async function TeamDetailPage({
   params: Promise<{ id: string; teamId: string }>;
   searchParams?: Promise<{ returnTo?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) notFound();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) notFound();
 
   const resolvedParams = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -34,7 +35,7 @@ export default async function TeamDetailPage({
   const workGroup = await prisma.hostWorkGroup.findFirst({
     where: {
       id: workGroupId,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     select: {
       id: true,
@@ -47,7 +48,7 @@ export default async function TeamDetailPage({
   // Verificar que el executor existe
   const executor = await prisma.workGroupExecutor.findFirst({
     where: {
-      hostTenantId: tenant.id,
+      hostTenantId: tenantId,
       workGroupId,
       teamId,
     },
@@ -106,7 +107,7 @@ export default async function TeamDetailPage({
   // Obtener propiedades asignadas al WorkGroup
   const workGroupProperties = await prisma.hostWorkGroupProperty.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       workGroupId,
     },
     select: {
@@ -178,7 +179,7 @@ export default async function TeamDetailPage({
   // Limpiezas pasadas: scheduledDate < hoy O status COMPLETED/CANCELLED
   const pastCleanings = await (prisma as any).cleaning.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       propertyId: { in: propertyIds },
       AND: [
         {
@@ -225,7 +226,7 @@ export default async function TeamDetailPage({
   // Limpiezas futuras: scheduledDate >= hoy Y status no COMPLETED
   const futureCleanings = await (prisma as any).cleaning.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       propertyId: { in: propertyIds },
       scheduledDate: { gte: startOfToday },
       status: { not: "COMPLETED" },

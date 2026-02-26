@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import {
   InventoryReviewStatus,
@@ -18,10 +18,9 @@ import {
  * Si ya existe, la actualiza. Si no, la crea.
  */
 export async function createOrUpdateInventoryReview(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const cleaningId = formData.get("cleaningId")?.toString();
   if (!cleaningId) {
@@ -29,8 +28,8 @@ export async function createOrUpdateInventoryReview(formData: FormData) {
   }
 
   // Verificar que la limpieza existe y obtener propertyId
-  const cleaning = await prisma.cleaning.findUnique({
-    where: { id: cleaningId },
+  const cleaning = await prisma.cleaning.findFirst({
+    where: { id: cleaningId, tenantId },
     select: { id: true, propertyId: true, tenantId: true },
   });
 
@@ -38,7 +37,7 @@ export async function createOrUpdateInventoryReview(formData: FormData) {
     throw new Error("Limpieza no encontrada");
   }
 
-  if (cleaning.tenantId !== tenant.id) {
+  if (cleaning.tenantId !== tenantId) {
     throw new Error("No tienes permiso para esta limpieza");
   }
 
@@ -48,7 +47,7 @@ export async function createOrUpdateInventoryReview(formData: FormData) {
   });
 
   const reviewData = {
-    tenantId: tenant.id,
+    tenantId: tenantId,
     cleaningId,
     propertyId: cleaning.propertyId,
     status: InventoryReviewStatus.DRAFT,
@@ -84,18 +83,17 @@ export async function createOrUpdateInventoryReview(formData: FormData) {
  * Valida que todos los cambios de cantidad tengan razón.
  */
 export async function submitInventoryReview(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const reviewId = formData.get("reviewId")?.toString();
   if (!reviewId) {
     throw new Error("No se encontró la revisión");
   }
 
-  const review = await prisma.inventoryReview.findUnique({
-    where: { id: reviewId },
+  const review = await prisma.inventoryReview.findFirst({
+    where: { id: reviewId, tenantId },
     include: {
       itemChanges: true,
     },
@@ -110,10 +108,6 @@ export async function submitInventoryReview(formData: FormData) {
 
   if (!review) {
     throw new Error("Revisión no encontrada");
-  }
-
-  if (review.tenantId !== tenant.id) {
-    throw new Error("No tienes permiso para esta revisión");
   }
 
   if (review.status !== InventoryReviewStatus.DRAFT) {
@@ -148,10 +142,9 @@ export async function submitInventoryReview(formData: FormData) {
  * Crea o actualiza un cambio de cantidad en una revisión.
  */
 export async function createOrUpdateInventoryChange(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const reviewId = formData.get("reviewId")?.toString();
   const itemId = formData.get("itemId")?.toString();
@@ -169,27 +162,24 @@ export async function createOrUpdateInventoryChange(formData: FormData) {
     throw new Error("La cantidad debe ser un número válido mayor o igual a 0");
   }
 
-  // Verificar que la revisión existe y está en DRAFT
-  const review = await prisma.inventoryReview.findUnique({
-    where: { id: reviewId },
-    select: { id: true, status: true, tenantId: true, cleaningId: true },
+  // Verificar que la revisión existe, pertenece al tenant y está en DRAFT
+  const review = await prisma.inventoryReview.findFirst({
+    where: { id: reviewId, tenantId },
+    select: { id: true, status: true, cleaningId: true },
   });
 
   if (!review) {
     throw new Error("Revisión no encontrada");
   }
 
-  if (review.tenantId !== tenant.id) {
-    throw new Error("No tienes permiso para esta revisión");
-  }
-
   if (review.status !== InventoryReviewStatus.DRAFT) {
     throw new Error("Solo se pueden modificar revisiones en estado DRAFT");
   }
 
-  // Obtener la cantidad actual del inventario (expectedQty de InventoryLine activa)
+  // Obtener la cantidad actual del inventario (expectedQty de InventoryLine activa, scoped por tenant)
   const inventoryLine = await prisma.inventoryLine.findFirst({
     where: {
+      tenantId,
       itemId,
       isActive: true,
     },
@@ -236,7 +226,7 @@ export async function createOrUpdateInventoryChange(formData: FormData) {
   });
 
   const changeData = {
-    tenantId: tenant.id,
+    tenantId: tenantId,
     reviewId,
     itemId,
     quantityBefore,
@@ -271,10 +261,9 @@ export async function createOrUpdateInventoryChange(formData: FormData) {
  * Crea un reporte de incidencia.
  */
 export async function createInventoryReport(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const reviewId = formData.get("reviewId")?.toString() || null;
   const cleaningId = formData.get("cleaningId")?.toString() || null;
@@ -299,18 +288,14 @@ export async function createInventoryReport(formData: FormData) {
   const type = typeStr as InventoryReportType;
   const severity = severityStr as InventoryReportSeverity;
 
-  // Verificar que el item existe
-  const item = await prisma.inventoryItem.findUnique({
-    where: { id: itemId },
-    select: { id: true, tenantId: true },
+  // Verificar que el item existe y pertenece al tenant
+  const item = await prisma.inventoryItem.findFirst({
+    where: { id: itemId, tenantId },
+    select: { id: true },
   });
 
   if (!item) {
     throw new Error("Item no encontrado");
-  }
-
-  if (item.tenantId !== tenant.id) {
-    throw new Error("No tienes permiso para este item");
   }
 
   // Obtener el usuario que crea el reporte
@@ -319,17 +304,13 @@ export async function createInventoryReport(formData: FormData) {
 
   // 1. Intentar obtener el usuario de la revisión
   if (reviewId) {
-    const review = await prisma.inventoryReview.findUnique({
-      where: { id: reviewId },
-      select: { id: true, tenantId: true, reviewedByUserId: true },
+    const review = await prisma.inventoryReview.findFirst({
+      where: { id: reviewId, tenantId },
+      select: { id: true, reviewedByUserId: true },
     });
 
     if (!review) {
       throw new Error("Revisión no encontrada");
-    }
-
-    if (review.tenantId !== tenant.id) {
-      throw new Error("No tienes permiso para esta revisión");
     }
 
     if (review.reviewedByUserId) {
@@ -339,12 +320,12 @@ export async function createInventoryReport(formData: FormData) {
 
   // 2. Si no hay usuario de la revisión, intentar obtenerlo de la limpieza
   if (!createdByUserId && cleaningId) {
-    const cleaning = await prisma.cleaning.findUnique({
-      where: { id: cleaningId },
-      select: { assignedToId: true, tenantId: true },
+    const cleaning = await prisma.cleaning.findFirst({
+      where: { id: cleaningId, tenantId },
+      select: { assignedToId: true },
     });
 
-    if (cleaning && cleaning.tenantId === tenant.id && cleaning.assignedToId) {
+    if (cleaning && cleaning.assignedToId) {
       createdByUserId = cleaning.assignedToId;
     }
   }
@@ -352,13 +333,13 @@ export async function createInventoryReport(formData: FormData) {
   // 3. Si aún no hay usuario, buscar cualquier Cleaner del tenant como fallback
   if (!createdByUserId) {
     const defaultUser = await prisma.user.findFirst({
-      where: { tenantId: tenant.id, role: "CLEANER" },
+      where: { tenantId: tenantId, role: "CLEANER" },
     });
 
     if (!defaultUser) {
       // Si no hay Cleaner, intentar con cualquier usuario del tenant como último recurso
       const anyUser = await prisma.user.findFirst({
-        where: { tenantId: tenant.id },
+        where: { tenantId: tenantId },
       });
 
       if (!anyUser) {
@@ -380,7 +361,7 @@ export async function createInventoryReport(formData: FormData) {
     existingReport = await prisma.inventoryReport.findFirst({
       where: {
         id: reportId,
-        tenantId: tenant.id,
+        tenantId: tenantId,
         status: InventoryReportStatus.PENDING,
       },
     });
@@ -388,7 +369,7 @@ export async function createInventoryReport(formData: FormData) {
     // Buscar por reviewId + itemId
     existingReport = await prisma.inventoryReport.findFirst({
       where: {
-        tenantId: tenant.id,
+        tenantId: tenantId,
         reviewId,
         itemId,
         status: InventoryReportStatus.PENDING,
@@ -412,7 +393,7 @@ export async function createInventoryReport(formData: FormData) {
     // Crear nuevo reporte
     report = await prisma.inventoryReport.create({
       data: {
-        tenantId: tenant.id,
+        tenantId: tenantId,
         reviewId,
         cleaningId,
         itemId,
@@ -426,8 +407,8 @@ export async function createInventoryReport(formData: FormData) {
   }
 
   if (reviewId) {
-    const review = await prisma.inventoryReview.findUnique({
-      where: { id: reviewId },
+    const review = await prisma.inventoryReview.findFirst({
+      where: { id: reviewId, tenantId },
       select: { cleaningId: true },
     });
 
@@ -443,16 +424,14 @@ export async function createInventoryReport(formData: FormData) {
  * Elimina un reporte de inventario (solo si está en estado PENDING).
  */
 export async function deleteInventoryReport(reportId: string) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
-  const report = await prisma.inventoryReport.findUnique({
-    where: { id: reportId },
+  const report = await prisma.inventoryReport.findFirst({
+    where: { id: reportId, tenantId },
     select: {
       id: true,
-      tenantId: true,
       status: true,
       reviewId: true,
     },
@@ -462,21 +441,17 @@ export async function deleteInventoryReport(reportId: string) {
     throw new Error("Reporte no encontrado");
   }
 
-  if (report.tenantId !== tenant.id) {
-    throw new Error("No tienes permiso para este reporte");
-  }
-
   if (report.status !== InventoryReportStatus.PENDING) {
     throw new Error("Solo se pueden eliminar reportes en estado PENDING");
   }
 
-  await prisma.inventoryReport.delete({
-    where: { id: reportId },
+  await prisma.inventoryReport.deleteMany({
+    where: { id: reportId, tenantId },
   });
 
   if (report.reviewId) {
-    const review = await prisma.inventoryReview.findUnique({
-      where: { id: report.reviewId },
+    const review = await prisma.inventoryReview.findFirst({
+      where: { id: report.reviewId, tenantId },
       select: { cleaningId: true },
     });
 
@@ -492,14 +467,13 @@ export async function deleteInventoryReport(reportId: string) {
  * Obtiene las líneas de inventario activas de una propiedad para la revisión.
  */
 export async function getActiveInventoryLines(propertyId: string) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return [];
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return [];
 
   const lines = await prisma.inventoryLine.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId,
       propertyId,
       isActive: true,
     },
@@ -560,13 +534,12 @@ export async function getActiveInventoryLines(propertyId: string) {
  * Obtiene una revisión de inventario con todos sus datos.
  */
 export async function getInventoryReview(cleaningId: string) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return null;
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return null;
 
-  const review = await prisma.inventoryReview.findUnique({
-    where: { cleaningId },
+  const review = await prisma.inventoryReview.findFirst({
+    where: { cleaningId, tenantId },
     include: {
       itemChanges: {
         include: {
@@ -615,7 +588,7 @@ export async function getInventoryReview(cleaningId: string) {
     },
   });
 
-  if (!review || review.tenantId !== tenant.id) {
+  if (!review || review.tenantId !== tenantId) {
     return null;
   }
 
@@ -626,13 +599,12 @@ export async function getInventoryReview(cleaningId: string) {
  * Obtiene el estado de una revisión de inventario (solo id y status) para mostrar rápidamente.
  */
 export async function getInventoryReviewStatus(cleaningId: string) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return null;
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return null;
 
-  const review = await prisma.inventoryReview.findUnique({
-    where: { cleaningId },
+  const review = await prisma.inventoryReview.findFirst({
+    where: { cleaningId, tenantId },
     select: {
       id: true,
       status: true,
@@ -640,7 +612,7 @@ export async function getInventoryReviewStatus(cleaningId: string) {
     },
   });
 
-  if (!review || review.tenantId !== tenant.id) {
+  if (!review || review.tenantId !== tenantId) {
     return null;
   }
 

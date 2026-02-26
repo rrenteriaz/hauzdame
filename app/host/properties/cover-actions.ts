@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import storageProvider from "@/lib/storage";
@@ -25,10 +25,9 @@ function redirectBack(returnTo: string | null) {
  * Upload de imagen de portada para una propiedad
  */
 export async function uploadCoverImage(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No tenant found");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const propertyId = formData.get("propertyId")?.toString();
   const returnTo = formData.get("returnTo")?.toString() || null;
@@ -61,7 +60,7 @@ export async function uploadCoverImage(formData: FormData) {
   const property = await prisma.property.findFirst({
     where: {
       id: propertyId,
-      tenantId: tenant.id,
+      tenantId,
     },
   });
 
@@ -71,7 +70,7 @@ export async function uploadCoverImage(formData: FormData) {
 
   // Si ya tiene una portada, eliminarla primero
   if (property.coverAssetGroupId) {
-    await removeCoverImageInternal(tenant.id, property.coverAssetGroupId);
+    await removeCoverImageInternal(tenantId, property.coverAssetGroupId);
   }
 
   // Generar groupId (UUID) para agrupar original + thumbnail
@@ -86,8 +85,8 @@ export async function uploadCoverImage(formData: FormData) {
   const thumbnailResult = await generateThumbnail(buffer, file.type);
 
   // Construir keys para storage
-  const originalKey = `${tenant.id}/${propertyId}/${groupId}/original.${file.name.split(".").pop() || "jpg"}`;
-  const thumbKey = `${tenant.id}/${propertyId}/${groupId}/thumb_256.${thumbnailResult.format}`;
+  const originalKey = `${tenantId}/${propertyId}/${groupId}/original.${file.name.split(".").pop() || "jpg"}`;
+  const thumbKey = `${tenantId}/${propertyId}/${groupId}/thumb_256.${thumbnailResult.format}`;
 
   try {
     // Subir original
@@ -111,7 +110,7 @@ export async function uploadCoverImage(formData: FormData) {
       // Original
       prisma.asset.create({
         data: {
-          tenantId: tenant.id,
+          tenantId,
           type: "IMAGE",
           provider: "SUPABASE",
           variant: "ORIGINAL",
@@ -128,7 +127,7 @@ export async function uploadCoverImage(formData: FormData) {
       // Thumbnail
       prisma.asset.create({
         data: {
-          tenantId: tenant.id,
+          tenantId,
           type: "IMAGE",
           provider: "SUPABASE",
           variant: "THUMB_256",
@@ -148,7 +147,7 @@ export async function uploadCoverImage(formData: FormData) {
     await prisma.property.updateMany({
       where: {
         id: propertyId,
-        tenantId: tenant.id,
+        tenantId,
       },
       data: {
         coverAssetGroupId: groupId,
@@ -175,10 +174,9 @@ export async function uploadCoverImage(formData: FormData) {
  * Elimina la portada de una propiedad
  */
 export async function removeCoverImage(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No tenant found");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const propertyId = formData.get("propertyId")?.toString();
   const returnTo = formData.get("returnTo")?.toString() || null;
@@ -191,7 +189,7 @@ export async function removeCoverImage(formData: FormData) {
   const property = await prisma.property.findFirst({
     where: {
       id: propertyId,
-      tenantId: tenant.id,
+      tenantId,
     },
     select: {
       coverAssetGroupId: true,
@@ -203,13 +201,13 @@ export async function removeCoverImage(formData: FormData) {
     return;
   }
 
-  await removeCoverImageInternal(tenant.id, property.coverAssetGroupId);
+  await removeCoverImageInternal(tenantId, property.coverAssetGroupId);
 
   // Actualizar propiedad
   await prisma.property.updateMany({
     where: {
       id: propertyId,
-      tenantId: tenant.id,
+      tenantId,
     },
     data: {
       coverAssetGroupId: null,

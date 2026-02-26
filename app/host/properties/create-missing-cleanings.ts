@@ -5,7 +5,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import { getEligibleMembersForCleaning } from "@/lib/cleaning-eligibility";
 import { createChecklistSnapshotForCleaning } from "@/lib/checklist-snapshot";
@@ -31,10 +31,9 @@ export async function createMissingCleaningsForReservations(): Promise<{
   created: number;
   errors: string[];
 }> {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No tenant found");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const result = {
     created: 0,
@@ -47,7 +46,7 @@ export async function createMissingCleaningsForReservations(): Promise<{
     // Obtener todas las reservas CONFIRMED de iCal
     const confirmedReservations = await (prisma as any).reservation.findMany({
       where: {
-        tenantId: tenant.id,
+        tenantId,
         status: "CONFIRMED",
         source: "ICAL",
       },
@@ -81,8 +80,8 @@ export async function createMissingCleaningsForReservations(): Promise<{
 
         // FASE 4: propertyId ahora es el nuevo PK directamente
         // Verificar que la propiedad existe y obtener información para snapshot
-        const property = await prisma.property.findUnique({
-          where: { id: reservation.propertyId },
+        const property = await prisma.property.findFirst({
+          where: { id: reservation.propertyId, tenantId },
           select: {
             id: true,
             name: true,
@@ -97,7 +96,7 @@ export async function createMissingCleaningsForReservations(): Promise<{
 
         // FASE 4: Obtener miembros elegibles (usar propertyId)
         const eligibleMembers = await getEligibleMembersForCleaning(
-          tenant.id,
+          tenantId,
           property.id, // FASE 4: propertyId ahora es el nuevo PK
           scheduledAtOriginal
         );
@@ -117,7 +116,7 @@ export async function createMissingCleaningsForReservations(): Promise<{
 
         const cleaning = await (prisma as any).cleaning.create({
           data: {
-            tenantId: tenant.id,
+            tenantId,
             propertyId: property.id, // FASE 4: propertyId ahora apunta directamente a Property.id
             reservationId: reservation.id,
             scheduledAtOriginal,
@@ -137,7 +136,7 @@ export async function createMissingCleaningsForReservations(): Promise<{
 
         // FASE 4: Crear snapshot del checklist (usar propertyId)
         await createChecklistSnapshotForCleaning(
-          tenant.id,
+          tenantId,
           property.id, // FASE 4: propertyId ahora es el nuevo PK
           cleaning.id
         );

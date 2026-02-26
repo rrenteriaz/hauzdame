@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { listInventoryByProperty } from "@/lib/inventory";
 import Page from "@/lib/ui/Page";
 import CollapsibleSection from "@/lib/ui/CollapsibleSection";
@@ -31,8 +31,9 @@ export default async function InventoryPage({
     returnTo?: string;
   }>;
 }) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) notFound();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) notFound();
 
   const resolvedParams = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -41,7 +42,7 @@ export default async function InventoryPage({
   const property = await prisma.property.findFirst({
     where: {
       id: resolvedParams.id,
-      tenantId: tenant.id,
+      tenantId,
     },
     select: {
       id: true,
@@ -55,7 +56,7 @@ export default async function InventoryPage({
   // Obtener todas las propiedades del tenant (excepto la actual) para el modal de copiar
   const availableProperties = await prisma.property.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId,
       id: { not: property.id },
     },
     select: {
@@ -82,7 +83,7 @@ export default async function InventoryPage({
 
   // Obtener inventario con filtros y paginación server-side
   const { lines: inventoryLines, total, hasMore } = await listInventoryByProperty(
-    tenant.id,
+    tenantId,
     property.id,
     {
       search: searchTerm || undefined,

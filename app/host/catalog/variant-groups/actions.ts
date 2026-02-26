@@ -1,14 +1,14 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { normalizeKey, normalizeValue } from "@/lib/normalize";
 import { revalidatePath } from "next/cache";
 
-async function getTenantOrThrow() {
-  const tenant = await getDefaultTenant();
-  if (!tenant) throw new Error("No se encontró el tenant");
-  return tenant;
+async function getTenantIdOrThrow() {
+  const user = await requireHostUser();
+  if (!user.tenantId) throw new Error("Usuario sin tenant asociado");
+  return user.tenantId;
 }
 
 function assertTenantOwnership(tenantId: string, expectedTenantId: string) {
@@ -19,9 +19,9 @@ function assertTenantOwnership(tenantId: string, expectedTenantId: string) {
 
 /** 5.1 Listar grupos de variantes del tenant */
 export async function listTenantVariantGroupsAction() {
-  const tenant = await getTenantOrThrow();
+  const tenantId = await getTenantIdOrThrow();
   const groups = await prisma.variantGroup.findMany({
-    where: { tenantId: tenant.id },
+    where: { tenantId },
     include: {
       options: {
         where: { isArchived: false },
@@ -52,20 +52,20 @@ export async function createTenantVariantGroupAction(payload: {
   key: string;
   label: string;
 }) {
-  const tenant = await getTenantOrThrow();
+  const tenantId = await getTenantIdOrThrow();
   const keyNormalized = normalizeKey(payload.key);
   const label = payload.label.trim();
   if (!keyNormalized) throw new Error("La key no puede estar vacía");
   if (!label) throw new Error("El label no puede estar vacío");
 
   const existing = await prisma.variantGroup.findUnique({
-    where: { tenantId_key: { tenantId: tenant.id, key: keyNormalized } },
+    where: { tenantId_key: { tenantId: tenantId, key: keyNormalized } },
   });
   if (existing) throw new Error("Ya existe un grupo con esa key");
 
   const group = await prisma.variantGroup.create({
     data: {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       key: keyNormalized,
       label,
     },
@@ -79,15 +79,14 @@ export async function updateTenantVariantGroupLabelAction(payload: {
   groupId: string;
   label: string;
 }) {
-  const tenant = await getTenantOrThrow();
+  const tenantId = await getTenantIdOrThrow();
   const label = payload.label.trim();
   if (!label) throw new Error("El label no puede estar vacío");
 
-  const group = await prisma.variantGroup.findUnique({
-    where: { id: payload.groupId },
+  const group = await prisma.variantGroup.findFirst({
+    where: { id: payload.groupId, tenantId },
   });
   if (!group) throw new Error("Grupo no encontrado");
-  assertTenantOwnership(group.tenantId, tenant.id);
 
   return prisma.variantGroup.update({
     where: { id: payload.groupId },
@@ -100,12 +99,11 @@ export async function listVariantGroupOptionsAction(payload: {
   groupId: string;
   includeArchived?: boolean;
 }) {
-  const tenant = await getTenantOrThrow();
-  const group = await prisma.variantGroup.findUnique({
-    where: { id: payload.groupId },
+  const tenantId = await getTenantIdOrThrow();
+  const group = await prisma.variantGroup.findFirst({
+    where: { id: payload.groupId, tenantId },
   });
   if (!group) throw new Error("Grupo no encontrado");
-  assertTenantOwnership(group.tenantId, tenant.id);
 
   const where: { groupId: string; isArchived?: boolean } = {
     groupId: payload.groupId,
@@ -127,12 +125,11 @@ export async function createVariantOptionAction(payload: {
   label: string;
   sortOrder?: number;
 }) {
-  const tenant = await getTenantOrThrow();
-  const group = await prisma.variantGroup.findUnique({
-    where: { id: payload.groupId },
+  const tenantId = await getTenantIdOrThrow();
+  const group = await prisma.variantGroup.findFirst({
+    where: { id: payload.groupId, tenantId },
   });
   if (!group) throw new Error("Grupo no encontrado");
-  assertTenantOwnership(group.tenantId, tenant.id);
 
   const valueNormalized = normalizeValue(payload.value);
   const label = payload.label.trim();
@@ -168,13 +165,12 @@ export async function updateVariantOptionLabelAction(payload: {
   label?: string;
   sortOrder?: number;
 }) {
-  const tenant = await getTenantOrThrow();
-  const option = await prisma.variantOption.findUnique({
-    where: { id: payload.optionId },
+  const tenantId = await getTenantIdOrThrow();
+  const option = await prisma.variantOption.findFirst({
+    where: { id: payload.optionId, group: { tenantId } },
     include: { group: true },
   });
   if (!option) throw new Error("Opción no encontrada");
-  assertTenantOwnership(option.group.tenantId, tenant.id);
 
   const data: { label?: string; sortOrder?: number } = {};
   if (payload.label !== undefined) data.label = payload.label.trim();
@@ -188,13 +184,12 @@ export async function updateVariantOptionLabelAction(payload: {
 
 /** 5.7 Archivar opción */
 export async function archiveVariantOptionAction(payload: { optionId: string }) {
-  const tenant = await getTenantOrThrow();
-  const option = await prisma.variantOption.findUnique({
-    where: { id: payload.optionId },
+  const tenantId = await getTenantIdOrThrow();
+  const option = await prisma.variantOption.findFirst({
+    where: { id: payload.optionId, group: { tenantId } },
     include: { group: true },
   });
   if (!option) throw new Error("Opción no encontrada");
-  assertTenantOwnership(option.group.tenantId, tenant.id);
 
   return prisma.variantOption.update({
     where: { id: payload.optionId },
@@ -209,19 +204,18 @@ export async function attachVariantGroupToItemByKeyAction(payload: {
   required?: boolean;
   sortOrder?: number;
 }) {
-  const tenant = await getTenantOrThrow();
+  const tenantId = await getTenantIdOrThrow();
   const group = await prisma.variantGroup.findUnique({
     where: {
-      tenantId_key: { tenantId: tenant.id, key: payload.groupKey },
+      tenantId_key: { tenantId: tenantId, key: payload.groupKey },
     },
   });
   if (!group) return null;
 
-  const item = await prisma.inventoryItem.findUnique({
-    where: { id: payload.itemId },
+  const item = await prisma.inventoryItem.findFirst({
+    where: { id: payload.itemId, tenantId },
   });
   if (!item) return null;
-  assertTenantOwnership(item.tenantId, tenant.id);
 
   return prisma.inventoryItemVariantGroup.upsert({
     where: {
@@ -245,15 +239,13 @@ export async function attachVariantGroupToItemAction(payload: {
   required?: boolean;
   sortOrder?: number;
 }) {
-  const tenant = await getTenantOrThrow();
+  const tenantId = await getTenantIdOrThrow();
   const [item, group] = await Promise.all([
-    prisma.inventoryItem.findUnique({ where: { id: payload.itemId } }),
-    prisma.variantGroup.findUnique({ where: { id: payload.groupId } }),
+    prisma.inventoryItem.findFirst({ where: { id: payload.itemId, tenantId } }),
+    prisma.variantGroup.findFirst({ where: { id: payload.groupId, tenantId } }),
   ]);
   if (!item) throw new Error("Ítem no encontrado");
   if (!group) throw new Error("Grupo no encontrado");
-  assertTenantOwnership(item.tenantId, tenant.id);
-  assertTenantOwnership(group.tenantId, tenant.id);
 
   const link = await prisma.inventoryItemVariantGroup.upsert({
     where: {
@@ -282,12 +274,11 @@ export async function detachVariantGroupFromItemAction(payload: {
   itemId: string;
   groupId: string;
 }) {
-  const tenant = await getTenantOrThrow();
-  const item = await prisma.inventoryItem.findUnique({
-    where: { id: payload.itemId },
+  const tenantId = await getTenantIdOrThrow();
+  const item = await prisma.inventoryItem.findFirst({
+    where: { id: payload.itemId, tenantId },
   });
   if (!item) throw new Error("Ítem no encontrado");
-  assertTenantOwnership(item.tenantId, tenant.id);
 
   await prisma.inventoryItemVariantGroup.deleteMany({
     where: {
@@ -305,12 +296,11 @@ export async function setItemVariantGroupActiveAction(payload: {
   groupId: string;
   isActive: boolean;
 }) {
-  const tenant = await getTenantOrThrow();
-  const item = await prisma.inventoryItem.findUnique({
-    where: { id: payload.itemId },
+  const tenantId = await getTenantIdOrThrow();
+  const item = await prisma.inventoryItem.findFirst({
+    where: { id: payload.itemId, tenantId },
   });
   if (!item) throw new Error("Ítem no encontrado");
-  assertTenantOwnership(item.tenantId, tenant.id);
 
   const link = await prisma.inventoryItemVariantGroup.findUnique({
     where: {
@@ -327,9 +317,9 @@ export async function setItemVariantGroupActiveAction(payload: {
 
 /** Listar grupos asociados a un ítem */
 export async function listItemVariantGroupsAction(itemId: string) {
-  const tenant = await getTenantOrThrow();
-  const item = await prisma.inventoryItem.findUnique({
-    where: { id: itemId },
+  const tenantId = await getTenantIdOrThrow();
+  const item = await prisma.inventoryItem.findFirst({
+    where: { id: itemId, tenantId },
     include: {
       variantGroupLinks: {
         include: { group: true },
@@ -338,20 +328,18 @@ export async function listItemVariantGroupsAction(itemId: string) {
     },
   });
   if (!item) return [];
-  assertTenantOwnership(item.tenantId, tenant.id);
   return item.variantGroupLinks;
 }
 
 /** Obtener un grupo por ID (para validación) */
 export async function getVariantGroupAction(groupId: string) {
-  const tenant = await getTenantOrThrow();
-  const group = await prisma.variantGroup.findUnique({
-    where: { id: groupId },
+  const tenantId = await getTenantIdOrThrow();
+  const group = await prisma.variantGroup.findFirst({
+    where: { id: groupId, tenantId },
     include: {
       options: { where: { isArchived: false }, orderBy: [{ sortOrder: "asc" }] },
     },
   });
   if (!group) return null;
-  assertTenantOwnership(group.tenantId, tenant.id);
   return group;
 }

@@ -1,5 +1,5 @@
 // app/host/actividad/reservas/hoy/page.tsx
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { getAllTodayReservations } from "@/app/host/hoy/data";
 import Page from "@/lib/ui/Page";
 import ListContainer from "@/lib/ui/ListContainer";
@@ -11,26 +11,16 @@ export default async function ReservasHoyPage({
 }: {
   searchParams?: Promise<{ propertyId?: string; from?: string; returnTo?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-
-  if (!tenant) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-semibold">Configura tu cuenta</h1>
-        <p className="text-base text-neutral-600">
-          No se encontró ningún tenant. Crea uno en Prisma Studio para continuar.
-        </p>
-      </div>
-    );
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const params = searchParams ? await searchParams : {};
   const propertyId = params?.propertyId;
-  // Mantener compatibilidad: leer returnTo si existe, si no leer from (legacy)
   const returnToInput = params?.returnTo || params?.from;
   const returnTo = safeReturnTo(returnToInput, "/host/hoy");
 
-  const items = await getAllTodayReservations(tenant.id, propertyId);
+  const items = await getAllTodayReservations(tenantId, propertyId);
 
   // Construir URL de retorno para esta vista (para que los detalles vuelvan aquí)
   // Round-trip seguro: conservar returnTo y from si existen

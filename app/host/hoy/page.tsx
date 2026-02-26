@@ -1,5 +1,5 @@
 // app/host/hoy/page.tsx
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import prisma from "@/lib/prisma";
 import Page from "@/lib/ui/Page";
 import HoyClient from "./HoyClient";
@@ -10,18 +10,9 @@ export default async function HoyPage({
 }: {
   searchParams?: Promise<{ propertyId?: string; tab?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-
-  if (!tenant) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-semibold">Configura tu cuenta</h1>
-        <p className="text-base text-neutral-600">
-          No se encontró ningún tenant. Crea uno en Prisma Studio para continuar.
-        </p>
-      </div>
-    );
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const params = searchParams ? await searchParams : {};
   const selectedPropertyId = params?.propertyId || "";
@@ -31,7 +22,7 @@ export default async function HoyPage({
   const [properties, hoyData, proximasData] = await Promise.all([
     prisma.property.findMany({
       where: {
-        tenantId: tenant.id,
+        tenantId,
         isActive: true,
       },
       select: {
@@ -41,8 +32,8 @@ export default async function HoyPage({
       },
       orderBy: { shortName: "asc" },
     }),
-    getHoyData(tenant.id, selectedPropertyId || undefined),
-    getProximasData(tenant.id, selectedPropertyId || undefined),
+    getHoyData(tenantId, selectedPropertyId || undefined),
+    getProximasData(tenantId, selectedPropertyId || undefined),
   ]);
 
   return (

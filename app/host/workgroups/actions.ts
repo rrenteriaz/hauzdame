@@ -2,8 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -16,8 +15,9 @@ function redirectBack(formData: FormData) {
 }
 
 export async function createWorkGroup(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     const returnTo = formData.get("returnTo")?.toString();
     if (returnTo) {
       redirectBack(formData);
@@ -39,7 +39,7 @@ export async function createWorkGroup(formData: FormData) {
   // Validar unicidad de nombre solo para WGs ACTIVE (ver contrato 7.8)
   const existingActive = await prisma.hostWorkGroup.findFirst({
     where: {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       name,
       status: "ACTIVE",
     },
@@ -53,7 +53,7 @@ export async function createWorkGroup(formData: FormData) {
   try {
     const workGroup = await prisma.hostWorkGroup.create({
       data: {
-        tenantId: tenant.id,
+        tenantId: tenantId,
         name,
         status: "ACTIVE", // Default según contrato
       },
@@ -84,8 +84,9 @@ export async function createWorkGroup(formData: FormData) {
 }
 
 export async function updateWorkGroup(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -103,7 +104,7 @@ export async function updateWorkGroup(formData: FormData) {
   const currentWG = await prisma.hostWorkGroup.findFirst({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     select: { status: true },
   });
@@ -111,7 +112,7 @@ export async function updateWorkGroup(formData: FormData) {
   if (currentWG?.status === "ACTIVE") {
     const existingActive = await prisma.hostWorkGroup.findFirst({
       where: {
-        tenantId: tenant.id,
+        tenantId: tenantId,
         name,
         status: "ACTIVE",
         id: { not: id }, // Excluir el WG actual
@@ -128,7 +129,7 @@ export async function updateWorkGroup(formData: FormData) {
     await prisma.hostWorkGroup.updateMany({
       where: {
         id,
-        tenantId: tenant.id,
+        tenantId: tenantId,
       },
       data: {
         name,
@@ -149,8 +150,9 @@ export async function updateWorkGroup(formData: FormData) {
 }
 
 export async function updateWorkGroupProperties(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -169,7 +171,7 @@ export async function updateWorkGroupProperties(formData: FormData) {
   }
 
   const workGroup = await prisma.hostWorkGroup.findFirst({
-    where: { id: workGroupId, tenantId: tenant.id },
+    where: { id: workGroupId, tenantId: tenantId },
     select: { id: true },
   });
 
@@ -180,7 +182,7 @@ export async function updateWorkGroupProperties(formData: FormData) {
   // Validar que las propiedades existen y pertenecen al tenant del host
   const validProperties = await prisma.property.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       isActive: true,
       id: { in: propertyIds },
     },
@@ -194,7 +196,7 @@ export async function updateWorkGroupProperties(formData: FormData) {
   // HostWorkGroupProperty: replace semantics to ensure consistency.
   // Delete ALL existing rows for workGroupId (regardless of tenantId) to clean stale rows.
   // Then insert new ones with correct hostTenantId.
-  const hostTenantId = tenant.id; // Explicitly use host tenant, NOT servicesTenantId
+  const hostTenantId = tenantId; // Explicitly use host tenant, NOT servicesTenantId
 
   await prisma.$transaction(async (tx) => {
     // Eliminar TODAS las filas existentes para este workGroup (sin filtrar por tenantId)
@@ -233,8 +235,9 @@ export async function updateWorkGroupProperties(formData: FormData) {
 }
 
 export async function deleteWorkGroup(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -247,13 +250,13 @@ export async function deleteWorkGroup(formData: FormData) {
     prisma.hostWorkGroupProperty.count({
       where: {
         workGroupId: id,
-        tenantId: tenant.id,
+        tenantId: tenantId,
       },
     }),
     prisma.workGroupExecutor.count({
       where: {
         workGroupId: id,
-        hostTenantId: tenant.id,
+        hostTenantId: tenantId,
         status: "ACTIVE",
       },
     }),
@@ -268,7 +271,7 @@ export async function deleteWorkGroup(formData: FormData) {
   await prisma.hostWorkGroup.deleteMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
   });
 
@@ -280,14 +283,10 @@ export async function toggleWorkGroupStatus(
   workGroupId: string,
   status: "ACTIVE" | "INACTIVE"
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     throw new Error("Tenant no encontrado.");
-  }
-
-  const user = await getCurrentUser();
-  if (!user) {
-    throw new Error("Usuario no autenticado.");
   }
 
   // Validar permisos: solo OWNER, MANAGER o AUXILIAR pueden editar propiedades
@@ -300,7 +299,7 @@ export async function toggleWorkGroupStatus(
   const workGroup = await prisma.hostWorkGroup.findFirst({
     where: {
       id: workGroupId,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     select: {
       id: true,
@@ -322,7 +321,7 @@ export async function toggleWorkGroupStatus(
   if (status === "ACTIVE") {
     const existingActive = await prisma.hostWorkGroup.findFirst({
       where: {
-        tenantId: tenant.id,
+        tenantId: tenantId,
         name: workGroup.name,
         status: "ACTIVE",
         id: { not: workGroupId },
@@ -339,7 +338,7 @@ export async function toggleWorkGroupStatus(
   await prisma.hostWorkGroup.updateMany({
     where: {
       id: workGroupId,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     data: {
       status,

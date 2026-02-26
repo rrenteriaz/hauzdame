@@ -1,6 +1,6 @@
 // app/host/reservations/page.tsx
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReservationFilters from "./ReservationFilters";
@@ -85,14 +85,15 @@ export default async function ReservationsPage({
 }: {
   searchParams?: Promise<{ propertyId?: string; status?: string; dateBucket?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) notFound();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) notFound();
 
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
 
   // Obtener propiedades para el filtro
   const properties = await prisma.property.findMany({
-    where: { tenantId: tenant.id },
+    where: { tenantId: tenantId },
     select: { id: true, name: true, shortName: true },
     orderBy: { name: "asc" },
   });
@@ -104,7 +105,7 @@ export default async function ReservationsPage({
   // Construir filtros
   // Por defecto, mostrar solo reservas CONFIRMED si no se especifica otro status
   const where: any = {
-    tenantId: tenant.id,
+    tenantId: tenantId,
   };
 
   if (resolvedSearchParams?.propertyId) {

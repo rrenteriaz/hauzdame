@@ -1,6 +1,6 @@
 // app/host/menu/page.tsx
 import Link from "next/link";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { getOrCreateDefaultOwner } from "@/lib/users";
 import PageContainer from "@/lib/ui/PageContainer";
 import PageHeader from "@/lib/ui/PageHeader";
@@ -17,14 +17,14 @@ export default async function MenuPage() {
   // Construir hrefs con returnTo para que las páginas destino puedan volver
   const returnTo = "/host/menu";
   
-  // Obtener información del usuario actual (placeholder por ahora)
-  const tenant = await getDefaultTenant();
+  // Obtener información del usuario actual
+  const user = await requireHostUser();
   let userName = "Usuario";
   let userEmail = "usuario@ejemplo.com";
   
-  if (tenant) {
+  if (user.tenantId) {
     try {
-      const owner = await getOrCreateDefaultOwner(tenant.id);
+      const owner = await getOrCreateDefaultOwner(user.tenantId);
       userName = owner.name || owner.email.split("@")[0] || "Usuario";
       userEmail = owner.email;
     } catch (error) {

@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import {
   InventoryChangeStatus,
@@ -15,27 +15,26 @@ import {
  * Obtiene el resumen de pendientes y resueltos del inbox de inventario.
  */
 export async function getInventoryInboxSummary() {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return { totalPendings: 0, urgentReports: 0, totalResolved: 0 };
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return { totalPendings: 0, urgentReports: 0, totalResolved: 0 };
 
   const [pendingChanges, pendingReports, resolvedChanges, resolvedReports] = await Promise.all([
     prisma.inventoryReviewItemChange.count({
       where: {
-        tenantId: tenant.id,
+        tenantId,
         status: InventoryChangeStatus.PENDING,
       },
     }),
     prisma.inventoryReport.count({
       where: {
-        tenantId: tenant.id,
+        tenantId,
         status: InventoryReportStatus.PENDING,
       },
     }),
     prisma.inventoryReviewItemChange.count({
       where: {
-        tenantId: tenant.id,
+        tenantId,
         status: {
           in: [InventoryChangeStatus.ACCEPTED, InventoryChangeStatus.REJECTED, InventoryChangeStatus.APPLIED],
         },
@@ -43,7 +42,7 @@ export async function getInventoryInboxSummary() {
     }),
     prisma.inventoryReport.count({
       where: {
-        tenantId: tenant.id,
+        tenantId,
         status: InventoryReportStatus.RESOLVED,
       },
     }),
@@ -51,7 +50,7 @@ export async function getInventoryInboxSummary() {
 
   const urgentReports = await prisma.inventoryReport.count({
     where: {
-      tenantId: tenant.id,
+      tenantId,
       status: InventoryReportStatus.PENDING,
       severity: InventoryReportSeverity.URGENT,
     },
@@ -76,10 +75,9 @@ interface InboxFilters {
  * Obtiene los items del inbox (cambios y reportes) con filtros.
  */
 export async function getInventoryInboxItems(filters: InboxFilters = {}) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return [];
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return [];
 
   const { propertyId, type, severity, status = "PENDING", dateRange = "all" } = filters;
 
@@ -98,7 +96,7 @@ export async function getInventoryInboxItems(filters: InboxFilters = {}) {
     type !== "REPORT"
       ? await prisma.inventoryReviewItemChange.findMany({
           where: {
-            tenantId: tenant.id,
+            tenantId,
             status:
               status === "PENDING"
                 ? InventoryChangeStatus.PENDING
@@ -162,7 +160,7 @@ export async function getInventoryInboxItems(filters: InboxFilters = {}) {
     type !== "CHANGE"
       ? await prisma.inventoryReport.findMany({
           where: {
-            tenantId: tenant.id,
+            tenantId,
             status:
               status === "PENDING"
                 ? InventoryReportStatus.PENDING
@@ -289,13 +287,12 @@ export async function getInventoryInboxItems(filters: InboxFilters = {}) {
  * Aplica un cambio de cantidad (acepta y actualiza el inventario).
  */
 export async function applyInventoryChange(changeId: string) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
-  const change = await prisma.inventoryReviewItemChange.findUnique({
-    where: { id: changeId },
+  const change = await prisma.inventoryReviewItemChange.findFirst({
+    where: { id: changeId, tenantId },
     include: {
       review: {
         include: {
@@ -325,8 +322,8 @@ export async function applyInventoryChange(changeId: string) {
 
   // Buscar la línea de inventario correspondiente
   const inventoryLine = await prisma.inventoryLine.findFirst({
-    where: {
-      tenantId: tenant.id,
+          where: {
+            tenantId,
       propertyId,
       itemId: change.itemId,
       isActive: true,
@@ -360,21 +357,16 @@ export async function applyInventoryChange(changeId: string) {
  * Rechaza un cambio de cantidad.
  */
 export async function rejectInventoryChange(changeId: string) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
-  const change = await prisma.inventoryReviewItemChange.findUnique({
-    where: { id: changeId },
+  const change = await prisma.inventoryReviewItemChange.findFirst({
+    where: { id: changeId, tenantId },
   });
 
   if (!change) {
     throw new Error("Cambio no encontrado");
-  }
-
-  if (change.tenantId !== tenant.id) {
-    throw new Error("No tienes permiso para este cambio");
   }
 
   if (change.status !== InventoryChangeStatus.PENDING) {
@@ -402,22 +394,12 @@ export async function resolveInventoryReport(
   reportId: string,
   resolution: InventoryReportResolution
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
-  // Obtener usuario actual (por ahora usar el primero disponible, TODO: obtener de sesión)
-  const currentUser = await prisma.user.findFirst({
-    where: { tenantId: tenant.id },
-  });
-
-  if (!currentUser) {
-    throw new Error("No se encontró un usuario para resolver el reporte");
-  }
-
-  const report = await prisma.inventoryReport.findUnique({
-    where: { id: reportId },
+  const report = await prisma.inventoryReport.findFirst({
+    where: { id: reportId, tenantId },
     include: {
       item: true,
     },
@@ -425,10 +407,6 @@ export async function resolveInventoryReport(
 
   if (!report) {
     throw new Error("Reporte no encontrado");
-  }
-
-  if (report.tenantId !== tenant.id) {
-    throw new Error("No tienes permiso para este reporte");
   }
 
   if (report.status !== InventoryReportStatus.PENDING) {
@@ -441,7 +419,7 @@ export async function resolveInventoryReport(
     data: {
       status: InventoryReportStatus.RESOLVED,
       managerResolution: resolution,
-      resolvedByUserId: currentUser.id,
+      resolvedByUserId: user.id,
       resolvedAt: new Date(),
       updatedAt: new Date(),
     },
@@ -455,8 +433,8 @@ export async function resolveInventoryReport(
   ) {
     // Desactivar todas las líneas activas del item
     await prisma.inventoryLine.updateMany({
-      where: {
-        tenantId: tenant.id,
+          where: {
+            tenantId,
         itemId: report.itemId,
         isActive: true,
       },
@@ -467,16 +445,16 @@ export async function resolveInventoryReport(
 
     // Archivar el item si no tiene líneas activas
     const activeLinesCount = await prisma.inventoryLine.count({
-      where: {
-        tenantId: tenant.id,
+          where: {
+            tenantId,
         itemId: report.itemId,
         isActive: true,
       },
     });
 
     if (activeLinesCount === 0) {
-      await prisma.inventoryItem.update({
-        where: { id: report.itemId },
+      await prisma.inventoryItem.updateMany({
+        where: { id: report.itemId, tenantId },
         data: { archivedAt: new Date() },
       });
     }

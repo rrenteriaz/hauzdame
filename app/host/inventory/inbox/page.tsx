@@ -1,6 +1,6 @@
 // app/host/inventory/inbox/page.tsx
 import { notFound } from "next/navigation";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import {
   getInventoryInboxItems,
   getInventoryInboxSummary,
@@ -20,8 +20,9 @@ export default async function InventoryInboxPage({
     dateRange?: string;
   }>;
 }) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) notFound();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) notFound();
 
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const tab = resolvedSearchParams.tab || "pending";
@@ -48,7 +49,7 @@ export default async function InventoryInboxPage({
       dateRange: dateRange || "all",
     }),
     prisma.property.findMany({
-      where: { tenantId: tenant.id },
+      where: { tenantId },
       select: {
         id: true,
         name: true,

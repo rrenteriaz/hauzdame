@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { getCleaningUi, getPropertyColor } from "@/lib/cleaning-ui";
 import { createChecklistSnapshotForCleaning } from "@/lib/checklist-snapshot";
 import { cleaningDetailInclude, type CleaningDetailPayload } from "@/lib/cleanings/cleaningIncludes";
@@ -74,8 +74,9 @@ export default async function CleaningDetailPage({
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ returnTo?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) notFound();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) notFound();
 
   // Manejar params y searchParams como Promise
   const resolvedParams = await params;
@@ -83,7 +84,7 @@ export default async function CleaningDetailPage({
 
   // Primero obtener la limpieza para obtener el propertyId
   const cleaningWithPropertyId = await (prisma as any).cleaning.findFirst({
-    where: { id: resolvedParams.id, tenantId: tenant.id },
+    where: { id: resolvedParams.id, tenantId },
     select: { propertyId: true },
   });
 
@@ -91,14 +92,14 @@ export default async function CleaningDetailPage({
 
   const [cleaning, propertyTeams, viewsCount, inventoryReview, assignees] = await Promise.all([
     prisma.cleaning.findFirst({
-      where: { id: resolvedParams.id, tenantId: tenant.id },
+      where: { id: resolvedParams.id, tenantId },
       include: cleaningDetailInclude,
     }),
     // Obtener equipos asignados a la propiedad
     (prisma as any).propertyTeam.findMany({
       where: {
         propertyId: cleaningWithPropertyId.propertyId,
-        tenantId: tenant.id,
+        tenantId,
         team: { status: "ACTIVE" },
       },
       select: {
@@ -114,7 +115,7 @@ export default async function CleaningDetailPage({
     (prisma as any).cleaningView.count({
       where: {
         cleaningId: resolvedParams.id,
-        tenantId: tenant.id,
+        tenantId,
       },
     }).catch(() => 0), // Si falla, retornar 0
     getInventoryReviewStatus(resolvedParams.id), // Obtener estado del inventario
@@ -124,7 +125,7 @@ export default async function CleaningDetailPage({
         return await (prisma as any).cleaningAssignee.findMany({
           where: {
             cleaningId: resolvedParams.id,
-            tenantId: tenant.id,
+            tenantId,
             status: "ASSIGNED",
           },
           include: {
@@ -197,7 +198,7 @@ export default async function CleaningDetailPage({
   // Usar función que siempre consulta ambas fuentes (WorkGroups + PropertyTeam legacy)
   const { resolveAvailableTeamsForProperty } = await import("@/lib/workgroups/resolveAvailableTeamsForProperty");
   const availableTeamsResult = await resolveAvailableTeamsForProperty(
-    tenant.id,
+    tenantId,
     cleaningWithPropertyId.propertyId
   );
   const teamIds = availableTeamsResult.teamIds;
@@ -235,7 +236,7 @@ export default async function CleaningDetailPage({
     // Obtener TeamMember legacy
     const teamMembersLegacy = await (prisma as any).teamMember.findMany({
       where: {
-        tenantId: tenant.id,
+        tenantId,
         isActive: true,
         teamId: { in: teamIds },
       },
@@ -340,18 +341,18 @@ export default async function CleaningDetailPage({
     const propertyHasChecklist = await (prisma as any).propertyChecklistItem.count({
       where: {
         propertyId: cleaning.propertyId,
-        tenantId: tenant.id,
+        tenantId,
         isActive: true,
       },
     });
 
     if (propertyHasChecklist > 0) {
-      await createChecklistSnapshotForCleaning(tenant.id, cleaning.propertyId, cleaning.id);
+      await createChecklistSnapshotForCleaning(tenantId, cleaning.propertyId, cleaning.id);
       
       const freshItems = await (prisma as any).cleaningChecklistItem.findMany({
         where: {
           cleaningId: cleaning.id,
-          tenantId: tenant.id,
+          tenantId,
         },
         orderBy: [
           { area: "asc" },
@@ -450,7 +451,7 @@ export default async function CleaningDetailPage({
   // Obtener razones de atención (mantener compatibilidad con CleaningWarningCard existente)
   // Pero filtrar según attentionResult.needsAttention
   // Pasar hasAvailableTeams (UNION de WorkGroups + PropertyTeam) para alertas precisas
-  const allAttentionReasons = await getCleaningAttentionReasons(tenant.id, {
+  const allAttentionReasons = await getCleaningAttentionReasons(tenantId, {
     id: cleaning.id,
     status: cleaning.status,
     scheduledDate: cleaning.scheduledDate,

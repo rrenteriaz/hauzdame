@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { getCurrentUser } from "@/lib/auth/session";
 import Page from "@/lib/ui/Page";
 import WorkGroupPropertiesCard from "./WorkGroupPropertiesCard";
@@ -20,8 +20,9 @@ export default async function WorkGroupDetailPage({
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ returnTo?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) notFound();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) notFound();
 
   const resolvedParams = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -30,7 +31,7 @@ export default async function WorkGroupDetailPage({
   const workGroup = await prisma.hostWorkGroup.findFirst({
     where: {
       id: resolvedParams.id,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     select: {
       id: true,
@@ -46,7 +47,7 @@ export default async function WorkGroupDetailPage({
   // Obtener propiedades asignadas a este grupo de trabajo
   const workGroupProperties = await prisma.hostWorkGroupProperty.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       workGroupId: workGroup.id,
     },
     select: {
@@ -60,7 +61,7 @@ export default async function WorkGroupDetailPage({
     ? await prisma.property.findMany({
         where: {
           id: { in: workGroupPropertyIds },
-          tenantId: tenant.id,
+          tenantId: tenantId,
         },
         select: {
           id: true,
@@ -75,7 +76,7 @@ export default async function WorkGroupDetailPage({
 
   const allActiveProperties = await prisma.property.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       isActive: true,
     },
     select: {
@@ -89,7 +90,7 @@ export default async function WorkGroupDetailPage({
   });
 
   // Obtener ejecutores (WorkGroupExecutor) - para UI, sin filtrar por status
-  const executors = await getExecutorsForWorkGroupsForUi(tenant.id, [workGroup.id]);
+  const executors = await getExecutorsForWorkGroupsForUi(tenantId, [workGroup.id]);
   
   // Obtener información de los teams ejecutores (solo lectura)
   const executorTeamIds = executors.map((e) => e.teamId);
@@ -195,7 +196,7 @@ export default async function WorkGroupDetailPage({
     if ((prisma as any).hostWorkGroupInvite) {
       invites = await (prisma as any).hostWorkGroupInvite.findMany({
         where: {
-          tenantId: tenant.id,
+          tenantId: tenantId,
           workGroupId: workGroup.id,
         },
         include: {

@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { CleaningStatus } from "@prisma/client";
@@ -34,9 +34,9 @@ function redirectBack(formData: FormData) {
 
 export async function startCleaning(formData: FormData) {
   try {
-    const tenant = await getDefaultTenant();
-    if (!tenant) {
-      console.error("[startCleaning] No tenant found");
+    const user = await requireHostUser();
+    const tenantId = user.tenantId;
+    if (!tenantId) {
       redirectBack(formData);
       return;
     }
@@ -48,12 +48,10 @@ export async function startCleaning(formData: FormData) {
       return;
     }
 
-    console.log("[startCleaning] Attempting to start cleaning:", { id, tenantId: tenant.id });
-
     const result = await prisma.cleaning.updateMany({
       where: {
         id,
-        tenantId: tenant.id,
+        tenantId,
         status: CleaningStatus.PENDING, // Solo permitir iniciar si está pendiente
       },
       data: {
@@ -69,8 +67,8 @@ export async function startCleaning(formData: FormData) {
     } else {
       // Crear o asegurar InventoryReview en DRAFT al iniciar la limpieza
       try {
-        const existingReview = await prisma.inventoryReview.findUnique({
-          where: { cleaningId: id },
+        const existingReview = await prisma.inventoryReview.findFirst({
+          where: { cleaningId: id, tenantId },
           select: { id: true, status: true },
         });
 
@@ -104,8 +102,9 @@ export async function startCleaning(formData: FormData) {
 }
 
 export async function completeCleaning(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -118,9 +117,10 @@ export async function completeCleaning(formData: FormData) {
 
   // GATING: Verificar que existe una revisión de inventario SUBMITTED antes de permitir concluir
   try {
-    const inventoryReview = await prisma.inventoryReview.findUnique({
+    const inventoryReview = await prisma.inventoryReview.findFirst({
       where: {
         cleaningId: id,
+        tenantId,
       },
       select: {
         id: true,
@@ -154,7 +154,7 @@ export async function completeCleaning(formData: FormData) {
   await prisma.cleaning.updateMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
     },
     data: {
       status: "COMPLETED",
@@ -167,8 +167,9 @@ export async function completeCleaning(formData: FormData) {
 }
 
 export async function cancelCleaning(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -182,7 +183,7 @@ export async function cancelCleaning(formData: FormData) {
   await prisma.cleaning.updateMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
     },
     data: {
       status: "CANCELLED",
@@ -194,8 +195,9 @@ export async function cancelCleaning(formData: FormData) {
 }
 
 export async function reopenCleaning(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -209,7 +211,7 @@ export async function reopenCleaning(formData: FormData) {
   await prisma.cleaning.updateMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
     },
     data: {
       status: "PENDING",
@@ -223,8 +225,9 @@ export async function reopenCleaning(formData: FormData) {
 }
 
 export async function deleteCleaning(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -239,7 +242,7 @@ export async function deleteCleaning(formData: FormData) {
   await prisma.cleaning.deleteMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId,
       status: CleaningStatus.CANCELLED,
     },
   });
@@ -256,8 +259,9 @@ export async function deleteCleaning(formData: FormData) {
 }
 
 export async function addAssigneeToCleaning(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -275,7 +279,7 @@ export async function addAssigneeToCleaning(formData: FormData) {
     const cleaning = await (prisma as any).cleaning.findFirst({
       where: {
         id: cleaningId,
-        tenantId: tenant.id,
+        tenantId,
       },
       select: {
         id: true,
@@ -295,7 +299,7 @@ export async function addAssigneeToCleaning(formData: FormData) {
         where: {
           id: memberId,
           teamId: cleaning.teamId,
-          tenantId: tenant.id,
+          tenantId,
           isActive: true,
         },
       });
@@ -351,7 +355,7 @@ export async function addAssigneeToCleaning(formData: FormData) {
         // Crear si no existe
         await tx.cleaningAssignee.create({
           data: {
-            tenantId: tenant.id,
+            tenantId,
             cleaningId: cleaningId,
             memberId: memberId,
             status: "ASSIGNED",
@@ -388,8 +392,9 @@ export async function addAssigneeToCleaning(formData: FormData) {
 }
 
 export async function assignTeamMemberToCleaning(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -409,7 +414,7 @@ export async function assignTeamMemberToCleaning(formData: FormData) {
   const cleaning = await (prisma as any).cleaning.findFirst({
     where: {
       id: cleaningId,
-      tenantId: tenant.id,
+      tenantId,
     },
     select: {
       id: true,
@@ -431,13 +436,14 @@ export async function assignTeamMemberToCleaning(formData: FormData) {
   let finalAssigneeId: string | null = null;
   
   if (assigneeType === "MEMBERSHIP" && assignedMembershipId) {
-    // Validar que el TeamMembership existe y pertenece al team de la limpieza
+    // Validar que el TeamMembership existe, pertenece al tenant y al team de la limpieza
     const membership = await prisma.teamMembership.findFirst({
       where: {
         id: assignedMembershipId,
         status: "ACTIVE",
         role: "CLEANER",
         teamId: cleaning.teamId || undefined,
+        Team: { tenantId },
       },
       select: {
         id: true,
@@ -457,7 +463,7 @@ export async function assignTeamMemberToCleaning(formData: FormData) {
       where: {
         id: teamMemberId,
         isActive: true,
-        tenantId: tenant.id,
+        tenantId,
         teamId: cleaning.teamId || undefined,
       },
       select: {
@@ -494,7 +500,7 @@ export async function assignTeamMemberToCleaning(formData: FormData) {
       // Solo validar disponibilidad si es legacy (TeamMember)
       if (assigneeType === "TEAM_MEMBER" || (!assigneeType && teamMemberId)) {
         const eligibleMembers = await getEligibleMembersForCleaning(
-          tenant.id,
+          tenantId,
           cleaning.propertyId,
           scheduledAt
         );
@@ -537,7 +543,7 @@ export async function assignTeamMemberToCleaning(formData: FormData) {
     
     try {
       const eligibleMembers = await getEligibleMembersForCleaning(
-        tenant.id,
+        tenantId,
         cleaning.propertyId,
         scheduledAt
       );
@@ -588,7 +594,7 @@ export async function assignTeamMemberToCleaning(formData: FormData) {
     await tx.cleaning.updateMany({
       where: {
         id: cleaningId,
-        tenantId: tenant.id,
+        tenantId,
       },
       data: updateData,
     });
@@ -617,7 +623,7 @@ export async function assignTeamMemberToCleaning(formData: FormData) {
         // Crear si no existe
         await tx.cleaningAssignee.create({
           data: {
-            tenantId: tenant.id,
+            tenantId,
             cleaningId: cleaningId,
             memberId: finalAssigneeId,
             status: "ASSIGNED",
@@ -669,17 +675,18 @@ export async function createCleaning(formData: FormData) {
     return;
   }
 
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     revalidatePath("/host/cleanings");
     return;
   }
 
   const scheduledDate = new Date(scheduledAtStr);
 
-  // Verificar que la propiedad existe y obtener información para snapshot
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
+  // Verificar que la propiedad existe y pertenece al tenant
+  const property = await prisma.property.findFirst({
+    where: { id: propertyId, tenantId },
     select: {
       id: true,
       name: true,
@@ -689,7 +696,7 @@ export async function createCleaning(formData: FormData) {
   });
   
   if (!property) {
-    console.error("[createCleaning] Property not found for propertyId:", propertyId);
+    console.error("[createCleaning] Property not found or does not belong to tenant:", propertyId);
     revalidatePath("/host/cleanings");
     return;
   }
@@ -698,7 +705,7 @@ export async function createCleaning(formData: FormData) {
   const propertyTeam = await (prisma as any).propertyTeam.findFirst({
     where: {
       propertyId: property.id,
-      tenantId: tenant.id,
+      tenantId,
     },
     select: {
       teamId: true,
@@ -747,7 +754,7 @@ export async function createCleaning(formData: FormData) {
   // PASO 4: Crear la limpieza con snapshot de propiedad (requisito técnico)
   const cleaning = await (prisma as any).cleaning.create({
     data: {
-      tenantId: tenant.id,
+      tenantId,
       propertyId: property.id,
       teamId: teamId,
       scheduledDate,
@@ -771,8 +778,11 @@ export async function createCleaning(formData: FormData) {
   // Nota: La asignación principal está en cleaning.assignedMembershipId
   if (assignedMembershipId) {
     // Obtener el userId de la membership para crear CleaningAssignee si es necesario
-    const membership = await prisma.teamMembership.findUnique({
-      where: { id: assignedMembershipId },
+    const membership = await prisma.teamMembership.findFirst({
+      where: {
+        id: assignedMembershipId,
+        Team: { tenantId },
+      },
       select: { userId: true },
     });
     
@@ -781,7 +791,7 @@ export async function createCleaning(formData: FormData) {
       try {
         await (prisma as any).cleaningAssignee.create({
           data: {
-            tenantId: tenant.id,
+            tenantId,
             cleaningId: cleaning.id,
             userId: membership.userId, // Usar userId en lugar de memberId
             status: "ASSIGNED",
@@ -797,14 +807,15 @@ export async function createCleaning(formData: FormData) {
   }
 
   // Crear snapshot del checklist
-  await createChecklistSnapshotForCleaning(tenant.id, property.id, cleaning.id);
+  await createChecklistSnapshotForCleaning(tenantId, property.id, cleaning.id);
 
   revalidatePath("/host/cleanings");
 }
 
 export async function setPrimaryAssignee(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -822,7 +833,7 @@ export async function setPrimaryAssignee(formData: FormData) {
     const cleaning = await (prisma as any).cleaning.findFirst({
       where: {
         id: cleaningId,
-        tenantId: tenant.id,
+        tenantId,
       },
       select: {
         id: true,
@@ -842,7 +853,7 @@ export async function setPrimaryAssignee(formData: FormData) {
     const member = await (prisma as any).teamMember.findFirst({
       where: {
         id: memberId,
-        tenantId: tenant.id,
+        tenantId,
         isActive: true,
       },
       select: {
@@ -884,7 +895,7 @@ export async function setPrimaryAssignee(formData: FormData) {
         // Crear si no existe
         await tx.cleaningAssignee.create({
           data: {
-            tenantId: tenant.id,
+            tenantId,
             cleaningId: cleaningId,
             memberId: memberId,
             status: "ASSIGNED",
@@ -936,8 +947,9 @@ export async function setPrimaryAssignee(formData: FormData) {
 }
 
 export async function clearPrimaryAssignee(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -950,6 +962,17 @@ export async function clearPrimaryAssignee(formData: FormData) {
   }
 
   try {
+    // Verificar que la limpieza existe y pertenece al tenant antes de mutar
+    const cleaning = await (prisma as any).cleaning.findFirst({
+      where: { id: cleaningId, tenantId },
+      select: { id: true },
+    });
+    if (!cleaning) {
+      console.warn("[clearPrimaryAssignee] Cleaning not found or does not belong to tenant:", cleaningId);
+      redirectBack(formData);
+      return;
+    }
+
     // Transacción para quitar primary y marcar todos los assignees como DECLINED
     await (prisma as any).$transaction(async (tx: any) => {
       // Marcar todos los CleaningAssignee como DECLINED

@@ -76,3 +76,10 @@ lint-output.txt
 
 # Configuración de IDE (local)
 .vscode/
+
+# local outputs
+eslint-out.txt
+eslint-result.txt
+
+# qa tokens (local only)
+scripts/qa/qa-tokens.json

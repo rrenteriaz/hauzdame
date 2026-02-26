@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -21,8 +21,9 @@ export async function createTeam(formData: FormData) {
 }
 
 export async function updateTeam(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const host = await requireHostUser();
+  const tenantId = host.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -40,7 +41,7 @@ export async function updateTeam(formData: FormData) {
     await prisma.team.updateMany({
       where: {
         id,
-        tenantId: tenant.id,
+        tenantId: tenantId,
       },
       data: {
         name,
@@ -62,8 +63,9 @@ export async function updateTeam(formData: FormData) {
 }
 
 export async function updateTeamStatus(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const host = await requireHostUser();
+  const tenantId = host.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -87,7 +89,7 @@ export async function updateTeamStatus(formData: FormData) {
   await prisma.team.updateMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     data: {
       status,
@@ -102,8 +104,9 @@ export async function updateTeamStatus(formData: FormData) {
 }
 
 export async function updateTeamProperties(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const host = await requireHostUser();
+  const tenantId = host.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -133,7 +136,7 @@ export async function updateTeamProperties(formData: FormData) {
   }
 
   const team = await prisma.team.findFirst({
-    where: { id: teamId, tenantId: tenant.id },
+    where: { id: teamId, tenantId: tenantId },
     select: { id: true, status: true },
   });
 
@@ -147,7 +150,7 @@ export async function updateTeamProperties(formData: FormData) {
 
   const validProperties = await prisma.property.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       isActive: true,
       id: { in: propertyIds },
     },
@@ -157,7 +160,7 @@ export async function updateTeamProperties(formData: FormData) {
   const finalPropertyIds = propertyIds.filter((id) => validPropertyIds.has(id));
 
   const existing = await (prisma as any).propertyTeam.findMany({
-    where: { tenantId: tenant.id, teamId },
+    where: { tenantId: tenantId, teamId },
     select: { propertyId: true },
   });
   const existingIds = new Set(existing.map((e: any) => e.propertyId));
@@ -171,7 +174,7 @@ export async function updateTeamProperties(formData: FormData) {
     if (toDelete.length > 0) {
       await (tx as any).propertyTeam.deleteMany({
         where: {
-          tenantId: tenant.id,
+          tenantId: tenantId,
           teamId,
           propertyId: { in: toDelete },
         },
@@ -181,7 +184,7 @@ export async function updateTeamProperties(formData: FormData) {
     if (toCreate.length > 0) {
       await (tx as any).propertyTeam.createMany({
         data: toCreate.map((propertyId) => ({
-          tenantId: tenant.id,
+          tenantId: tenantId,
           teamId,
           propertyId,
         })),
@@ -194,8 +197,9 @@ export async function updateTeamProperties(formData: FormData) {
 }
 
 export async function deleteTeam(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const host = await requireHostUser();
+  const tenantId = host.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -207,7 +211,7 @@ export async function deleteTeam(formData: FormData) {
   const membersWithCleanings = await (prisma as any).teamMember.findMany({
     where: {
       teamId: id,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     include: {
       cleanings: {
@@ -228,7 +232,7 @@ export async function deleteTeam(formData: FormData) {
   await (prisma as any).team.deleteMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
   });
 
@@ -269,8 +273,9 @@ async function saveMemberSchedules(
 }
 
 export async function createTeamMember(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const host = await requireHostUser();
+  const tenantId = host.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -287,7 +292,7 @@ export async function createTeamMember(formData: FormData) {
   // Crear el miembro primero
   const member = await (prisma as any).teamMember.create({
     data: {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       teamId,
       name,
       phone: phone ?? undefined,
@@ -334,7 +339,7 @@ export async function createTeamMember(formData: FormData) {
   }
 
   // Guardar schedules (siempre se guardan)
-  await saveMemberSchedules(tenant.id, member.id, schedules);
+  await saveMemberSchedules(tenantId, member.id, schedules);
 
   const returnTo = formData.get("returnTo")?.toString();
   revalidatePath("/host/teams");
@@ -346,8 +351,9 @@ export async function createTeamMember(formData: FormData) {
 }
 
 export async function updateTeamMember(formData: FormData, skipRedirect: boolean = false) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const host = await requireHostUser();
+  const tenantId = host.tenantId;
+  if (!tenantId) {
     if (!skipRedirect) redirectBack(formData);
     return;
   }
@@ -399,7 +405,7 @@ export async function updateTeamMember(formData: FormData, skipRedirect: boolean
   await (prisma as any).teamMember.updateMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     data: {
       name,
@@ -408,7 +414,7 @@ export async function updateTeamMember(formData: FormData, skipRedirect: boolean
   });
 
   // Guardar schedules
-  await saveMemberSchedules(tenant.id, id, schedules);
+  await saveMemberSchedules(tenantId, id, schedules);
 
   const returnTo = formData.get("returnTo")?.toString();
   revalidatePath("/host/teams");
@@ -427,8 +433,9 @@ export async function updateTeamMember(formData: FormData, skipRedirect: boolean
 }
 
 export async function toggleTeamMemberStatus(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const host = await requireHostUser();
+  const tenantId = host.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -441,7 +448,7 @@ export async function toggleTeamMemberStatus(formData: FormData) {
   await prisma.teamMember.updateMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     data: {
       isActive,
@@ -458,8 +465,9 @@ export async function toggleTeamMemberStatus(formData: FormData) {
 }
 
 export async function deleteTeamMember(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const host = await requireHostUser();
+  const tenantId = host.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -471,7 +479,7 @@ export async function deleteTeamMember(formData: FormData) {
   const cleaningsCount = await (prisma as any).cleaning.count({
     where: {
       assignedTeamMemberId: id,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
   });
 
@@ -485,7 +493,7 @@ export async function deleteTeamMember(formData: FormData) {
   await (prisma as any).teamMember.deleteMany({
     where: {
       id,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
   });
 

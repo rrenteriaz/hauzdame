@@ -1,7 +1,7 @@
 // app/host/properties/inactive/page.tsx
 import Link from "next/link";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import Page from "@/lib/ui/Page";
 import ListContainer from "@/lib/ui/ListContainer";
 import ListRow from "@/lib/ui/ListRow";
@@ -9,22 +9,13 @@ import ListThumb from "@/lib/ui/ListThumb";
 import { getCoverThumbUrlsBatch } from "@/lib/media/getCoverThumbUrl";
 
 export default async function InactivePropertiesPage() {
-  const tenant = await getDefaultTenant();
-
-  if (!tenant) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-semibold">Configura tu cuenta</h1>
-        <p className="text-base text-neutral-600">
-          No se encontró ningún tenant. Crea uno en Prisma Studio para continuar.
-        </p>
-      </div>
-    );
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const properties = await prisma.property.findMany({
     where: { 
-      tenantId: tenant.id,
+      tenantId,
       ...({ isActive: false } as any), // Solo propiedades inactivas - Temporal hasta que TypeScript reconozca el campo
     },
     select: {

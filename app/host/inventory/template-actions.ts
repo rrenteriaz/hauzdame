@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { normalizeName, normalizeVariantValue } from "@/lib/inventory-normalize";
 import {
   InventoryCategory,
@@ -61,16 +61,15 @@ interface TemplateItem {
 export async function applyInventoryTemplateToProperty(
   propertyId: string
 ): Promise<{ created: number; errors: string[] }> {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró tenant.");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   // 1. Validar que la propiedad existe y pertenece al tenant
   const property = await prisma.property.findFirst({
     where: {
       id: propertyId,
-      tenantId: tenant.id,
+      tenantId,
     },
     select: { id: true },
   });
@@ -207,7 +206,7 @@ export async function applyInventoryTemplateToProperty(
       async (tx) => {
         // 4.0. Bootstrap: asegurar que grupos canónicos (bed_size, material, use) existan para el tenant
         // Permite que cualquier Host (nuevo o existente) tenga variantes listas al aplicar plantilla
-        await ensureCanonicalVariantGroupsForTenant(tenant.id, tx);
+        await ensureCanonicalVariantGroupsForTenant(tenantId, tx);
 
         // 4.1. Resolver catálogo (InventoryItem) sin loops
         // Buscar items existentes por nameNormalized únicamente (category is classification, not identity - CATALOG_ITEMS_V1)
@@ -215,7 +214,7 @@ export async function applyInventoryTemplateToProperty(
         const uniqueNameNormalized = Array.from(new Set(catalogItemsArray.map((item) => item.nameNormalized)));
         const existingItems = await tx.inventoryItem.findMany({
           where: {
-            tenantId: tenant.id,
+            tenantId: tenantId,
             archivedAt: null,
             nameNormalized: {
               in: uniqueNameNormalized,
@@ -257,7 +256,7 @@ export async function applyInventoryTemplateToProperty(
         // Log warning si hay duplicados (corrupción de datos)
         if (duplicateGroups.length > 0) {
           console.warn(
-            `[applyInventoryTemplateToProperty] DATA_CORRUPTION: Found duplicate catalog items for tenant ${tenant.id}:`,
+            `[applyInventoryTemplateToProperty] DATA_CORRUPTION: Found duplicate catalog items for tenant ${tenantId}:`,
             duplicateGroups.map((g) => `${g.nameNormalized} (${g.count} items)`)
           );
           // Usar el primero (más antiguo) como winner determinístico
@@ -270,7 +269,7 @@ export async function applyInventoryTemplateToProperty(
           if (!existingItem) {
             // Item no existe, crear con categoría de la plantilla
             const itemToCreate: any = {
-              tenantId: tenant.id,
+              tenantId: tenantId,
               category: itemData.category,
               name: itemData.name,
               nameNormalized: itemData.nameNormalized,
@@ -320,7 +319,7 @@ export async function applyInventoryTemplateToProperty(
           const existingItem = existingItemsMap.get(itemData.nameNormalized);
           if (existingItem && (itemData.defaultVariantKey || itemData.defaultVariantLabel || itemData.defaultVariantOptions)) {
             await tx.inventoryItem.updateMany({
-              where: { id: existingItem.id, tenantId: tenant.id },
+              where: { id: existingItem.id, tenantId: tenantId },
               data: {
                 ...(itemData.defaultVariantKey ? { defaultVariantKey: itemData.defaultVariantKey } : {}),
                 ...(itemData.defaultVariantLabel ? { defaultVariantLabel: itemData.defaultVariantLabel } : {}),
@@ -334,7 +333,7 @@ export async function applyInventoryTemplateToProperty(
         // Buscar solo por nameNormalized (sin category)
         const allItems = await tx.inventoryItem.findMany({
           where: {
-            tenantId: tenant.id,
+            tenantId: tenantId,
             archivedAt: null,
             nameNormalized: {
               in: uniqueNameNormalized,
@@ -367,7 +366,7 @@ export async function applyInventoryTemplateToProperty(
           } else {
             // Log warning si se detecta duplicado después de createMany
             console.warn(
-              `[applyInventoryTemplateToProperty] DATA_CORRUPTION: Duplicate catalog item detected after createMany: tenantId=${tenant.id}, nameNormalized="${item.nameNormalized}"`
+              `[applyInventoryTemplateToProperty] DATA_CORRUPTION: Duplicate catalog item detected after createMany: tenantId=${tenantId}, nameNormalized="${item.nameNormalized}"`
             );
           }
         }
@@ -378,7 +377,7 @@ export async function applyInventoryTemplateToProperty(
         if (itemIdsUsed.size > 0) {
           await tx.inventoryItemAsset.deleteMany({
             where: {
-              tenantId: tenant.id,
+              tenantId: tenantId,
               itemId: {
                 in: Array.from(itemIdsUsed),
               },
@@ -391,7 +390,7 @@ export async function applyInventoryTemplateToProperty(
         await tx.inventoryLine.deleteMany({
           where: {
             propertyId: property.id,
-            tenantId: tenant.id,
+            tenantId: tenantId,
           },
         });
 
@@ -437,7 +436,7 @@ export async function applyInventoryTemplateToProperty(
           // Si ya existe una línea con esta key, usar la que tenga mayor expectedQty (o la primera)
           if (!linesMap.has(uniqueKey)) {
             linesMap.set(uniqueKey, {
-              tenantId: tenant.id,
+              tenantId: tenantId,
               propertyId: property.id,
               itemId,
               area: lineData.area,
@@ -476,7 +475,7 @@ export async function applyInventoryTemplateToProperty(
         const canonicalGroupKeys = ["bed_size", "material", "use"];
         const variantGroups = await tx.variantGroup.findMany({
           where: {
-            tenantId: tenant.id,
+            tenantId: tenantId,
             key: { in: canonicalGroupKeys },
           },
           select: { id: true, key: true },

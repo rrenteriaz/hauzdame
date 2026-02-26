@@ -2,8 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomBytes } from "crypto";
@@ -20,14 +19,9 @@ function redirectBack(formData: FormData) {
  * Crea una invitación para conectar un Team Leader (Cleaner) a un WorkGroup.
  */
 export async function createCleanerInviteForWorkGroup(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    redirectBack(formData);
-    return;
-  }
-
-  const user = await getCurrentUser();
-  if (!user) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -46,7 +40,7 @@ export async function createCleanerInviteForWorkGroup(formData: FormData) {
   const workGroup = await prisma.hostWorkGroup.findFirst({
     where: {
       id: workGroupId,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     select: { id: true },
   });
@@ -84,7 +78,7 @@ export async function createCleanerInviteForWorkGroup(formData: FormData) {
 
   await (prisma as any).hostWorkGroupInvite.create({
     data: {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       workGroupId,
       token,
       status: "PENDING",
@@ -104,8 +98,9 @@ export async function createCleanerInviteForWorkGroup(formData: FormData) {
  * Revoca una invitación (marca como REVOKED).
  */
 export async function revokeInvite(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -125,7 +120,7 @@ export async function revokeInvite(formData: FormData) {
   await (prisma as any).hostWorkGroupInvite.updateMany({
     where: {
       id: inviteId,
-      tenantId: tenant.id,
+      tenantId: tenantId,
       status: "PENDING",
     },
     data: {

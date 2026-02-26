@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { toggleExecutorStatus } from "@/lib/workgroups/toggleExecutorStatus";
@@ -20,8 +20,9 @@ function redirectBack(formData: FormData) {
  * Reutiliza un teamId que ya está conectado a otros WorkGroups del mismo Host.
  */
 export async function addExecutorToWorkGroup(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) {
     redirectBack(formData);
     return;
   }
@@ -38,7 +39,7 @@ export async function addExecutorToWorkGroup(formData: FormData) {
   const workGroup = await prisma.hostWorkGroup.findFirst({
     where: {
       id: workGroupId,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     select: { id: true },
   });
@@ -51,7 +52,7 @@ export async function addExecutorToWorkGroup(formData: FormData) {
   // para obtener el servicesTenantId
   const existingExecutor = await prisma.workGroupExecutor.findFirst({
     where: {
-      hostTenantId: tenant.id,
+      hostTenantId: tenantId,
       teamId,
       status: "ACTIVE",
     },
@@ -68,13 +69,13 @@ export async function addExecutorToWorkGroup(formData: FormData) {
   await prisma.workGroupExecutor.upsert({
     where: {
       hostTenantId_workGroupId_teamId: {
-        hostTenantId: tenant.id,
+        hostTenantId: tenantId,
         workGroupId,
         teamId,
       },
     },
     create: {
-      hostTenantId: tenant.id,
+      hostTenantId: tenantId,
       workGroupId,
       servicesTenantId: existingExecutor.servicesTenantId,
       teamId,
@@ -95,10 +96,9 @@ export async function addExecutorToWorkGroup(formData: FormData) {
  * Reutiliza la lógica backend existente en toggleExecutorStatus.
  */
 export async function toggleExecutorStatusAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("Tenant no encontrado");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const workGroupId = String(formData.get("workGroupId") || "");
   const teamId = String(formData.get("teamId") || "");
@@ -112,7 +112,7 @@ export async function toggleExecutorStatusAction(formData: FormData) {
   const workGroup = await prisma.hostWorkGroup.findFirst({
     where: {
       id: workGroupId,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
     select: { id: true },
   });
@@ -123,7 +123,7 @@ export async function toggleExecutorStatusAction(formData: FormData) {
 
   // Invocar la función backend existente
   const result = await toggleExecutorStatus({
-    hostTenantId: tenant.id,
+    hostTenantId: tenantId,
     workGroupId,
     teamId,
     newStatus: newStatus as "ACTIVE" | "INACTIVE",

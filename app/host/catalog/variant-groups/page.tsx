@@ -1,4 +1,4 @@
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import Link from "next/link";
 import Page from "@/lib/ui/Page";
 import HostWebContainer from "@/lib/ui/HostWebContainer";
@@ -11,17 +11,9 @@ export default async function VariantGroupsPage({
 }: {
   searchParams?: Promise<{ returnTo?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
+  await requireHostUser();
   const params = searchParams ? await searchParams : {};
   const returnTo = safeReturnTo(params?.returnTo, "/host/menu");
-
-  if (!tenant) {
-    return (
-      <Page title="Grupos de variantes" showBack backHref={returnTo}>
-        <p className="text-neutral-600">No se encontró el tenant.</p>
-      </Page>
-    );
-  }
 
   const groups = await listTenantVariantGroupsAction();
 

@@ -1,6 +1,6 @@
 // app/host/cleanings/upcoming/page.tsx
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import Link from "next/link";
 import Page from "@/lib/ui/Page";
 import ListContainer from "@/lib/ui/ListContainer";
@@ -39,25 +39,16 @@ export default async function UpcomingCleaningsPage({
 }: {
   searchParams?: Promise<{ month?: string; date?: string; view?: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-
-  if (!tenant) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-xl font-semibold">Configura tu cuenta</h1>
-        <p className="text-base text-neutral-600">
-          No se encontró ningún tenant. Crea uno en Prisma Studio para continuar.
-        </p>
-      </div>
-    );
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const params = searchParams ? await searchParams : undefined;
 
   // Obtener propiedades
   const properties = await prisma.property.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId,
       ...({ isActive: true } as any),
     },
     select: {
@@ -73,7 +64,7 @@ export default async function UpcomingCleaningsPage({
   // Obtener limpiezas próximas (PENDING o IN_PROGRESS, scheduledDate >= now)
   const upcomingCleanings = await (prisma as any).cleaning.findMany({
     where: {
-      tenantId: tenant.id,
+      tenantId,
       status: { in: ["PENDING", "IN_PROGRESS"] },
       scheduledDate: { gte: now },
     },

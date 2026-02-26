@@ -1,7 +1,7 @@
 // app/host/cleanings/[id]/inventory-review/page.tsx
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { getInventoryReview, getActiveInventoryLines } from "@/app/host/inventory-review/actions";
 import InventoryReviewScreen from "./InventoryReviewScreen";
 
@@ -10,19 +10,20 @@ export default async function InventoryReviewPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) notFound();
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) notFound();
 
   const resolvedParams = await params;
   const cleaningId = resolvedParams.id;
 
   // Verificar que la limpieza existe
-  const cleaning = await prisma.cleaning.findUnique({
-    where: { id: cleaningId },
+  const cleaning = await prisma.cleaning.findFirst({
+    where: { id: cleaningId, tenantId },
     select: { id: true, propertyId: true, tenantId: true },
   });
 
-  if (!cleaning || cleaning.tenantId !== tenant.id) {
+  if (!cleaning || cleaning.tenantId !== tenantId) {
     notFound();
   }
 

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import {
   createInventoryLine,
   updateInventoryLine,
@@ -45,10 +45,9 @@ function redirectBack(formData: FormData) {
 }
 
 export async function createInventoryLineAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const propertyId = formData.get("propertyId")?.toString();
   if (!propertyId) {
@@ -132,7 +131,7 @@ export async function createInventoryLineAction(formData: FormData) {
   console.log("[createInventoryLineAction] allowDuplicate:", allowDuplicate);
 
   try {
-    const result = await createInventoryLine(tenant.id, propertyId, {
+    const result = await createInventoryLine(tenantId, propertyId, {
       area,
       category,
       itemId: itemId || undefined,
@@ -157,10 +156,10 @@ export async function createInventoryLineAction(formData: FormData) {
     const finalItemId = result.itemId;
     let finalItemName = itemName || null;
     
-    // Si se usó itemId existente, obtener el nombre del item
+    // Si se usó itemId existente, obtener el nombre del item (scoped por tenant)
     if (itemId && !finalItemName) {
-      const item = await prisma.inventoryItem.findUnique({
-        where: { id: itemId },
+      const item = await prisma.inventoryItem.findFirst({
+        where: { id: itemId, tenantId },
         select: { name: true },
       });
       if (item) {
@@ -168,10 +167,10 @@ export async function createInventoryLineAction(formData: FormData) {
       }
     }
     
-    // Si aún no tenemos nombre y tenemos itemId, obtenerlo de la BD
+    // Si aún no tenemos nombre y tenemos itemId, obtenerlo de la BD (scoped por tenant)
     if (finalItemId && !finalItemName) {
-      const item = await prisma.inventoryItem.findUnique({
-        where: { id: finalItemId },
+      const item = await prisma.inventoryItem.findFirst({
+        where: { id: finalItemId, tenantId },
         select: { name: true },
       });
       if (item) {
@@ -203,10 +202,9 @@ export async function createInventoryLineAction(formData: FormData) {
  * Si no hay itemId pero hay itemName, busca el item primero por nombre normalizado.
  */
 export async function checkDuplicateInventoryLineAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return { exists: false };
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return { exists: false };
 
   const propertyId = formData.get("propertyId")?.toString();
   if (!propertyId) {
@@ -237,7 +235,7 @@ export async function checkDuplicateInventoryLineAction(formData: FormData) {
       // después de aplicar la migración del compound unique
       const existingItem = await prisma.inventoryItem.findFirst({
         where: {
-          tenantId: tenant.id,
+          tenantId: tenantId,
           nameNormalized,
           archivedAt: null, // Solo items activos
         },
@@ -277,7 +275,7 @@ export async function checkDuplicateInventoryLineAction(formData: FormData) {
   const variantValue = formData.get("variantValue")?.toString().trim() || null;
 
   try {
-    const result = await checkDuplicateInventoryLine(tenant.id, propertyId, {
+    const result = await checkDuplicateInventoryLine(tenantId, propertyId, {
       area,
       itemId,
       variantKey,
@@ -292,10 +290,9 @@ export async function checkDuplicateInventoryLineAction(formData: FormData) {
 }
 
 export async function deleteInventoryLineAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const lineId = formData.get("lineId")?.toString();
   const propertyId = formData.get("propertyId")?.toString();
@@ -305,7 +302,7 @@ export async function deleteInventoryLineAction(formData: FormData) {
   }
 
   try {
-    await deleteInventoryLine(tenant.id, lineId);
+    await deleteInventoryLine(tenantId, lineId);
     if (propertyId) {
       revalidatePath(`/host/properties/${propertyId}/inventory`);
     }
@@ -320,10 +317,9 @@ export async function deleteInventoryLineAction(formData: FormData) {
  * Elimina un área completa y todos sus items (soft delete).
  */
 export async function deleteInventoryAreaAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const propertyId = formData.get("propertyId")?.toString();
   const area = formData.get("area")?.toString()?.trim();
@@ -335,7 +331,7 @@ export async function deleteInventoryAreaAction(formData: FormData) {
     throw new Error("El área es obligatoria");
   }
 
-  const { count } = await deleteInventoryArea(tenant.id, propertyId, area);
+  const { count } = await deleteInventoryArea(tenantId, propertyId, area);
   revalidatePath(`/host/properties/${propertyId}/inventory`);
   return { count };
 }
@@ -344,13 +340,12 @@ export async function deleteInventoryAreaAction(formData: FormData) {
  * Obtiene el catálogo de items por categoría para el modal.
  */
 export async function getCatalogByCategory(category: InventoryCategory) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return [];
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return [];
 
   try {
-    return await listInventoryCatalogByCategory(tenant.id, category, 200);
+    return await listInventoryCatalogByCategory(tenantId, category, 200);
   } catch (error) {
     console.error("[getCatalogByCategory] Error:", error);
     return [];
@@ -361,10 +356,9 @@ export async function getCatalogByCategory(category: InventoryCategory) {
  * Actualiza una línea de inventario.
  */
 export async function updateInventoryLineAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const lineId = formData.get("lineId")?.toString();
   if (!lineId) {
@@ -437,7 +431,7 @@ export async function updateInventoryLineAction(formData: FormData) {
     const lineVariantKey = clearVariant ? null : (variantKey || undefined);
     const lineVariantValue = clearVariant ? null : (variantValue || undefined);
 
-    await updateInventoryLine(tenant.id, lineId, {
+    await updateInventoryLine(tenantId, lineId, {
       area,
       expectedQty,
       condition,
@@ -457,7 +451,7 @@ export async function updateInventoryLineAction(formData: FormData) {
     if (clearVariant) {
       // Si se desmarcó variantes, limpiar también el grupo de variantes del ítem
       if (itemId) {
-        await updateInventoryItem(tenant.id, itemId, {
+        await updateInventoryItem(tenantId, itemId, {
           defaultVariantKey: null,
           defaultVariantLabel: null,
           defaultVariantOptions: null,
@@ -496,10 +490,9 @@ export async function updateInventoryLineAction(formData: FormData) {
  * Útil para cuando el usuario crea un item personalizado desde "Otro..."
  */
 export async function createInventoryItemAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const category = formData.get("category")?.toString() as InventoryCategory | null;
   if (!category || !Object.values(InventoryCategory).includes(category)) {
@@ -541,7 +534,7 @@ export async function createInventoryItemAction(formData: FormData) {
     // Solo considerar items activos (archivedAt: null)
     const existingItem = await prisma.inventoryItem.findFirst({
       where: {
-        tenantId: tenant.id,
+        tenantId: tenantId,
         nameNormalized,
         archivedAt: null, // Solo items activos
       },
@@ -571,7 +564,7 @@ export async function createInventoryItemAction(formData: FormData) {
     // Crear nuevo item usando create (upsert no disponible hasta que se ejecute la migración)
     // El manejo de race conditions se hace con try/catch de P2002
     const itemData: any = {
-      tenantId: tenant.id,
+      tenantId: tenantId,
       category,
       name: itemNameCapitalized, // Capitalizar primera letra para consistencia visual
       nameNormalized, // nameNormalized sin capitalizar (normalización canónica)
@@ -609,7 +602,7 @@ export async function createInventoryItemAction(formData: FormData) {
         console.warn("[createInventoryItemAction] Campos de variantes personalizadas no existen, creando sin ellos");
         item = await prisma.inventoryItem.create({
           data: {
-            tenantId: tenant.id,
+            tenantId: tenantId,
             category,
             name: itemNameCapitalized, // Capitalizar primera letra para consistencia visual
             nameNormalized, // nameNormalized sin capitalizar (normalización canónica)
@@ -648,7 +641,7 @@ export async function createInventoryItemAction(formData: FormData) {
       // Solo considerar items activos (archivedAt: null)
       const existingItem = await prisma.inventoryItem.findFirst({
         where: {
-          tenantId: tenant.id,
+          tenantId: tenantId,
           nameNormalized,
           archivedAt: null, // Solo items activos
         },
@@ -686,10 +679,9 @@ export async function createInventoryItemAction(formData: FormData) {
  * Actualiza un item del catálogo (InventoryItem).
  */
 export async function updateInventoryItemAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const itemId = formData.get("itemId")?.toString();
   if (!itemId) {
@@ -733,7 +725,7 @@ export async function updateInventoryItemAction(formData: FormData) {
       variantLabel,
       variantOptions,
     });
-    await updateInventoryItem(tenant.id, itemId, {
+    await updateInventoryItem(tenantId, itemId, {
       name: itemNameCapitalized, // Capitalizar primera letra para consistencia visual
       defaultVariantKey: variantKey || null,
       defaultVariantLabel: variantLabel || null,
@@ -762,10 +754,9 @@ export async function updateInventoryItemAction(formData: FormData) {
  * Elimina un item del catálogo.
  */
 export async function deleteInventoryItemAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const itemId = formData.get("itemId")?.toString();
   if (!itemId) {
@@ -773,13 +764,13 @@ export async function deleteInventoryItemAction(formData: FormData) {
   }
 
   console.log("[deleteInventoryItemAction] Iniciando eliminación:", {
-    tenantId: tenant.id,
+    tenantId: tenantId,
     itemId,
     timestamp: new Date().toISOString(),
   });
 
   try {
-    await deleteInventoryItem(tenant.id, itemId);
+    await deleteInventoryItem(tenantId, itemId);
     console.log("[deleteInventoryItemAction] Eliminación exitosa:", { itemId });
   } catch (error: any) {
     console.error("[deleteInventoryItemAction] Error al eliminar:", {
@@ -797,13 +788,12 @@ export async function deleteInventoryItemAction(formData: FormData) {
 }
 
 export async function getInventoryLine(lineId: string) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return null;
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return null;
 
   try {
-    return await getInventoryLineById(tenant.id, lineId);
+    return await getInventoryLineById(tenantId, lineId);
   } catch (error) {
     console.error("[getInventoryLine] Error:", error);
     return null;
@@ -823,11 +813,12 @@ export async function getInventoryLineForEditAction(
   variantGroup: Awaited<ReturnType<typeof getInventoryItemVariantGroupAction>>;
   variantGroups: VariantGroupData[];
 } | null> {
-  const tenant = await getDefaultTenant();
-  if (!tenant) return null;
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return null;
 
   try {
-    const line = await getInventoryLineById(tenant.id, lineId);
+    const line = await getInventoryLineById(tenantId, lineId);
     if (!line) return null;
 
     const { normalizeName } = await import("@/lib/inventory-normalize");
@@ -836,7 +827,7 @@ export async function getInventoryLineForEditAction(
 
     const lineVariantKey = (line as { variantKey?: string | null }).variantKey;
     const [siblings, variantGroup, variantGroups] = await Promise.all([
-      listInventorySiblings(tenant.id, propertyId, areaNorm, line.item.id),
+      listInventorySiblings(tenantId, propertyId, areaNorm, line.item.id),
       getInventoryItemVariantGroupAction(line.item.id, lineVariantKey),
       getInventoryItemVariantGroupsAction(line.item.id),
     ]);
@@ -856,14 +847,13 @@ export async function getInventoryLineSiblingsAction(
   areaNormalized: string,
   itemId: string
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return [];
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return [];
 
   try {
     return await listInventorySiblings(
-      tenant.id,
+      tenantId,
       propertyId,
       areaNormalized,
       itemId
@@ -888,10 +878,9 @@ export async function updateInventoryItemVariantGroupAction(
   itemId: string,
   payload: VariantGroupPayload
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const key = normalizeVariantKey(payload.key);
   if (!key) {
@@ -920,7 +909,7 @@ export async function updateInventoryItemVariantGroupAction(
     }))
   );
 
-  await updateInventoryItem(tenant.id, itemId, {
+  await updateInventoryItem(tenantId, itemId, {
     defaultVariantKey: (newGroups[0]?.key ?? key),
     defaultVariantLabel: (newGroups[0]?.label ?? payload.label?.trim()) || null,
     defaultVariantOptions: serialized as unknown,
@@ -934,10 +923,9 @@ export async function addInventoryItemVariantGroupAction(
   itemId: string,
   payload: VariantGroupPayload
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const key = normalizeVariantKey(payload.key);
   if (!key) {
@@ -958,7 +946,7 @@ export async function addInventoryItemVariantGroupAction(
   const canonicalKeys = ["bed_size", "material", "use"];
   if (canonicalKeys.includes(key)) {
     const existingGroup = await prisma.variantGroup.findUnique({
-      where: { tenantId_key: { tenantId: tenant.id, key } },
+      where: { tenantId_key: { tenantId: tenantId, key } },
     });
     if (existingGroup) {
       throw new Error(
@@ -980,7 +968,7 @@ export async function addInventoryItemVariantGroupAction(
 
   const serialized = serializeDefaultVariantGroups(newGroups);
 
-  await updateInventoryItem(tenant.id, itemId, {
+  await updateInventoryItem(tenantId, itemId, {
     defaultVariantKey: groups.length > 0 ? groups[0].key : key,
     defaultVariantLabel: groups.length > 0 ? groups[0].label : payload.label?.trim() || null,
     defaultVariantOptions: serialized as unknown,
@@ -994,11 +982,12 @@ export async function addInventoryItemVariantGroupAction(
 export async function getInventoryItemVariantGroupsAction(
   itemId: string
 ): Promise<VariantGroupData[]> {
-  const tenant = await getDefaultTenant();
-  if (!tenant) return [];
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return [];
 
   const item = await prisma.inventoryItem.findFirst({
-    where: { id: itemId, tenantId: tenant.id },
+    where: { id: itemId, tenantId: tenantId },
     select: {
       defaultVariantKey: true,
       defaultVariantLabel: true,
@@ -1077,13 +1066,12 @@ export async function getInventoryItemVariantGroupAction(
 export async function reactivateItemVariantGroupsAction(itemId: string): Promise<{
   reactivatedCount: number;
 }> {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const item = await prisma.inventoryItem.findFirst({
-    where: { id: itemId, tenantId: tenant.id },
+    where: { id: itemId, tenantId: tenantId },
     select: { id: true },
   });
   if (!item) {
@@ -1110,12 +1098,11 @@ export async function setInventoryLineActiveAction(
   propertyId: string,
   isActive: boolean
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
-  await updateInventoryLine(tenant.id, lineId, { isActive });
+  await updateInventoryLine(tenantId, lineId, { isActive });
   revalidatePath(`/host/properties/${propertyId}/inventory`);
 }
 
@@ -1127,10 +1114,9 @@ export async function updateInventoryLineExpectedQtyAction(
   propertyId: string,
   expectedQtyRaw: number | string
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const expectedQty =
     typeof expectedQtyRaw === "number" ? expectedQtyRaw : parseInt(String(expectedQtyRaw), 10);
@@ -1143,7 +1129,7 @@ export async function updateInventoryLineExpectedQtyAction(
     throw new Error("Cantidad inválida. Debe ser un entero mayor a 0.");
   }
 
-  await updateInventoryLine(tenant.id, lineId, { expectedQty });
+  await updateInventoryLine(tenantId, lineId, { expectedQty });
   revalidatePath(`/host/properties/${propertyId}/inventory`);
 }
 
@@ -1152,13 +1138,12 @@ export async function updateInventoryLineExpectedQtyAction(
  * @deprecated Usar searchGlobalCatalogItemsAction para autocomplete Step 1
  */
 export async function searchCatalogAction(searchTerm: string) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return [];
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return [];
 
   try {
-    return await searchInventoryCatalog(tenant.id, searchTerm);
+    return await searchInventoryCatalog(tenantId, searchTerm);
   } catch (error) {
     console.error("[searchCatalogAction] Error:", error);
     return [];
@@ -1182,13 +1167,12 @@ export async function searchGlobalCatalogItemsAction(searchTerm: string) {
  * Lazy copy: busca primero, crea solo si no existe.
  */
 export async function ensureTenantCatalogItemFromGlobalAction(globalCatalogItemId: string) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   try {
-    return await ensureTenantCatalogItemFromGlobal(tenant.id, globalCatalogItemId);
+    return await ensureTenantCatalogItemFromGlobal(tenantId, globalCatalogItemId);
   } catch (error) {
     console.error("[ensureTenantCatalogItemFromGlobalAction] Error:", error);
     throw error;
@@ -1199,13 +1183,12 @@ export async function ensureTenantCatalogItemFromGlobalAction(globalCatalogItemI
  * Obtiene items frecuentes del catálogo (para mostrar cuando no hay búsqueda).
  */
 export async function getFrequentItemsAction() {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return [];
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return [];
 
   try {
-    return await getFrequentInventoryItems(tenant.id);
+    return await getFrequentInventoryItems(tenantId);
   } catch (error) {
     console.error("[getFrequentItemsAction] Error:", error);
     return [];
@@ -1216,17 +1199,16 @@ export async function getFrequentItemsAction() {
  * Obtiene las áreas existentes para una propiedad (para sugerencias en el modal).
  */
 export async function getExistingAreas(propertyId: string) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    return [];
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return [];
 
   try {
     // Usar groupBy para obtener áreas únicas
     const areas = await prisma.inventoryLine.groupBy({
       by: ["area"],
       where: {
-        tenantId: tenant.id,
+        tenantId: tenantId,
         propertyId,
       },
       orderBy: {
@@ -1246,10 +1228,9 @@ export async function getExistingAreas(propertyId: string) {
  * Copia inventario de una propiedad a otra.
  */
 export async function copyInventoryBetweenPropertiesAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const fromPropertyId = formData.get("fromPropertyId")?.toString();
   const toPropertyId = formData.get("toPropertyId")?.toString();
@@ -1274,13 +1255,13 @@ export async function copyInventoryBetweenPropertiesAction(formData: FormData) {
     prisma.property.findFirst({
       where: {
         id: fromPropertyId,
-        tenantId: tenant.id,
+        tenantId: tenantId,
       },
     }),
     prisma.property.findFirst({
       where: {
         id: toPropertyId,
-        tenantId: tenant.id,
+        tenantId: tenantId,
       },
     }),
   ]);
@@ -1302,7 +1283,7 @@ export async function copyInventoryBetweenPropertiesAction(formData: FormData) {
   const copyQuantities = copyQuantitiesStr === "false" ? false : true;
 
   console.log("[copyInventoryBetweenPropertiesAction] Iniciando copia:", {
-    tenantId: tenant.id,
+    tenantId: tenantId,
     fromPropertyId,
     toPropertyId,
     fromPropertyName: fromProperty.name,
@@ -1313,7 +1294,7 @@ export async function copyInventoryBetweenPropertiesAction(formData: FormData) {
 
   try {
     const stats = await copyInventoryBetweenProperties({
-      tenantId: tenant.id,
+      tenantId: tenantId,
       fromPropertyId,
       toPropertyId,
       copyQuantities,
@@ -1346,16 +1327,15 @@ export async function copyInventoryBetweenPropertiesAction(formData: FormData) {
  * Obtiene las URLs de thumbnails para un InventoryItem
  */
 export async function getInventoryItemThumbsAction(itemId: string): Promise<Array<string | null>> {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No se encontró el tenant");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   // Verificar que el item existe y pertenece al tenant
   const item = await prisma.inventoryItem.findFirst({
     where: {
       id: itemId,
-      tenantId: tenant.id,
+      tenantId: tenantId,
     },
   });
 

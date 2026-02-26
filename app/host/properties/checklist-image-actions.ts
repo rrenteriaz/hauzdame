@@ -2,7 +2,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 import storageProvider from "@/lib/storage";
 import { generateThumbnail, getOutputMimeType } from "@/lib/media/thumbnail";
@@ -20,10 +20,9 @@ const BUCKET_NAME = "checklist-item-images";
  * @returns { position, groupId, thumbUrl, originalUrl, assetIds: [originalId, thumbId] }
  */
 export async function uploadChecklistItemImageAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No tenant found");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const checklistItemId = formData.get("checklistItemId")?.toString();
   const positionStr = formData.get("position")?.toString();
@@ -64,7 +63,7 @@ export async function uploadChecklistItemImageAction(formData: FormData) {
   const checklistItem = await prisma.propertyChecklistItem.findFirst({
     where: {
       id: checklistItemId,
-      tenantId: tenant.id,
+      tenantId,
     },
     select: {
       id: true,
@@ -80,7 +79,7 @@ export async function uploadChecklistItemImageAction(formData: FormData) {
   const property = await prisma.property.findFirst({
     where: {
       id: checklistItem.propertyId,
-      tenantId: tenant.id,
+      tenantId,
     },
     select: {
       id: true,
@@ -94,7 +93,7 @@ export async function uploadChecklistItemImageAction(formData: FormData) {
   // Si ya existe una imagen en esta posición, obtener el assetId actual para referencia
   const existingItemAsset = await (prisma as any).checklistItemAsset.findFirst({
     where: {
-      tenantId: tenant.id,
+      tenantId,
       checklistItemId,
       position,
     },
@@ -116,8 +115,8 @@ export async function uploadChecklistItemImageAction(formData: FormData) {
 
   // Construir keys para storage
   const fileExtension = file.name.split(".").pop() || "jpg";
-  const originalKey = `${tenant.id}/checklist-items/${checklistItemId}/${groupId}/original.${fileExtension}`;
-  const thumbKey = `${tenant.id}/checklist-items/${checklistItemId}/${groupId}/thumb_256.${thumbnailResult.format}`;
+  const originalKey = `${tenantId}/checklist-items/${checklistItemId}/${groupId}/original.${fileExtension}`;
+  const thumbKey = `${tenantId}/checklist-items/${checklistItemId}/${groupId}/thumb_256.${thumbnailResult.format}`;
 
   try {
     // Subir original
@@ -141,7 +140,7 @@ export async function uploadChecklistItemImageAction(formData: FormData) {
       // Crear Asset original
       const originalAsset = await tx.asset.create({
         data: {
-          tenantId: tenant.id,
+          tenantId,
           type: "IMAGE",
           provider: "SUPABASE",
           variant: "ORIGINAL",
@@ -159,7 +158,7 @@ export async function uploadChecklistItemImageAction(formData: FormData) {
       // Crear Asset thumbnail
       const thumbAsset = await tx.asset.create({
         data: {
-          tenantId: tenant.id,
+          tenantId,
           type: "IMAGE",
           provider: "SUPABASE",
           variant: "THUMB_256",
@@ -179,13 +178,13 @@ export async function uploadChecklistItemImageAction(formData: FormData) {
       await (tx as any).checklistItemAsset.upsert({
         where: {
           tenantId_checklistItemId_position: {
-            tenantId: tenant.id,
+            tenantId,
             checklistItemId,
             position,
           },
         },
         create: {
-          tenantId: tenant.id,
+          tenantId,
           checklistItemId,
           assetId: thumbAsset.id, // Apuntar al thumb para listas
           position,
@@ -232,10 +231,9 @@ export async function uploadChecklistItemImageAction(formData: FormData) {
  * Esto permite recuperación si es necesario. Se puede implementar cleanup después.
  */
 export async function deleteChecklistItemImageAction(formData: FormData) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) {
-    throw new Error("No tenant found");
-  }
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) throw new Error("Usuario sin tenant asociado");
 
   const checklistItemId = formData.get("checklistItemId")?.toString();
   const positionStr = formData.get("position")?.toString();
@@ -257,7 +255,7 @@ export async function deleteChecklistItemImageAction(formData: FormData) {
   const checklistItem = await prisma.propertyChecklistItem.findFirst({
     where: {
       id: checklistItemId,
-      tenantId: tenant.id,
+      tenantId,
     },
     select: {
       id: true,
@@ -273,7 +271,7 @@ export async function deleteChecklistItemImageAction(formData: FormData) {
   // Los Assets quedan huérfanos por ahora (no se borran)
   await (prisma as any).checklistItemAsset.deleteMany({
     where: {
-      tenantId: tenant.id,
+      tenantId,
       checklistItemId,
       position,
     },

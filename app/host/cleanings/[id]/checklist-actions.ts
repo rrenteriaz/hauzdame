@@ -5,7 +5,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getDefaultTenant } from "@/lib/tenant";
+import { requireHostUser } from "@/lib/auth/requireUser";
 import { revalidatePath } from "next/cache";
 
 export async function updateCleaningChecklistItem(
@@ -13,8 +13,9 @@ export async function updateCleaningChecklistItem(
   itemId: string,
   title: string
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) return { success: false, error: "No tenant found" };
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return { success: false, error: "Usuario sin tenant asociado" };
 
   try {
     await (prisma as any).cleaningChecklistItem.updateMany({
@@ -40,8 +41,9 @@ export async function deleteCleaningChecklistItem(
   cleaningId: string,
   itemId: string
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) return { success: false, error: "No tenant found" };
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return { success: false, error: "Usuario sin tenant asociado" };
 
   try {
     await (prisma as any).cleaningChecklistItem.deleteMany({
@@ -66,8 +68,9 @@ export async function addCleaningChecklistItem(
   title: string,
   sortOrder: number
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) return { success: false, error: "No tenant found" };
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return { success: false, error: "Usuario sin tenant asociado" };
 
   try {
     await (prisma as any).cleaningChecklistItem.create({
@@ -94,8 +97,9 @@ export async function reorderCleaningChecklistItems(
   cleaningId: string,
   itemIds: string[]
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) return { success: false, error: "No tenant found" };
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return { success: false, error: "Usuario sin tenant asociado" };
 
   try {
     // Actualizar el sortOrder de cada item según su nueva posición
@@ -126,8 +130,9 @@ export async function deleteCleaningChecklistArea(
   cleaningId: string,
   area: string
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) return { success: false, error: "No tenant found" };
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return { success: false, error: "Usuario sin tenant asociado" };
 
   try {
     await (prisma as any).cleaningChecklistItem.deleteMany({
@@ -151,8 +156,9 @@ export async function toggleCleaningChecklistItem(
   itemId: string,
   isCompleted: boolean
 ) {
-  const tenant = await getDefaultTenant();
-  if (!tenant) return { success: false, error: "No tenant found" };
+  const user = await requireHostUser();
+  const tenantId = user.tenantId;
+  if (!tenantId) return { success: false, error: "Usuario sin tenant asociado" };
 
   try {
     await (prisma as any).cleaningChecklistItem.updateMany({
