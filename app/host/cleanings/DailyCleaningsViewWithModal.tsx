@@ -60,7 +60,17 @@ export default function DailyCleaningsViewWithModal({
   monthParamForLinks,
   dateParamForLinks,
 }: DailyCleaningsViewWithModalProps) {
-  const dayKey = `${referenceDate.getFullYear()}-${referenceDate.getMonth()}-${referenceDate.getDate()}`;
+  // Parsear dateParamForLinks (YYYY-MM-DD) en zona local para evitar desfase servidor/cliente
+  // (referenceDate llega serializado en UTC y puede mostrarse 1 día antes en zonas UTC-)
+  const [y, m, d] = (dateParamForLinks || "").split("-").map(Number);
+  const localRefDate =
+    y && m && d
+      ? new Date(y, m - 1, d)
+      : referenceDate instanceof Date
+        ? referenceDate
+        : new Date(referenceDate);
+
+  const dayKey = `${localRefDate.getFullYear()}-${localRefDate.getMonth()}-${localRefDate.getDate()}`;
 
   const dayCleanings = cleanings
     .filter((c) => {
@@ -79,13 +89,13 @@ export default function DailyCleaningsViewWithModal({
       return a.scheduledDate.getTime() - b.scheduledDate.getTime();
     });
 
-  const dayLabel = referenceDate.toLocaleString("es-MX", {
+  const dayLabel = localRefDate.toLocaleString("es-MX", {
     weekday: "long",
     day: "2-digit",
     month: "short",
   });
 
-  const isToday = referenceDate.toDateString() === new Date().toDateString();
+  const isToday = localRefDate.toDateString() === new Date().toDateString();
 
   // FASE 4: Crear mapa de colores por propiedad (usar id como clave, propertyId ahora apunta directamente a Property.id)
   const colorToHex: Record<string, string> = {
