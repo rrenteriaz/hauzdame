@@ -82,6 +82,7 @@ export default function InventoryReviewScreen({
   const [showItemDetailModal, setShowItemDetailModal] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+  const [selectedLineIdForQuantity, setSelectedLineIdForQuantity] = useState<string | null>(null);
   const [selectedLineForDetail, setSelectedLineForDetail] = useState<InventoryLine | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -142,8 +143,11 @@ export default function InventoryReviewScreen({
       newChanges.delete(lineId);
       setChanges(newChanges);
     } else {
-      // Si cambia, abrir modal para razón
+      // Si cambia, abrir modal para razón (cerrar detalle para que no tape el modal de cantidad)
+      setShowItemDetailModal(false);
+      setSelectedLineForDetail(null);
       setSelectedItemId(line.item.id);
+      setSelectedLineIdForQuantity(lineId);
       setShowQuantityModal(true);
     }
   };
@@ -478,15 +482,16 @@ export default function InventoryReviewScreen({
       </div>
 
       {/* Modales */}
-      {showQuantityModal && selectedItemId && (
+      {showQuantityModal && selectedItemId && selectedLineIdForQuantity && (
         <QuantityChangeModal
           isOpen={showQuantityModal}
           itemId={selectedItemId}
           itemName={inventoryLines.find((l) => l.item.id === selectedItemId)?.item.name || ""}
-          quantityBefore={quantities.get(selectedItemId) || 0}
+          quantityBefore={quantities.get(selectedLineIdForQuantity) ?? 0}
           onClose={() => {
             setShowQuantityModal(false);
             setSelectedItemId(null);
+            setSelectedLineIdForQuantity(null);
           }}
           onSubmit={(quantityAfter, reason, reasonOtherText, note) =>
             handleQuantityReasonSubmit(selectedItemId, quantityAfter, reason, reasonOtherText, note)

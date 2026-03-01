@@ -145,6 +145,8 @@ export default function InventoryReviewPanel({
       newChanges.delete(lineId);
       setChanges(newChanges);
     } else {
+      setShowItemDetailModal(false);
+      setSelectedLineForDetail(null);
       setSelectedItemId(line.item.id);
       setSelectedLineIdForQuantity(lineId);
       setShowQuantityModal(true);
