@@ -922,10 +922,10 @@ export default async function CleanerPage({
 
       {/* Calendario */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between border-b border-neutral-200">
+        <div className="flex items-center justify-between border-b border-neutral-200 pb-2 mb-2">
           <h2 className="text-base font-semibold text-neutral-800">Calendario</h2>
 
-          {/* Tabs Día / Mes */}
+          {/* Tabs Día / Mes - separación extra para evitar toques accidentales en dispositivos táctiles */}
           <div className="flex items-center gap-2">
             <Link
               href={buildViewHref("month")}

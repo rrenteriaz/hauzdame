@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { OfflineInit } from "@/components/offline/OfflineInit";
 import LogoutSyncListener from "@/lib/auth/LogoutSyncListener";
@@ -16,10 +16,17 @@ export default function CleanerLayoutClient({
   menuUser: { email: string; nickname: string | null; fullName: string | null };
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Cuando ya estamos en /cleaner, preservar view/date/month para evitar que tap en Hoy pierda la vista día
+  const hoyHref =
+    pathname === "/cleaner" && searchParams.toString()
+      ? `/cleaner?${searchParams.toString()}`
+      : "/cleaner";
   
   const navItems = [
-    { href: "/cleaner", label: "Hoy", icon: "📅" },
+    { href: hoyHref, label: "Hoy", icon: "📅" },
     { href: "/cleaner/history", label: "Historial", icon: "📋" },
     { href: "/cleaner/marketplace", label: "Marketplace", icon: "🔍" },
     { href: "/cleaner/messages", label: "Mensajes", icon: "💬" },

@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import CollapsibleSection from "@/lib/ui/CollapsibleSection";
 import ListContainer from "@/lib/ui/ListContainer";
-import ListRow from "@/lib/ui/ListRow";
 import ListThumb from "@/lib/ui/ListThumb";
 import { formatCleaningStatus } from "@/lib/cleaning-ui";
 
@@ -103,11 +102,16 @@ export default function MyCleaningsSection({
               const detailsHref = `/cleaner/cleanings/${cleaning.id}?memberId=${encodeURIComponent(currentMemberId)}&returnTo=${encodeURIComponent(returnTo)}`;
 
               return (
-                <ListRow
+                <Link
                   key={cleaning.id}
                   href={detailsHref}
-                  isLast={isLast}
-                  ariaLabel={`Ver detalles de limpieza ${propertyName}`}
+                  prefetch={false}
+                  aria-label={`Ver detalles de limpieza ${propertyName}`}
+                  className={`
+                    flex items-center gap-3 py-3 px-3 sm:px-4 min-h-[44px]
+                    hover:bg-neutral-50 active:opacity-95 transition-colors touch-manipulation
+                    ${!isLast ? "border-b border-neutral-200" : ""}
+                  `.trim()}
                 >
                   <ListThumb
                     src={myThumbUrls[cleaning.property.id] || null}
@@ -135,7 +139,7 @@ export default function MyCleaningsSection({
                       </p>
                     )}
                   </div>
-                </ListRow>
+                </Link>
               );
             })}
           </ListContainer>

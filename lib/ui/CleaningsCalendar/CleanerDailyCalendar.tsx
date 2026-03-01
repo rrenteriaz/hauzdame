@@ -92,8 +92,10 @@ export default function CleanerDailyCalendar({
     return key === dayKey;
   });
 
+  const linkBaseClass = "flex w-full items-center gap-3 py-3 px-3 sm:px-4 hover:bg-neutral-50 active:opacity-95 transition-colors touch-manipulation cursor-pointer";
+
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-3 sm:p-4 space-y-4">
+    <div className="rounded-2xl border border-neutral-200 bg-white p-3 sm:p-4 space-y-4 relative z-[1]">
       <div className="flex items-center justify-between">
         <p className="text-xs text-neutral-600">
           {isToday ? "Hoy · " : ""}{dayLabel}
@@ -123,12 +125,9 @@ export default function CleanerDailyCalendar({
                 <Link
                   key={cleaning.id}
                   href={detailsHref}
+                  prefetch={false}
                   aria-label={`Ver detalles de limpieza ${propertyName}`}
-                  className={`
-                    flex items-center gap-3 py-3 px-3 sm:px-4
-                    hover:bg-neutral-50 active:opacity-95 transition-colors
-                    ${!isLast ? "border-b border-neutral-200" : ""}
-                  `.trim()}
+                  className={`${linkBaseClass} min-h-[44px] ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
                   <ListThumb src={myThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                   <div className="min-w-0 flex-1">
@@ -179,11 +178,9 @@ export default function CleanerDailyCalendar({
                 >
                   <Link
                     href={detailsHref}
+                    prefetch={false}
                     aria-label={`Ver detalles de limpieza ${propertyName}`}
-                    className={`
-                      flex items-center gap-3 py-3 px-3 sm:px-4 pr-24
-                      hover:bg-neutral-50 active:opacity-95 transition-colors
-                    `.trim()}
+                    className={`${linkBaseClass} pr-24 min-h-[44px]`}
                   >
                     <ListThumb src={availableThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                     <div className="min-w-0 flex-1">
@@ -204,10 +201,9 @@ export default function CleanerDailyCalendar({
                     </div>
                   </Link>
                   <div
-                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10"
-                    onClick={(e) => e.stopPropagation()}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none"
                   >
-                    <form action={acceptCleaning}>
+                    <form action={acceptCleaning} className="pointer-events-auto">
                       <input type="hidden" name="cleaningId" value={cleaning.id} />
                       <input type="hidden" name="memberId" value={currentMemberId} />
                       <input type="hidden" name="returnTo" value={returnTo} />
@@ -247,12 +243,9 @@ export default function CleanerDailyCalendar({
                 <Link
                   key={cleaning.id}
                   href={detailsHref}
+                  prefetch={false}
                   aria-label={`Ver detalles de limpieza ${propertyName}`}
-                  className={`
-                    flex items-center gap-3 py-3 px-3 sm:px-4
-                    hover:bg-neutral-50 active:opacity-95 transition-colors
-                    ${!isLast ? "border-b border-neutral-200" : ""}
-                  `.trim()}
+                  className={`${linkBaseClass} min-h-[44px] ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
                   <ListThumb src={availableThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                   <div className="min-w-0 flex-1">
@@ -301,12 +294,9 @@ export default function CleanerDailyCalendar({
                 <Link
                   key={cleaning.id}
                   href={detailsHref}
+                  prefetch={false}
                   aria-label={`Ver detalles de limpieza ${propertyName}`}
-                  className={`
-                    flex items-center gap-3 py-3 px-3 sm:px-4
-                    hover:bg-neutral-50 active:opacity-95 transition-colors
-                    ${!isLast ? "border-b border-neutral-200" : ""}
-                  `.trim()}
+                  className={`${linkBaseClass} min-h-[44px] ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
                   <ListThumb src={myThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                   <div className="min-w-0 flex-1">
