@@ -920,9 +920,9 @@ export default async function CleanerPage({
         returnTo={buildReturnTo()}
       />
 
-      {/* Calendario */}
+      {/* Calendario - tabs sticky para evitar que toques en la lista activen Mes por superposición */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between border-b border-neutral-200 pb-2 mb-2">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-200 bg-white py-2 -mx-4 px-4 sm:mx-0 sm:px-0 mb-2">
           <h2 className="text-base font-semibold text-neutral-800">Calendario</h2>
 
           {/* Tabs Día / Mes - separación extra para evitar toques accidentales en dispositivos táctiles */}

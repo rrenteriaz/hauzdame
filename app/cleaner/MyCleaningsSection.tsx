@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import CollapsibleSection from "@/lib/ui/CollapsibleSection";
 import ListContainer from "@/lib/ui/ListContainer";
 import ListThumb from "@/lib/ui/ListThumb";
@@ -37,6 +38,17 @@ export default function MyCleaningsSection({
   memberIdParam,
   returnTo,
 }: MyCleaningsSectionProps) {
+  const router = useRouter();
+
+  // En móvil, onPointerDown es más fiable que click para toques
+  const handleTouchNavigation = (e: React.PointerEvent, href: string) => {
+    if (e.pointerType === "touch") {
+      e.preventDefault();
+      e.stopPropagation();
+      router.push(href);
+    }
+  };
+
   // Estado local para el filtro (sin recargar página)
   const [localMyFilter, setLocalMyFilter] = useState<"pending" | "in_progress">(
     (initialMyFilter === "in_progress" ? "in_progress" : "pending") as "pending" | "in_progress"
@@ -106,6 +118,7 @@ export default function MyCleaningsSection({
                   key={cleaning.id}
                   href={detailsHref}
                   prefetch={false}
+                  onPointerDown={(e) => handleTouchNavigation(e, detailsHref)}
                   aria-label={`Ver detalles de limpieza ${propertyName}`}
                   className={`
                     flex items-center gap-3 py-3 px-3 sm:px-4 min-h-[44px]

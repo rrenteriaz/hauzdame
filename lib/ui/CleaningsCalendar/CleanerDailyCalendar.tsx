@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { acceptCleaning } from "@/app/cleaner/actions";
 import { formatCleaningStatus } from "@/lib/cleaning-ui";
 import ListContainer from "@/lib/ui/ListContainer";
@@ -47,6 +48,17 @@ export default function CleanerDailyCalendar({
   myThumbUrls,
   availableThumbUrls,
 }: CleanerDailyCalendarProps) {
+  const router = useRouter();
+
+  // En móvil, onPointerDown es más fiable que click para toques; evita que el tap se pierda o active otro elemento
+  const handleTouchNavigation = (e: React.PointerEvent, href: string) => {
+    if (e.pointerType === "touch") {
+      e.preventDefault();
+      e.stopPropagation();
+      router.push(href);
+    }
+  };
+
   // Parsear dateParam (YYYY-MM-DD) en zona local para evitar desfase servidor/cliente
   const [y, m, d] = (dateParam || "").split("-").map(Number);
   const localRefDate =
@@ -126,6 +138,7 @@ export default function CleanerDailyCalendar({
                   key={cleaning.id}
                   href={detailsHref}
                   prefetch={false}
+                  onPointerDown={(e) => handleTouchNavigation(e, detailsHref)}
                   aria-label={`Ver detalles de limpieza ${propertyName}`}
                   className={`${linkBaseClass} min-h-[44px] ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
@@ -179,6 +192,7 @@ export default function CleanerDailyCalendar({
                   <Link
                     href={detailsHref}
                     prefetch={false}
+                    onPointerDown={(e) => handleTouchNavigation(e, detailsHref)}
                     aria-label={`Ver detalles de limpieza ${propertyName}`}
                     className={`${linkBaseClass} pr-24 min-h-[44px]`}
                   >
@@ -244,6 +258,7 @@ export default function CleanerDailyCalendar({
                   key={cleaning.id}
                   href={detailsHref}
                   prefetch={false}
+                  onPointerDown={(e) => handleTouchNavigation(e, detailsHref)}
                   aria-label={`Ver detalles de limpieza ${propertyName}`}
                   className={`${linkBaseClass} min-h-[44px] ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
@@ -295,6 +310,7 @@ export default function CleanerDailyCalendar({
                   key={cleaning.id}
                   href={detailsHref}
                   prefetch={false}
+                  onPointerDown={(e) => handleTouchNavigation(e, detailsHref)}
                   aria-label={`Ver detalles de limpieza ${propertyName}`}
                   className={`${linkBaseClass} min-h-[44px] ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
