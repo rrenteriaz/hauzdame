@@ -470,64 +470,8 @@ export async function getActiveInventoryLines(propertyId: string) {
   const user = await requireHostUser();
   const tenantId = user.tenantId;
   if (!tenantId) return [];
-
-  const lines = await prisma.inventoryLine.findMany({
-    where: {
-      tenantId,
-      propertyId,
-      isActive: true,
-    },
-    select: {
-      id: true,
-      area: true,
-      expectedQty: true,
-      variantKey: true,
-      variantValue: true,
-      brand: true,
-      model: true,
-      color: true,
-      size: true,
-      condition: true,
-      priority: true,
-      notes: true,
-      item: {
-        select: {
-          id: true,
-          name: true,
-          category: true,
-        },
-      },
-    },
-    orderBy: [
-      { item: { name: "asc" } },
-      { area: "asc" },
-    ],
-  });
-
-  // Retornar cada línea individualmente, sin agrupar ni sumar
-  // Cada línea representa un item específico en un área específica con una variante específica
-  return lines.map((line) => ({
-    id: line.id,
-    area: line.area,
-    expectedQty: line.expectedQty,
-    variantKey: line.variantKey,
-    variantValue: line.variantValue,
-    item: line.item,
-    allLines: [{
-      id: line.id,
-      area: line.area,
-      expectedQty: line.expectedQty,
-      variantKey: line.variantKey,
-      variantValue: line.variantValue,
-      brand: line.brand,
-      model: line.model,
-      color: line.color,
-      size: line.size,
-      condition: line.condition,
-      priority: line.priority,
-      notes: line.notes,
-    }],
-  }));
+  const { fetchActiveInventoryLines } = await import("@/lib/inventory-review-queries");
+  return fetchActiveInventoryLines(propertyId, tenantId);
 }
 
 /**
@@ -537,62 +481,8 @@ export async function getInventoryReview(cleaningId: string) {
   const user = await requireHostUser();
   const tenantId = user.tenantId;
   if (!tenantId) return null;
-
-  const review = await prisma.inventoryReview.findFirst({
-    where: { cleaningId, tenantId },
-    include: {
-      itemChanges: {
-        include: {
-          item: {
-            select: {
-              id: true,
-              name: true,
-              category: true,
-            },
-          },
-          evidence: {
-            include: {
-              asset: {
-                select: {
-                  id: true,
-                  publicUrl: true,
-                  variant: true,
-                },
-              },
-            },
-          },
-        },
-      },
-      reports: {
-        include: {
-          item: {
-            select: {
-              id: true,
-              name: true,
-              category: true,
-            },
-          },
-          evidence: {
-            include: {
-              asset: {
-                select: {
-                  id: true,
-                  publicUrl: true,
-                  variant: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!review || review.tenantId !== tenantId) {
-    return null;
-  }
-
-  return review;
+  const { fetchInventoryReview } = await import("@/lib/inventory-review-queries");
+  return fetchInventoryReview(cleaningId, tenantId);
 }
 
 /**

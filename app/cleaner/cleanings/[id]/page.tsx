@@ -15,7 +15,7 @@ import InventoryPreviewList from "./InventoryPreviewList";
 import InventoryProblemsCard from "./InventoryProblemsCard";
 import CollapsibleSection from "@/lib/ui/CollapsibleSection";
 import { createChecklistSnapshotForCleaning } from "@/lib/checklist-snapshot";
-import { getActiveInventoryLines, getInventoryReview } from "@/app/host/inventory-review/actions";
+import { fetchActiveInventoryLines, fetchInventoryReview } from "@/lib/inventory-review-queries";
 import Page from "@/lib/ui/Page";
 import { getActiveMembershipsForUser } from "@/lib/cleaner/getActiveMembershipsForUser";
 import { getChecklistItemThumbsByProperty } from "@/lib/media/getChecklistItemThumbsByProperty";
@@ -314,9 +314,10 @@ export default async function CleanerCleaningDetailPage({
   const canDecline = !isPreviewMode && isAssignedToMe && !isHistoricalMembership && cleaning.status === "PENDING";
 
   // Obtener inventario activo de la propiedad y revisión completa
+  // Usar lib compartida (no host actions) para evitar redirect: requireHostUser redirige CLEANER a /cleaner
   const [inventoryLines, inventoryReview] = await Promise.all([
-    getActiveInventoryLines(cleaning.property.id),
-    getInventoryReview(cleaning.id),
+    fetchActiveInventoryLines(cleaning.property.id, tenantId),
+    fetchInventoryReview(cleaning.id, tenantId),
   ]);
 
   // Nota: No calculamos attentionReasons en cleaner - es exclusivo de Host

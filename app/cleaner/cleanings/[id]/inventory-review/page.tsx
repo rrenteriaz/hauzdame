@@ -2,7 +2,7 @@
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { getDefaultTenant } from "@/lib/tenant";
-import { getInventoryReview, getActiveInventoryLines } from "@/app/host/inventory-review/actions";
+import { fetchInventoryReview, fetchActiveInventoryLines } from "@/lib/inventory-review-queries";
 import { validateRedirect } from "@/lib/auth/validateRedirect";
 import InventoryReviewPanel from "./InventoryReviewPanel";
 
@@ -34,9 +34,10 @@ export default async function CleanerInventoryReviewPage({
   }
 
   // Obtener la revisión existente (si existe) y las líneas de inventario activas
+  // Usar lib compartida (no host actions) para evitar redirect: requireHostUser redirige CLEANER a /cleaner
   const [review, inventoryLines] = await Promise.all([
-    getInventoryReview(cleaningId),
-    getActiveInventoryLines(cleaning.propertyId),
+    fetchInventoryReview(cleaningId, cleaning.tenantId),
+    fetchActiveInventoryLines(cleaning.propertyId, cleaning.tenantId),
   ]);
 
   return (
