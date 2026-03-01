@@ -4,6 +4,10 @@ import prisma from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import { createSession } from "@/lib/auth/session";
 import { checkRateLimit } from "@/lib/auth/rateLimit";
+import {
+  validateRedirect,
+  AUTH_REDIRECT_PREFIXES,
+} from "@/lib/auth/validateRedirect";
 
 /**
  * POST /api/auth/login
@@ -110,17 +114,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Determinar redirección: priorizar redirect param, luego según rol
-    let redirectTo = redirect || "/app";
-    
-    // Si no hay redirect param, usar lógica por defecto según rol
-    if (!redirect) {
-      if (user.role === "CLEANER") {
-        redirectTo = "/cleaner";
-      } else {
-        redirectTo = "/host/hoy";
-      }
-    }
+    // Determinar redirección: validar redirect param, default seguro según rol
+    const validatedRedirect = validateRedirect(redirect, [
+      ...AUTH_REDIRECT_PREFIXES,
+    ]);
+    const redirectTo =
+      validatedRedirect ??
+      (user.role === "CLEANER" ? "/cleaner" : "/host/properties");
 
     // Crear respuesta PRIMERO
     const response = NextResponse.json({

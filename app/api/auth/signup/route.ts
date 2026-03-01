@@ -4,6 +4,10 @@ import prisma from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import { createSession } from "@/lib/auth/session";
 import { checkRateLimit } from "@/lib/auth/rateLimit";
+import {
+  validateRedirect,
+  AUTH_REDIRECT_PREFIXES,
+} from "@/lib/auth/validateRedirect";
 import { ensureCleanerPersonalTeam } from "@/lib/teams/provisioning";
 import { ensureCanonicalVariantGroupsForTenant } from "@/lib/variant-groups-bootstrap";
 
@@ -224,22 +228,25 @@ export async function POST(req: NextRequest) {
     // Crear sesión inmediatamente
     await createSession(user.id);
 
-    // Determinar redirección: priorizar redirect param, luego token, luego por defecto
-    let redirectTo = redirect || (ecosystem === "host" ? "/host/hoy" : "/cleaner");
-    
-    // Solo intentar claim de TeamInvite si hay token y NO hay redirect
-    // Si hay redirect, significa que viene de /join/host y debe regresar ahí
-    if (token && !redirect) {
+    // Determinar redirección: validar redirect param, default seguro según ecosystem
+    const validatedRedirect = validateRedirect(redirect, [
+      ...AUTH_REDIRECT_PREFIXES,
+    ]);
+    const defaultRedirect =
+      ecosystem === "host" ? "/host/properties" : "/cleaner";
+    let redirectTo = validatedRedirect ?? defaultRedirect;
+
+    // Solo intentar claim de TeamInvite si hay token y NO hay redirect válido
+    if (token && !validatedRedirect) {
       try {
         const { claimInvite } = await import("@/lib/invites/claimInvite");
         const claimResult = await claimInvite(token, user.id);
-        redirectTo = claimResult.redirectTo || "/app";
+        const claimPath = validateRedirect(claimResult.redirectTo, [
+          ...AUTH_REDIRECT_PREFIXES,
+        ]);
+        redirectTo = claimPath ?? redirectTo;
       } catch (claimError: any) {
-        // Si claim falla, continuar con redirectTo por defecto
-        // (el usuario ya está creado y logueado, puede reclamar después)
         console.error("Error reclamando invite después de signup:", claimError);
-        // No propagar el error, el signup fue exitoso
-        redirectTo = redirect || "/app";
       }
     }
 
