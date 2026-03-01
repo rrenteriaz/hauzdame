@@ -311,6 +311,7 @@ export default async function CleanerPage({
           ) : (
             <CleanerDailyCalendar
               referenceDate={referenceDate}
+              dateParam={dateParam}
               basePath="/cleaner"
               currentMemberId=""
               myCleanings={[]}
@@ -613,6 +614,7 @@ export default async function CleanerPage({
           ) : (
             <CleanerDailyCalendar
               referenceDate={referenceDate}
+              dateParam={dateParam}
               basePath="/cleaner"
               currentMemberId={currentMemberId}
               myCleanings={[]}
@@ -994,6 +996,7 @@ export default async function CleanerPage({
         ) : (
           <CleanerDailyCalendar
             referenceDate={referenceDate}
+            dateParam={dateParam}
             basePath="/cleaner"
             currentMemberId={currentMemberId}
             myCleanings={myCleaningsForCalendar.map((c: any) => ({

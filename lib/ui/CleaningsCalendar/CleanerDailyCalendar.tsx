@@ -26,6 +26,7 @@ interface CleanerDailyCalendarProps {
   lostCleanings?: CleaningForCalendar[];
   availableCleanings: CleaningForCalendar[];
   referenceDate: Date;
+  dateParam?: string; // YYYY-MM-DD desde URL, para evitar desfase timezone servidor/cliente
   basePath: string; // ej: "/cleaner"
   currentMemberId: string;
   returnTo: string;
@@ -39,23 +40,33 @@ export default function CleanerDailyCalendar({
   lostCleanings = [],
   availableCleanings,
   referenceDate,
+  dateParam,
   basePath,
   currentMemberId,
   returnTo,
   myThumbUrls,
   availableThumbUrls,
 }: CleanerDailyCalendarProps) {
-  const dayLabel = referenceDate.toLocaleString("es-MX", {
+  // Parsear dateParam (YYYY-MM-DD) en zona local para evitar desfase servidor/cliente
+  const [y, m, d] = (dateParam || "").split("-").map(Number);
+  const localRefDate =
+    y && m && d
+      ? new Date(y, m - 1, d)
+      : referenceDate instanceof Date
+        ? referenceDate
+        : new Date(referenceDate);
+
+  const dayLabel = localRefDate.toLocaleString("es-MX", {
     weekday: "long",
     day: "2-digit",
     month: "short",
   });
 
   const isToday =
-    referenceDate.toDateString() === new Date().toDateString();
+    localRefDate.toDateString() === new Date().toDateString();
 
   // Filtrar limpiezas para el día específico
-  const dayKey = `${referenceDate.getFullYear()}-${referenceDate.getMonth()}-${referenceDate.getDate()}`;
+  const dayKey = `${localRefDate.getFullYear()}-${localRefDate.getMonth()}-${localRefDate.getDate()}`;
   
   const dayMyCleanings = myCleanings.filter((c) => {
     const d = c.scheduledDate;
