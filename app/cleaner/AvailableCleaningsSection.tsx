@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import CleanerCleaningLink from "@/lib/ui/CleanerCleaningLink";
 import CollapsibleSection from "@/lib/ui/CollapsibleSection";
 import ListContainer from "@/lib/ui/ListContainer";
 import ListThumb from "@/lib/ui/ListThumb";
@@ -90,7 +91,7 @@ export default function AvailableCleaningsSection({
                     !isLast ? "border-b border-neutral-200" : ""
                   }`}
                 >
-                  <a
+                  <CleanerCleaningLink
                     href={`/cleaner/cleanings/${cleaning.id}?returnTo=${encodeURIComponent(returnTo)}`}
                     aria-label={`Ver detalle de limpieza en ${propertyName}`}
                     className={`
@@ -98,7 +99,6 @@ export default function AvailableCleaningsSection({
                       py-3 px-3 sm:px-4 pr-24 min-h-[44px]
                       hover:bg-neutral-50 active:opacity-95
                       transition-colors touch-manipulation
-                      block text-inherit no-underline
                     `.trim()}
                   >
                     <ListThumb
@@ -124,7 +124,7 @@ export default function AvailableCleaningsSection({
                         </p>
                       )}
                     </div>
-                  </a>
+                  </CleanerCleaningLink>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
                     <form action={acceptCleaning}>
                       <input type="hidden" name="cleaningId" value={cleaning.id} />

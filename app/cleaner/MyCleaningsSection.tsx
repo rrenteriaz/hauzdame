@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import CleanerCleaningLink from "@/lib/ui/CleanerCleaningLink";
 import CollapsibleSection from "@/lib/ui/CollapsibleSection";
 import ListContainer from "@/lib/ui/ListContainer";
 import ListThumb from "@/lib/ui/ListThumb";
@@ -102,14 +103,13 @@ export default function MyCleaningsSection({
               const detailsHref = `/cleaner/cleanings/${cleaning.id}?memberId=${encodeURIComponent(currentMemberId)}&returnTo=${encodeURIComponent(returnTo)}`;
 
               return (
-                <a
+                <CleanerCleaningLink
                   key={cleaning.id}
                   href={detailsHref}
                   aria-label={`Ver detalles de limpieza ${propertyName}`}
                   className={`
                     flex items-center gap-3 py-3 px-3 sm:px-4 min-h-[44px]
                     hover:bg-neutral-50 active:opacity-95 transition-colors touch-manipulation
-                    block text-inherit no-underline
                     ${!isLast ? "border-b border-neutral-200" : ""}
                   `.trim()}
                 >
@@ -139,7 +139,7 @@ export default function MyCleaningsSection({
                       </p>
                     )}
                   </div>
-                </a>
+                </CleanerCleaningLink>
               );
             })}
           </ListContainer>

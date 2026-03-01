@@ -102,7 +102,7 @@ export default function CleanerLayoutClient({
 
       {/* Contenido principal */}
       <main
-        className={`${isThreadPage ? "p-0 flex flex-col overflow-hidden min-h-0 sm:flex-1 sm:h-auto sm:overflow-visible" : "flex-1 px-4 py-4 sm:px-6 sm:py-6 pb-20 sm:pb-6"}`}
+        className={`${isThreadPage ? "p-0 flex flex-col overflow-hidden min-h-0 sm:flex-1 sm:h-auto sm:overflow-visible" : "flex-1 px-4 py-4 sm:px-6 sm:py-6 pb-28 sm:pb-6"}`}
         style={isThreadPage ? {
           height: "calc(var(--app-vh, 1dvh) * 100)",
           minHeight: "calc(var(--app-vh, 1dvh) * 100)",

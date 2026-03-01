@@ -1,6 +1,7 @@
 // lib/ui/CleaningsCalendar/CleanerDailyCalendar.tsx
 "use client";
 
+import CleanerCleaningLink from "@/lib/ui/CleanerCleaningLink";
 import { acceptCleaning } from "@/app/cleaner/actions";
 import { formatCleaningStatus } from "@/lib/cleaning-ui";
 import ListContainer from "@/lib/ui/ListContainer";
@@ -121,11 +122,11 @@ export default function CleanerDailyCalendar({
               const detailsHref = `${basePath}/cleanings/${cleaning.id}?memberId=${encodeURIComponent(currentMemberId)}&returnTo=${encodeURIComponent(returnTo)}`;
 
               return (
-                <a
+                <CleanerCleaningLink
                   key={cleaning.id}
                   href={detailsHref}
                   aria-label={`Ver detalles de limpieza ${propertyName}`}
-                  className={`${linkBaseClass} min-h-[44px] block text-inherit no-underline ${!isLast ? "border-b border-neutral-200" : ""}`}
+                  className={`${linkBaseClass} min-h-[44px] ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
                   <ListThumb src={myThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                   <div className="min-w-0 flex-1">
@@ -146,7 +147,7 @@ export default function CleanerDailyCalendar({
                       </p>
                     )}
                   </div>
-                </a>
+                </CleanerCleaningLink>
               );
             })}
           </ListContainer>
@@ -174,10 +175,10 @@ export default function CleanerDailyCalendar({
                   key={cleaning.id}
                   className={`relative ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
-                  <a
+                  <CleanerCleaningLink
                     href={detailsHref}
                     aria-label={`Ver detalles de limpieza ${propertyName}`}
-                    className={`${linkBaseClass} pr-24 min-h-[44px] block text-inherit no-underline`}
+                    className={`${linkBaseClass} pr-24 min-h-[44px]`}
                   >
                     <ListThumb src={availableThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                     <div className="min-w-0 flex-1">
@@ -196,7 +197,7 @@ export default function CleanerDailyCalendar({
                       </p>
                     )}
                     </div>
-                  </a>
+                  </CleanerCleaningLink>
                   <div
                     className="absolute right-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none"
                   >
@@ -237,11 +238,11 @@ export default function CleanerDailyCalendar({
               )}&returnTo=${encodeURIComponent(returnTo)}`;
 
               return (
-                <a
+                <CleanerCleaningLink
                   key={cleaning.id}
                   href={detailsHref}
                   aria-label={`Ver detalles de limpieza ${propertyName}`}
-                  className={`${linkBaseClass} min-h-[44px] block text-inherit no-underline ${!isLast ? "border-b border-neutral-200" : ""}`}
+                  className={`${linkBaseClass} min-h-[44px] ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
                   <ListThumb src={availableThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                   <div className="min-w-0 flex-1">
@@ -267,7 +268,7 @@ export default function CleanerDailyCalendar({
                       </p>
                     )}
                   </div>
-                </a>
+                </CleanerCleaningLink>
               );
             })}
           </ListContainer>
@@ -287,11 +288,11 @@ export default function CleanerDailyCalendar({
               const detailsHref = `${basePath}/cleanings/${cleaning.id}?memberId=${encodeURIComponent(currentMemberId)}&returnTo=${encodeURIComponent(returnTo)}`;
 
               return (
-                <a
+                <CleanerCleaningLink
                   key={cleaning.id}
                   href={detailsHref}
                   aria-label={`Ver detalles de limpieza ${propertyName}`}
-                  className={`${linkBaseClass} min-h-[44px] block text-inherit no-underline ${!isLast ? "border-b border-neutral-200" : ""}`}
+                  className={`${linkBaseClass} min-h-[44px] ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
                   <ListThumb src={myThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                   <div className="min-w-0 flex-1">
@@ -317,7 +318,7 @@ export default function CleanerDailyCalendar({
                       </p>
                     )}
                   </div>
-                </a>
+                </CleanerCleaningLink>
               );
             })}
           </ListContainer>
