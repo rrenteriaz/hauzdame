@@ -1,10 +1,10 @@
 // lib/ui/CleaningsCalendar/CleanerDailyCalendar.tsx
 "use client";
 
+import Link from "next/link";
 import { acceptCleaning } from "@/app/cleaner/actions";
 import { formatCleaningStatus } from "@/lib/cleaning-ui";
 import ListContainer from "@/lib/ui/ListContainer";
-import ListRow from "@/lib/ui/ListRow";
 import ListThumb from "@/lib/ui/ListThumb";
 
 type CleaningForCalendar = {
@@ -120,11 +120,15 @@ export default function CleanerDailyCalendar({
               const detailsHref = `${basePath}/cleanings/${cleaning.id}?memberId=${encodeURIComponent(currentMemberId)}&returnTo=${encodeURIComponent(returnTo)}`;
 
               return (
-                <ListRow
+                <Link
                   key={cleaning.id}
                   href={detailsHref}
-                  isLast={isLast}
-                  ariaLabel={`Ver detalles de limpieza ${propertyName}`}
+                  aria-label={`Ver detalles de limpieza ${propertyName}`}
+                  className={`
+                    flex items-center gap-3 py-3 px-3 sm:px-4
+                    hover:bg-neutral-50 active:opacity-95 transition-colors
+                    ${!isLast ? "border-b border-neutral-200" : ""}
+                  `.trim()}
                 >
                   <ListThumb src={myThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                   <div className="min-w-0 flex-1">
@@ -145,7 +149,7 @@ export default function CleanerDailyCalendar({
                       </p>
                     )}
                   </div>
-                </ListRow>
+                </Link>
               );
             })}
           </ListContainer>
@@ -173,11 +177,13 @@ export default function CleanerDailyCalendar({
                   key={cleaning.id}
                   className={`relative ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
-                  <ListRow
+                  <Link
                     href={detailsHref}
-                    isLast={isLast}
-                    ariaLabel={`Ver detalles de limpieza ${propertyName}`}
-                    className="pr-24"
+                    aria-label={`Ver detalles de limpieza ${propertyName}`}
+                    className={`
+                      flex items-center gap-3 py-3 px-3 sm:px-4 pr-24
+                      hover:bg-neutral-50 active:opacity-95 transition-colors
+                    `.trim()}
                   >
                     <ListThumb src={availableThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                     <div className="min-w-0 flex-1">
@@ -196,7 +202,7 @@ export default function CleanerDailyCalendar({
                         </p>
                       )}
                     </div>
-                  </ListRow>
+                  </Link>
                   <div
                     className="absolute right-3 top-1/2 -translate-y-1/2 z-10"
                     onClick={(e) => e.stopPropagation()}
@@ -238,11 +244,15 @@ export default function CleanerDailyCalendar({
               )}&returnTo=${encodeURIComponent(returnTo)}`;
 
               return (
-                <ListRow
+                <Link
                   key={cleaning.id}
                   href={detailsHref}
-                  isLast={isLast}
-                  ariaLabel={`Ver detalles de limpieza ${propertyName}`}
+                  aria-label={`Ver detalles de limpieza ${propertyName}`}
+                  className={`
+                    flex items-center gap-3 py-3 px-3 sm:px-4
+                    hover:bg-neutral-50 active:opacity-95 transition-colors
+                    ${!isLast ? "border-b border-neutral-200" : ""}
+                  `.trim()}
                 >
                   <ListThumb src={availableThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                   <div className="min-w-0 flex-1">
@@ -268,7 +278,7 @@ export default function CleanerDailyCalendar({
                       </p>
                     )}
                   </div>
-                </ListRow>
+                </Link>
               );
             })}
           </ListContainer>
@@ -288,11 +298,15 @@ export default function CleanerDailyCalendar({
               const detailsHref = `${basePath}/cleanings/${cleaning.id}?memberId=${encodeURIComponent(currentMemberId)}&returnTo=${encodeURIComponent(returnTo)}`;
 
               return (
-                <ListRow
+                <Link
                   key={cleaning.id}
                   href={detailsHref}
-                  isLast={isLast}
-                  ariaLabel={`Ver detalles de limpieza ${propertyName}`}
+                  aria-label={`Ver detalles de limpieza ${propertyName}`}
+                  className={`
+                    flex items-center gap-3 py-3 px-3 sm:px-4
+                    hover:bg-neutral-50 active:opacity-95 transition-colors
+                    ${!isLast ? "border-b border-neutral-200" : ""}
+                  `.trim()}
                 >
                   <ListThumb src={myThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                   <div className="min-w-0 flex-1">
@@ -318,7 +332,7 @@ export default function CleanerDailyCalendar({
                       </p>
                     )}
                   </div>
-                </ListRow>
+                </Link>
               );
             })}
           </ListContainer>
