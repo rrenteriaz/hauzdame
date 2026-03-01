@@ -2,6 +2,7 @@
 import { notFound } from "next/navigation";
 import { getInventoryForCleaning } from "@/app/cleaner/inventory/actions";
 import { requireCleanerAccessToCleaning } from "@/lib/cleaner/requireCleanerAccessToCleaning";
+import { validateRedirect } from "@/lib/auth/validateRedirect";
 import Page from "@/lib/ui/Page";
 import InventoryVerificationClient from "./InventoryVerificationClient";
 
@@ -24,7 +25,9 @@ export default async function CleanerInventoryVerificationPage({
   // Obtener inventario con checks
   const inventoryData = await getInventoryForCleaning(cleaning.id);
 
-  const returnTo = resolvedSearchParams?.returnTo || `/cleaner/cleanings/${cleaning.id}`;
+  const defaultReturn = `/cleaner/cleanings/${cleaning.id}`;
+  const returnTo =
+    validateRedirect(resolvedSearchParams?.returnTo, ["/cleaner"]) ?? defaultReturn;
 
   return (
     <Page

@@ -4,12 +4,19 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import {
+  validateRedirect,
+  AUTH_REDIRECT_PREFIXES,
+} from "@/lib/auth/validateRedirect";
 
 export default function SignupClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const redirectParam = searchParams.get("redirect");
+  const safeRedirectParam = validateRedirect(redirectParam, [
+    ...AUTH_REDIRECT_PREFIXES,
+  ]);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -46,16 +53,13 @@ export default function SignupClient() {
         return;
       }
 
-      // Signup exitoso, redirigir según redirect param o response
-      let redirectTo = redirectParam || data.redirectTo || "/app";
-      
-      // Si el redirect es a /join/host, agregar auto=1 para activar auto-claim
+      // Usar SOLO data.redirectTo (validado por el API). No usar redirectParam para navegar.
+      let redirectTo = data.redirectTo || "/host/properties";
       if (redirectTo.startsWith("/join/host")) {
         const url = new URL(redirectTo, window.location.origin);
         url.searchParams.set("auto", "1");
         redirectTo = url.pathname + url.search;
       }
-      
       router.replace(redirectTo);
     } catch (err) {
       setError("Error de conexión");
@@ -202,10 +206,10 @@ export default function SignupClient() {
               ¿Ya tienes cuenta?{" "}
               <Link
                 href={
-                  redirectParam 
-                    ? `/login?redirect=${encodeURIComponent(redirectParam)}`
-                    : token 
-                    ? `/login?redirect=${encodeURIComponent(`/join?token=${token}`)}` 
+                  safeRedirectParam
+                    ? `/login?redirect=${encodeURIComponent(safeRedirectParam)}`
+                    : token
+                    ? `/login?redirect=${encodeURIComponent(`/join?token=${token}`)}`
                     : "/login"
                 }
                 className="text-blue-600 hover:text-blue-700 font-medium"

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { getDefaultTenant } from "@/lib/tenant";
 import { getInventoryReview, getActiveInventoryLines } from "@/app/host/inventory-review/actions";
+import { validateRedirect } from "@/lib/auth/validateRedirect";
 import InventoryReviewPanel from "./InventoryReviewPanel";
 
 export default async function CleanerInventoryReviewPage({
@@ -18,7 +19,9 @@ export default async function CleanerInventoryReviewPage({
   const resolvedParams = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const cleaningId = resolvedParams.id;
-  const returnTo = resolvedSearchParams.returnTo || `/cleaner/cleanings/${cleaningId}`;
+  const defaultReturn = `/cleaner/cleanings/${cleaningId}`;
+  const returnTo =
+    validateRedirect(resolvedSearchParams.returnTo, ["/cleaner"]) ?? defaultReturn;
 
   // Verificar que la limpieza existe
   const cleaning = await prisma.cleaning.findUnique({

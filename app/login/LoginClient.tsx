@@ -4,11 +4,18 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import {
+  validateRedirect,
+  AUTH_REDIRECT_PREFIXES,
+} from "@/lib/auth/validateRedirect";
 
 export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectParam = searchParams.get("redirect");
+  const safeRedirectParam = validateRedirect(redirectParam, [
+    ...AUTH_REDIRECT_PREFIXES,
+  ]);
   
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -40,16 +47,13 @@ export default function LoginClient() {
         return;
       }
 
-      // Login exitoso, redirigir según el redirect param o el rol
-      let redirectTo = redirectParam || data.redirectTo || "/host/hoy";
-      
-      // Si el redirect es a /join/host, agregar auto=1 para activar auto-claim
+      // Usar SOLO data.redirectTo (validado por el API). No usar redirectParam para navegar.
+      let redirectTo = data.redirectTo || "/host/properties";
       if (redirectTo.startsWith("/join/host")) {
         const url = new URL(redirectTo, window.location.origin);
         url.searchParams.set("auto", "1");
         redirectTo = url.pathname + url.search;
       }
-      
       router.replace(redirectTo);
     } catch (err) {
       setError("Error de conexión");
@@ -157,14 +161,14 @@ export default function LoginClient() {
             </button>
           </form>
 
-          {redirectParam ? (
+          {safeRedirectParam ? (
             <>
               <div className="mt-4 text-center text-sm text-neutral-500">
                 <p>¿No tienes cuenta?</p>
               </div>
               <div className="mt-4">
                 <Link
-                  href={`/signup?redirect=${encodeURIComponent(redirectParam)}`}
+                  href={`/signup?redirect=${encodeURIComponent(safeRedirectParam)}`}
                   className="block w-full py-2 px-4 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 text-center font-medium"
                 >
                   Crear cuenta
