@@ -12,6 +12,8 @@ import { assertCleanerCanOperateCleaning } from "@/lib/cleaner/assertCleanerCanO
 import { resolveCleanerContext } from "@/lib/cleaner/resolveCleanerContext";
 import { getAvailabilityWindow } from "@/lib/cleaner/availabilityWindow";
 import { getAccessibleTeamsForUser } from "@/lib/cleaner/getAccessibleTeamsForUser";
+import { getAccessiblePropertiesAndTenants } from "@/lib/cleaner/getAccessiblePropertiesAndTenants";
+import { getServiceTeamsForPropertyViaWorkGroupsWithFallback } from "@/lib/workgroups/getServiceTeamsForPropertyViaWorkGroups";
 
 const DEBUG_LOGS = process.env.DEBUG_LOGS === "1";
 
@@ -139,29 +141,35 @@ export async function acceptCleaning(formData: FormData) {
       return;
     }
 
-    const { activeTeamIds, tenantIds } = await getAccessibleTeamsForUser(ctx.user.id);
-    if (!tenantIds.includes(cleaning.tenantId)) {
+    // Obtener scope canónico (WGE o PropertyTeam) - mismo que usa la lista de disponibles
+    const { propertyIds, tenantIds } = await getAccessiblePropertiesAndTenants(
+      ctx.user.id,
+      myMemberships.map((m) => m.teamId)
+    );
+    if (
+      !propertyIds.includes(cleaning.propertyId) ||
+      !tenantIds.includes(cleaning.tenantId)
+    ) {
       redirect("/cleaner");
       return;
     }
 
+    // Obtener teams que pueden atender esta propiedad (WGE + fallback PropertyTeam)
+    const eligibleTeamIds = await getServiceTeamsForPropertyViaWorkGroupsWithFallback(
+      cleaning.tenantId,
+      cleaning.propertyId
+    );
     const membershipTeamIds = new Set(myMemberships.map((m) => m.teamId));
-    const propertyTeams = await prisma.propertyTeam.findMany({
-      where: {
-        tenantId: cleaning.tenantId,
-        propertyId: cleaning.propertyId,
-        teamId: { in: Array.from(membershipTeamIds) },
-      },
-      select: {
-        teamId: true,
-        team: { select: { status: true } },
-      },
-    });
+    const overlappingTeamIds = eligibleTeamIds.filter((tid) =>
+      membershipTeamIds.has(tid)
+    );
 
-    if (!propertyTeams || propertyTeams.length === 0) {
+    if (overlappingTeamIds.length === 0) {
       redirect("/cleaner");
       return;
     }
+
+    const { activeTeamIds } = await getAccessibleTeamsForUser(ctx.user.id);
 
     // Validación de disponibilidad
     const isUnassigned =
@@ -181,7 +189,8 @@ export async function acceptCleaning(formData: FormData) {
       return;
     }
 
-    const teamForCleaningId = cleaning.teamId || propertyTeams.find((pt) => pt.teamId)?.teamId || null;
+    const teamForCleaningId =
+      cleaning.teamId || overlappingTeamIds[0] || null;
     const mustBeActiveForFuture = teamForCleaningId
       ? activeTeamIds.includes(teamForCleaningId)
       : false;
@@ -192,9 +201,9 @@ export async function acceptCleaning(formData: FormData) {
     }
 
     const targetTeamId =
-      cleaning.teamId && membershipTeamIds.has(cleaning.teamId)
+      cleaning.teamId && overlappingTeamIds.includes(cleaning.teamId)
         ? cleaning.teamId
-        : propertyTeams.find((pt) => pt.team?.status !== "INACTIVE")?.teamId || propertyTeams[0].teamId;
+        : overlappingTeamIds[0];
 
     const myMembership = myMemberships.find((m) => m.teamId === targetTeamId);
     if (!myMembership) {
