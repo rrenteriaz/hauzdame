@@ -166,19 +166,18 @@ export default function CleanerDailyCalendar({
             {dayAvailableCleanings.map((cleaning, index) => {
               const isLast = index === dayAvailableCleanings.length - 1;
               const propertyName = cleaning.property.shortName || cleaning.property.name;
+              const detailsHref = `${basePath}/cleanings/${cleaning.id}?memberId=${encodeURIComponent(currentMemberId)}&returnTo=${encodeURIComponent(returnTo)}`;
 
               return (
                 <div
                   key={cleaning.id}
                   className={`relative ${!isLast ? "border-b border-neutral-200" : ""}`}
                 >
-                  <div
-                    className={`
-                      flex items-center gap-3
-                      py-3 px-3 sm:px-4 pr-24
-                      hover:bg-neutral-50
-                      transition-colors
-                    `.trim()}
+                  <ListRow
+                    href={detailsHref}
+                    isLast={isLast}
+                    ariaLabel={`Ver detalles de limpieza ${propertyName}`}
+                    className="pr-24"
                   >
                     <ListThumb src={availableThumbUrls.get(cleaning.property.id) || null} alt={propertyName} />
                     <div className="min-w-0 flex-1">
@@ -197,8 +196,11 @@ export default function CleanerDailyCalendar({
                         </p>
                       )}
                     </div>
-                  </div>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
+                  </ListRow>
+                  <div
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <form action={acceptCleaning}>
                       <input type="hidden" name="cleaningId" value={cleaning.id} />
                       <input type="hidden" name="memberId" value={currentMemberId} />
