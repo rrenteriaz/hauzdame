@@ -193,11 +193,11 @@ export default function InventoryIncidentModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 pb-24 sm:pb-4"
         onClick={onClose}
       >
         <div
-          className="relative bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] flex flex-col min-h-0"
+          className="relative bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[calc(100dvh-8rem)] sm:max-h-[90vh] flex flex-col min-h-0"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header - fijo arriba */}
