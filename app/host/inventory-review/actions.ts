@@ -258,8 +258,12 @@ export async function createOrUpdateInventoryChange(formData: FormData) {
   // Verificar que la revisión existe, pertenece al tenant y está en DRAFT
   const review = await prisma.inventoryReview.findFirst({
     where: { id: reviewId, tenantId },
-    select: { id: true, status: true, cleaningId: true },
-    include: { cleaning: { select: { propertyId: true } } },
+    select: {
+      id: true,
+      status: true,
+      cleaningId: true,
+      cleaning: { select: { propertyId: true } },
+    },
   });
 
   if (!review) {
