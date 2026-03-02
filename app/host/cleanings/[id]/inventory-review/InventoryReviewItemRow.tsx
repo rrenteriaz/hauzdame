@@ -114,18 +114,11 @@ export default function InventoryReviewItemRow({
                 {variantLabel}
               </span>
             )}
-            {(hasQuantityChange || hasReport) && (
-              <div className="shrink-0 flex gap-1">
-                {hasQuantityChange && (
-                  <span className="text-xs bg-amber-100 text-amber-700 px-1.5 sm:px-2 py-0.5 rounded">
-                    Cambio
-                  </span>
-                )}
-                {hasReport && (
-                  <span className="text-xs bg-red-100 text-red-700 px-1.5 sm:px-2 py-0.5 rounded">
-                    Reporte {report!.status === "PENDING" ? "(Pendiente)" : ""}
-                  </span>
-                )}
+            {hasQuantityChange && (
+              <div className="shrink-0">
+                <span className="text-xs bg-amber-100 text-amber-700 px-1.5 sm:px-2 py-0.5 rounded">
+                  Cambio
+                </span>
               </div>
             )}
           </div>
