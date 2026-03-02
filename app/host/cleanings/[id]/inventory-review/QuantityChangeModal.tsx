@@ -42,7 +42,9 @@ export default function QuantityChangeModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     if (!selectedReason) {
       alert("Debes seleccionar una razón para el cambio");
       return;
@@ -192,7 +194,7 @@ export default function QuantityChangeModal({
           </button>
           <button
             type="button"
-            onClick={handleSubmit}
+            onClick={(e) => handleSubmit(e)}
             className="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors"
           >
             Guardar cambio

@@ -163,15 +163,19 @@ export default function InventoryReviewPanel({
     setError(null);
     startTransition(async () => {
       try {
+        let effectiveReviewId = review?.id ?? "";
         if (!review) {
           const formData = new FormData();
+          formData.set("callerContext", "cleaner");
           formData.set("cleaningId", cleaningId);
           const result = await createOrUpdateInventoryReview(formData);
+          effectiveReviewId = result.id;
           setReview({ id: result.id, status: result.status as InventoryReviewStatus, itemChanges: [], reports: [] });
         }
 
         const formData = new FormData();
-        formData.set("reviewId", review?.id || "");
+        formData.set("callerContext", "cleaner");
+        formData.set("reviewId", effectiveReviewId);
         formData.set("itemId", itemId);
         formData.set("quantityAfter", quantityAfter.toString());
         formData.set("reason", reason);
@@ -211,8 +215,11 @@ export default function InventoryReviewPanel({
         setShowQuantityModal(false);
         setSelectedItemId(null);
         setSelectedLineIdForQuantity(null);
+        // Refrescar para sincronizar datos en modo embedded
+        if (mode === "embedded") router.refresh();
       } catch (err: any) {
         setError(err.message || "Error al guardar el cambio");
+        console.error("[InventoryReview] Error guardando cambio cantidad:", err);
       }
     });
   };
@@ -226,15 +233,19 @@ export default function InventoryReviewPanel({
     setError(null);
     startTransition(async () => {
       try {
+        let effectiveReviewId = review?.id ?? "";
         if (!review) {
           const formData = new FormData();
+          formData.set("callerContext", "cleaner");
           formData.set("cleaningId", cleaningId);
           const result = await createOrUpdateInventoryReview(formData);
+          effectiveReviewId = result.id;
           setReview({ id: result.id, status: result.status as InventoryReviewStatus, itemChanges: [], reports: [] });
         }
 
         const formData = new FormData();
-        formData.set("reviewId", review?.id || "");
+        formData.set("callerContext", "cleaner");
+        formData.set("reviewId", effectiveReviewId);
         formData.set("cleaningId", cleaningId);
         formData.set("itemId", itemId);
         formData.set("type", type);
@@ -264,8 +275,11 @@ export default function InventoryReviewPanel({
         setShowReportModal(false);
         setSelectedItemId(null);
         setSelectedLineId(null);
+        // Refrescar para sincronizar datos en modo embedded
+        if (mode === "embedded") router.refresh();
       } catch (err: any) {
         setError(err.message || "Error al crear el reporte");
+        console.error("[InventoryReview] Error creando reporte:", err);
       }
     });
   };
@@ -274,7 +288,7 @@ export default function InventoryReviewPanel({
     setError(null);
     startTransition(async () => {
       try {
-        await deleteInventoryReport(reportId);
+        await deleteInventoryReport(reportId, { callerContext: "cleaner" });
 
         const newReports = new Map(reports);
         newReports.delete(lineId);
@@ -298,6 +312,7 @@ export default function InventoryReviewPanel({
         }
 
         const formData = new FormData();
+        formData.set("callerContext", "cleaner");
         formData.set("reviewId", review.id);
 
         await submitInventoryReview(formData);
@@ -310,9 +325,8 @@ export default function InventoryReviewPanel({
           router.refresh();
           onSubmitted?.();
         } else {
-          // En modo page, redirigir
-          const redirectPath = returnTo || `/cleaner/cleanings/${cleaningId}`;
-          router.push(redirectPath);
+          // En modo page, volver siempre al detalle de la limpieza (no a Hoy/returnTo)
+          router.push(`/cleaner/cleanings/${cleaningId}`);
           router.refresh();
         }
       } catch (err: any) {
@@ -325,28 +339,29 @@ export default function InventoryReviewPanel({
     setError(null);
     startTransition(async () => {
       try {
+        let effectiveReview = review;
         if (!review) {
           const formData = new FormData();
+          formData.set("callerContext", "cleaner");
           formData.set("cleaningId", cleaningId);
           const result = await createOrUpdateInventoryReview(formData);
-          setReview({ id: result.id, status: result.status as InventoryReviewStatus, itemChanges: [], reports: [] });
+          effectiveReview = { id: result.id, status: result.status as InventoryReviewStatus, itemChanges: [], reports: [] };
+          setReview(effectiveReview);
         }
 
         const formData = new FormData();
-        formData.set("reviewId", review?.id || "");
+        formData.set("callerContext", "cleaner");
+        formData.set("reviewId", effectiveReview!.id);
         await submitInventoryReview(formData);
         
-        // Actualizar estado local
-        if (review) {
-          setReview({ ...review, status: InventoryReviewStatus.SUBMITTED });
-        }
+        setReview((prev) => (prev ? { ...prev, status: InventoryReviewStatus.SUBMITTED } : prev));
 
         if (mode === "embedded") {
           router.refresh();
           onSubmitted?.();
         } else {
-          const redirectPath = returnTo || `/cleaner/cleanings/${cleaningId}`;
-          router.push(redirectPath);
+          // Volver siempre al detalle de la limpieza (no a Hoy/returnTo)
+          router.push(`/cleaner/cleanings/${cleaningId}`);
           router.refresh();
         }
       } catch (err: any) {
