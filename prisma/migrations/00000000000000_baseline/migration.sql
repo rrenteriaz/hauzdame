@@ -769,7 +769,6 @@ CREATE TABLE "InventoryCheck" (
     "createdByUserId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "inventoryItemId" TEXT,
 
     CONSTRAINT "InventoryCheck_pkey" PRIMARY KEY ("id")
 );
@@ -1336,6 +1335,9 @@ CREATE INDEX "InventoryItem_tenantId_category_archivedAt_idx" ON "InventoryItem"
 CREATE UNIQUE INDEX "InventoryItem_tenantId_nameNormalized_key" ON "InventoryItem"("tenantId", "nameNormalized");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "InventoryItem_tenantId_category_nameNormalized_key" ON "InventoryItem"("tenantId", "category", "nameNormalized");
+
+-- CreateIndex
 CREATE INDEX "GlobalCatalogItem_locale_isActive_idx" ON "GlobalCatalogItem"("locale", "isActive");
 
 -- CreateIndex
@@ -1870,8 +1872,6 @@ ALTER TABLE "InventoryCheck" ADD CONSTRAINT "InventoryCheck_tenantId_fkey" FOREI
 ALTER TABLE "InventoryCheck" ADD CONSTRAINT "InventoryCheck_createdByUserId_fkey" FOREIGN KEY ("createdByUserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "InventoryCheck" ADD CONSTRAINT "InventoryCheck_inventoryItemId_fkey" FOREIGN KEY ("inventoryItemId") REFERENCES "InventoryItem"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
 -- AddForeignKey
 ALTER TABLE "InventoryReviewItemChange" ADD CONSTRAINT "InventoryReviewItemChange_itemId_fkey" FOREIGN KEY ("itemId") REFERENCES "InventoryItem"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 

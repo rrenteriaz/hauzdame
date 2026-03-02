@@ -51,7 +51,6 @@ interface InventoryItemDetailModalProps {
   onClose: () => void;
   onReportClick: () => void;
   onDeleteReport?: () => void;
-  onQuantityChange?: (newQuantity: number) => void;
   disabled?: boolean;
 }
 
@@ -63,7 +62,6 @@ export default function InventoryItemDetailModal({
   onClose,
   onReportClick,
   onDeleteReport,
-  onQuantityChange,
   disabled = false,
 }: InventoryItemDetailModalProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -181,43 +179,26 @@ export default function InventoryItemDetailModal({
             </div>
           )}
 
-          {/* Cantidad */}
+          {/* Cantidad (solo lectura; para cambiar usar botón Reportar/Editar incidencia) */}
           <div>
             <p className="text-sm font-medium text-neutral-700 mb-2">Cantidad</p>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <div>
                 <p className="text-xs text-neutral-500 mb-1">Registrada</p>
                 <p className="text-lg font-semibold text-neutral-900">
                   {originalQuantity}
                 </p>
               </div>
-              {onQuantityChange && (
-                <div>
-                  <p className="text-xs text-neutral-500 mb-1">Verificada</p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onQuantityChange(Math.max(0, currentQuantity - 1))}
-                      disabled={disabled}
-                      className="w-8 h-8 rounded border border-neutral-300 flex items-center justify-center hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      −
-                    </button>
-                    <span className="w-12 text-center font-medium text-lg">
-                      {currentQuantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => onQuantityChange(currentQuantity + 1)}
-                      disabled={disabled}
-                      className="w-8 h-8 rounded border border-neutral-300 flex items-center justify-center hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              )}
+              <div>
+                <p className="text-xs text-neutral-500 mb-1">Verificada</p>
+                <p className="text-lg font-semibold text-neutral-900">
+                  {currentQuantity}
+                </p>
+              </div>
             </div>
+            <p className="text-xs text-neutral-500 mt-2">
+              Para cambiar la cantidad, usa el botón &quot;Reportar incidencia&quot; o &quot;Editar incidencia&quot;.
+            </p>
           </div>
 
           {/* Detalles adicionales de la primera línea */}

@@ -15,15 +15,19 @@ model Tenant {
   assets                     Asset[]
   chatMessages               ChatMessage[]
   chatThreads                ChatThread[]
+  checklistItemAssets        ChecklistItemAsset[]
   cleanings                  Cleaning[]
   cleaningAssignees          CleaningAssignee[]
   cleaningChecklistItems     CleaningChecklistItem[]
   cleaningMedia              CleaningMedia[]
   cleaningViews              CleaningView[]
+  hostWorkGroups             HostWorkGroup[]             @relation("Tenant_HostWorkGroups")
+  hostWorkGroupInvites       HostWorkGroupInvite[]       @relation("Tenant_HostWorkGroupInvites")
+  hostWorkGroupProperties    HostWorkGroupProperty[]     @relation("Tenant_HostWorkGroupProperties")
+  inventoryChecks            InventoryCheck[]
   inventoryEvidence          InventoryEvidence[]
   inventoryItems             InventoryItem[]
   inventoryItemAssets        InventoryItemAsset[]
-  checklistItemAssets        ChecklistItemAsset[]
   inventoryLines             InventoryLine[]
   inventoryReports           InventoryReport[]
   inventoryReviews           InventoryReview[]
@@ -37,21 +41,17 @@ model Tenant {
   propertyChecklistItems     PropertyChecklistItem[]
   propertyCleaners           PropertyCleaner[]
   propertyHandymen           PropertyHandyman[]
+  propertyInvites            PropertyInvite[]
   propertyOpenings           PropertyOpening[]
   propertyTeams              PropertyTeam[]
-  propertyInvites            PropertyInvite[]
   reservations               Reservation[]
   teams                      Team[]
   teamMembers                TeamMember[]
   teamMemberScheduleDays     TeamMemberScheduleDay[]
   users                      User[]
-  hostWorkGroups             HostWorkGroup[]             @relation("Tenant_HostWorkGroups")
-  hostWorkGroupProperties    HostWorkGroupProperty[]     @relation("Tenant_HostWorkGroupProperties")
-  hostWorkGroupInvites       HostWorkGroupInvite[]       @relation("Tenant_HostWorkGroupInvites")
+  variantGroups              VariantGroup[]
   workGroupExecutorsHost     WorkGroupExecutor[]         @relation("Tenant_WorkGroupExecutorsHost")
   workGroupExecutorsServices WorkGroupExecutor[]         @relation("Tenant_WorkGroupExecutorsServices")
-  inventoryChecks            InventoryCheck[]
-  variantGroups              VariantGroup[]
 }
 
 /// *
@@ -70,66 +70,62 @@ model User {
   chatMessages                                ChatMessage[]                 @relation("ChatMessageSender")
   chatParticipantsAddedBy                     ChatParticipant[]             @relation("ChatParticipantAddedBy")
   chatParticipants                            ChatParticipant[]             @relation("ChatParticipant")
+  cleanerProfile                              CleanerProfile?
+  cleanerReviewsReceived                      CleanerReview[]               @relation("CleanerReviewCleaner")
+  cleanerReviewsGiven                         CleanerReview[]               @relation("CleanerReviewReviewer")
+  cleanerVerificationDocuments                CleanerVerificationDocument[]
   cleaningAssignments                         Cleaning[]                    @relation("CleanerAssignments")
+  hostWorkGroupInvitesClaimed                 HostWorkGroupInvite[]         @relation("HostWorkGroupInvite_claimedByUser")
+  hostWorkGroupInvitesCreated                 HostWorkGroupInvite[]         @relation("HostWorkGroupInvite_createdByUser")
+  inventoryChecksCreated                      InventoryCheck[]              @relation("InventoryCheckCreator")
   inventoryReportsAsCreator                   InventoryReport[]             @relation("InventoryReportCreator")
   inventoryReportsAsResolver                  InventoryReport[]             @relation("InventoryReportResolver")
   inventoryReviewsAsReviewer                  InventoryReview[]             @relation("InventoryReviewer")
-  inventoryChecksCreated                      InventoryCheck[]              @relation("InventoryCheckCreator")
   ownedProperties                             Property[]                    @relation("PropertyOwner")
   adminProperties                             PropertyAdmin[]
   applications                                PropertyApplication[]         @relation("PropertyApplicationApplicant")
   cleanerProperties                           PropertyCleaner[]
   handymanProperties                          PropertyHandyman[]
-  createdOpenings                             PropertyOpening[]             @relation("PropertyOpeningCreator")
-  propertyMemberAccesses                      PropertyMemberAccess[]
   propertyInvitesClaimed                      PropertyInvite[]              @relation("PropertyInvite_claimedByUser")
   propertyInvitesCreated                      PropertyInvite[]              @relation("PropertyInvite_createdByUser")
+  propertyMemberAccesses                      PropertyMemberAccess[]
+  createdOpenings                             PropertyOpening[]             @relation("PropertyOpeningCreator")
+  inactivatedTeams                            Team[]                        @relation("TeamInactivatedBy")
   TeamInvite_TeamInvite_claimedByUserIdToUser TeamInvite[]                  @relation("TeamInvite_claimedByUserIdToUser")
   TeamInvite_TeamInvite_createdByUserIdToUser TeamInvite[]                  @relation("TeamInvite_createdByUserIdToUser")
-  hostWorkGroupInvitesClaimed                 HostWorkGroupInvite[]         @relation("HostWorkGroupInvite_claimedByUser")
-  hostWorkGroupInvitesCreated                 HostWorkGroupInvite[]         @relation("HostWorkGroupInvite_createdByUser")
-  inactivatedTeams                            Team[]                        @relation("TeamInactivatedBy")
   teamMembers                                 TeamMember[]                  @relation("UserTeamMembers")
   TeamMembership                              TeamMembership[]
-  cleanerProfile                              CleanerProfile?
-  cleanerReviewsReceived                      CleanerReview[]               @relation("CleanerReviewCleaner")
-  cleanerReviewsGiven                         CleanerReview[]               @relation("CleanerReviewReviewer")
   avatarMedia                                 Asset?                        @relation("UserAvatar", fields: [avatarMediaId], references: [id])
   tenant                                      Tenant?                       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  cleanerVerificationDocuments                CleanerVerificationDocument[]
 }
 
 /// *
 /// * Perfil marketplace del cleaner
 /// * Contiene información necesaria para buscar trabajo en marketplace
 model CleanerProfile {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  fullName        String?
-  phone           String?
-  // Address completo
-  addressLine1    String?
-  addressLine2    String?
-  neighborhood    String?
-  city            String?
-  state           String?
-  postalCode      String?
-  country         String?   @default("MX")
-  latitude        Float?
-  longitude       Float?
-  // Marketplace
-  serviceRadiusKm Int?
-  isAvailable     Boolean   @default(false)
-  lastAvailableAt DateTime?
-  // Ratings agregados (recalculados)
-  avgRating       Float?    @default(0)
-  ratingsCount    Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
+  id                    String                        @id @default(cuid())
+  userId                String                        @unique
+  fullName              String?
+  phone                 String?
+  addressLine1          String?
+  addressLine2          String?
+  neighborhood          String?
+  city                  String?
+  state                 String?
+  postalCode            String?
+  country               String?                       @default("MX")
+  latitude              Float?
+  longitude             Float?
+  serviceRadiusKm       Int?
+  isAvailable           Boolean                       @default(false)
+  lastAvailableAt       DateTime?
+  avgRating             Float?                        @default(0)
+  ratingsCount          Int                           @default(0)
+  createdAt             DateTime                      @default(now())
+  updatedAt             DateTime                      @updatedAt
+  availabilitySlots     CleanerAvailabilitySlot[]
   user                  User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
   verificationDocuments CleanerVerificationDocument[]
-  availabilitySlots     CleanerAvailabilitySlot[]
   workFlags             CleanerWorkFlag[]
 
   @@index([userId])
@@ -149,10 +145,9 @@ model CleanerVerificationDocument {
   reviewedAt       DateTime?
   createdAt        DateTime                          @default(now())
   updatedAt        DateTime                          @updatedAt
-
-  cleanerProfile CleanerProfile @relation(fields: [cleanerProfileId], references: [id], onDelete: Cascade)
-  asset          Asset          @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  reviewedBy     User?          @relation(fields: [reviewedByUserId], references: [id])
+  asset            Asset                             @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  cleanerProfile   CleanerProfile                    @relation(fields: [cleanerProfileId], references: [id], onDelete: Cascade)
+  reviewedBy       User?                             @relation(fields: [reviewedByUserId], references: [id])
 
   @@index([cleanerProfileId])
   @@index([status])
@@ -163,16 +158,15 @@ model CleanerVerificationDocument {
 /// * Horarios de disponibilidad del cleaner
 /// * Define disponibilidad por día de la semana
 model CleanerAvailabilitySlot {
-  id               String   @id @default(cuid())
+  id               String         @id @default(cuid())
   cleanerProfileId String
-  dayOfWeek        Int // 0-6 (0 = domingo)
-  startTime        String // "HH:MM"
-  endTime          String // "HH:MM"
-  timezone         String   @default("America/Mexico_City")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  cleanerProfile CleanerProfile @relation(fields: [cleanerProfileId], references: [id], onDelete: Cascade)
+  dayOfWeek        Int
+  startTime        String
+  endTime          String
+  timezone         String         @default("America/Mexico_City")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  cleanerProfile   CleanerProfile @relation(fields: [cleanerProfileId], references: [id], onDelete: Cascade)
 
   @@unique([cleanerProfileId, dayOfWeek])
   @@index([cleanerProfileId])
@@ -182,19 +176,18 @@ model CleanerAvailabilitySlot {
 /// * Calificación/review del cleaner
 /// * Calificaciones viven en tabla separada; profile tiene agregados
 model CleanerReview {
-  id                String   @id @default(cuid())
-  cleanerUserId     String // FK a User (cleaner)
-  reviewerUserId    String // FK a User (host/admin)
-  rating            Int // 1-5
-  comment           String?  @db.VarChar(500)
+  id                String    @id @default(cuid())
+  cleanerUserId     String
+  reviewerUserId    String
+  rating            Int
+  comment           String?   @db.VarChar(500)
   relatedCleaningId String?
   relatedPropertyId String?
-  createdAt         DateTime @default(now())
-
-  cleanerUser  User      @relation("CleanerReviewCleaner", fields: [cleanerUserId], references: [id], onDelete: Cascade)
-  reviewerUser User      @relation("CleanerReviewReviewer", fields: [reviewerUserId], references: [id], onDelete: Cascade)
-  cleaning     Cleaning? @relation(fields: [relatedCleaningId], references: [id], onDelete: SetNull)
-  property     Property? @relation(fields: [relatedPropertyId], references: [id], onDelete: SetNull)
+  createdAt         DateTime  @default(now())
+  cleanerUser       User      @relation("CleanerReviewCleaner", fields: [cleanerUserId], references: [id], onDelete: Cascade)
+  cleaning          Cleaning? @relation(fields: [relatedCleaningId], references: [id])
+  property          Property? @relation(fields: [relatedPropertyId], references: [id])
+  reviewerUser      User      @relation("CleanerReviewReviewer", fields: [reviewerUserId], references: [id], onDelete: Cascade)
 
   @@index([cleanerUserId])
   @@index([reviewerUserId])
@@ -213,8 +206,7 @@ model CleanerWorkFlag {
   notes            String?
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
-
-  cleanerProfile CleanerProfile @relation(fields: [cleanerProfileId], references: [id], onDelete: Cascade)
+  cleanerProfile   CleanerProfile        @relation(fields: [cleanerProfileId], references: [id], onDelete: Cascade)
 
   @@unique([cleanerProfileId, desiredWorkType])
   @@index([cleanerProfileId])
@@ -232,10 +224,6 @@ model Property {
   address                 String?
   notes                   String?
   icalUrl                 String?
-  icalLastSyncedAt        DateTime?
-  icalLastSyncAttemptAt   DateTime?
-  icalSyncInProgressUntil DateTime?
-  icalLastSyncError       String?                 @db.VarChar(500)
   timeZone                String?
   checkInTime             String?
   checkOutTime            String?
@@ -248,79 +236,59 @@ model Property {
   idOld                   String?                 @unique
   id                      String                  @id @default(cuid())
   coverAssetGroupId       String?
+  coverMediaId            String?                 @unique
   latitude                Float?
   longitude               Float?
   wifiSsid                String?
   wifiPassword            String?
   accessCode              String?
-  coverMediaId            String?                 @unique
+  icalLastSyncedAt        DateTime?               @db.Timestamptz(6)
+  icalLastSyncAttemptAt   DateTime?               @db.Timestamptz(6)
+  icalSyncInProgressUntil DateTime?               @db.Timestamptz(6)
+  icalLastSyncError       String?                 @db.VarChar(500)
   chatThreads             ChatThread[]
+  cleanerReviews          CleanerReview[]
   cleanings               Cleaning[]
+  hostWorkGroupProperties HostWorkGroupProperty[] @relation("Property_HostWorkGroupProperties")
+  inventoryChecks         InventoryCheck[]
   inventoryLines          InventoryLine[]
   inventoryReviews        InventoryReview[]
-  inventoryChecks         InventoryCheck[]
   locks                   Lock[]
   coverMedia              Asset?                  @relation("PropertyCover", fields: [coverMediaId], references: [id])
-  user                    User                    @relation("PropertyOwner", fields: [userId], references: [id])
   tenant                  Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user                    User                    @relation("PropertyOwner", fields: [userId], references: [id])
   admins                  PropertyAdmin[]
   propertyApplications    PropertyApplication[]
   propertyChecklistItems  PropertyChecklistItem[]
   cleaners                PropertyCleaner[]
   handymen                PropertyHandyman[]
+  propertyInvites         PropertyInvite[]
+  memberAccesses          PropertyMemberAccess[]
   propertyOpenings        PropertyOpening[]
   teams                   PropertyTeam[]
-  memberAccesses          PropertyMemberAccess[]
-  propertyInvites         PropertyInvite[]
   reservations            Reservation[]           @relation("ReservationProperty")
-  cleanerReviews          CleanerReview[]
-  hostWorkGroupProperties HostWorkGroupProperty[] @relation("Property_HostWorkGroupProperties")
 
   @@index([tenantId])
-}
-
-enum PropertyMemberAccessStatus {
-  ACTIVE
-  REMOVED
-  INACTIVE
-}
-
-enum PropertyAccessRole {
-  CLEANER
-  MANAGER
 }
 
 model PropertyMemberAccess {
   id               String                     @id @default(cuid())
   propertyId       String
   teamMembershipId String?
-  userId           String?
-  accessRole       PropertyAccessRole?
   status           PropertyMemberAccessStatus @default(ACTIVE)
   createdAt        DateTime                   @default(now())
   updatedAt        DateTime                   @updatedAt
-
-  Property       Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  TeamMembership TeamMembership? @relation(fields: [teamMembershipId], references: [id], onDelete: Cascade)
-  User           User?           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  userId           String?
+  accessRole       PropertyAccessRole?
+  Property         Property                   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  TeamMembership   TeamMembership?            @relation(fields: [teamMembershipId], references: [id], onDelete: Cascade)
+  User             User?                      @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@unique([propertyId, teamMembershipId])
   @@unique([propertyId, userId])
   @@index([teamMembershipId])
   @@index([propertyId])
   @@index([userId])
-}
-
-enum PropertyInviteStatus {
-  PENDING
-  CLAIMED
-  REVOKED
-  EXPIRED
-}
-
-enum WorkGroupExecutorStatus {
-  ACTIVE
-  INACTIVE
 }
 
 model PropertyInvite {
@@ -337,11 +305,10 @@ model PropertyInvite {
   createdByUserId String
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
-
-  Property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  Tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  claimedByUser User?    @relation("PropertyInvite_claimedByUser", fields: [claimedByUserId], references: [id], onDelete: SetNull)
-  createdByUser User     @relation("PropertyInvite_createdByUser", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  claimedByUser   User?                @relation("PropertyInvite_claimedByUser", fields: [claimedByUserId], references: [id])
+  createdByUser   User                 @relation("PropertyInvite_createdByUser", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  Property        Property             @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  Tenant          Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([propertyId])
@@ -454,6 +421,8 @@ model Cleaning {
   notes                  String?
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
+  assignedMembershipId   String?
+  teamId                 String?
   completedAt            DateTime?
   startedAt              DateTime?
   assignedTeamMemberId   String?
@@ -466,13 +435,11 @@ model Cleaning {
   isScheduleOverridden   Boolean                 @default(false)
   scheduleOverriddenAt   DateTime?
   propertyId             String
-  teamId                 String?
-  assignedMembershipId   String?
-  // Snapshot de información de propiedad (requisito técnico para histórico sin depender de Property actual)
   propertyName           String?
   propertyShortName      String?
   propertyAddress        String?
   chatThread             ChatThread?
+  cleanerReviews         CleanerReview[]
   assignedMember         TeamMember?             @relation("AssignedCleanings", fields: [assignedMemberId], references: [id])
   TeamMembership         TeamMembership?         @relation(fields: [assignedMembershipId], references: [id])
   assignedTeamMember     TeamMember?             @relation(fields: [assignedTeamMemberId], references: [id])
@@ -485,10 +452,9 @@ model Cleaning {
   cleaningChecklistItems CleaningChecklistItem[]
   cleaningMedia          CleaningMedia[]
   views                  CleaningView[]
+  inventoryChecks        InventoryCheck[]        @relation("CleaningInventoryChecks")
   inventoryReports       InventoryReport[]
   inventoryReview        InventoryReview?
-  inventoryChecks        InventoryCheck[]        @relation("CleaningInventoryChecks")
-  cleanerReviews         CleanerReview[]
 
   @@index([tenantId])
   @@index([propertyId])
@@ -575,20 +541,20 @@ model Team {
   tenantId            String
   name                String
   notes               String?
-  status              TeamStatus          @default(ACTIVE)
-  inactivatedAt       DateTime?
-  inactivatedByUserId String?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
+  inactivatedAt       DateTime?
+  inactivatedByUserId String?
+  status              TeamStatus          @default(ACTIVE)
   chatParticipants    ChatParticipant[]
   chatThreads         ChatThread[]
   cleanings           Cleaning[]
   properties          PropertyTeam[]
+  inactivatedByUser   User?               @relation("TeamInactivatedBy", fields: [inactivatedByUserId], references: [id])
   tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   TeamInvite          TeamInvite[]
   members             TeamMember[]
   TeamMembership      TeamMembership[]
-  inactivatedByUser   User?               @relation("TeamInactivatedBy", fields: [inactivatedByUserId], references: [id])
   workGroupExecutors  WorkGroupExecutor[] @relation("Team_WorkGroupExecutors")
 
   @@unique([tenantId, name])
@@ -665,20 +631,17 @@ model PropertyTeam {
 /// *
 /// * Grupo de trabajo configurado por Host (tenant HOST).
 model HostWorkGroup {
-  id        String              @id @default(cuid())
-  tenantId  String
-  name      String
-  status    HostWorkGroupStatus @default(ACTIVE)
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
-
+  id         String                  @id @default(cuid())
+  tenantId   String
+  name       String
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @updatedAt
+  status     HostWorkGroupStatus     @default(ACTIVE)
   tenant     Tenant                  @relation("Tenant_HostWorkGroups", fields: [tenantId], references: [id], onDelete: Cascade)
+  invites    HostWorkGroupInvite[]   @relation("HostWorkGroup_HostWorkGroupInvites")
   properties HostWorkGroupProperty[]
   executors  WorkGroupExecutor[]     @relation("HostWorkGroup_WorkGroupExecutors")
-  invites    HostWorkGroupInvite[]   @relation("HostWorkGroup_HostWorkGroupInvites")
 
-  // NOTE: Uniqueness of (tenantId, name) is enforced ONLY for status=ACTIVE via a partial unique index in SQL (contract 7.8).
-  // Prisma schema cannot represent partial unique indexes.
   @@index([tenantId])
   @@index([status])
 }
@@ -686,15 +649,14 @@ model HostWorkGroup {
 /// *
 /// * Relación Property <-> HostWorkGroup (tenant HOST).
 model HostWorkGroupProperty {
-  id          String   @id @default(cuid())
+  id          String        @id @default(cuid())
   tenantId    String
   workGroupId String
   propertyId  String
-  createdAt   DateTime @default(now())
-
-  tenant    Tenant        @relation("Tenant_HostWorkGroupProperties", fields: [tenantId], references: [id], onDelete: Cascade)
-  workGroup HostWorkGroup @relation(fields: [workGroupId], references: [id], onDelete: Cascade)
-  property  Property      @relation("Property_HostWorkGroupProperties", fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  property    Property      @relation("Property_HostWorkGroupProperties", fields: [propertyId], references: [id], onDelete: Cascade)
+  tenant      Tenant        @relation("Tenant_HostWorkGroupProperties", fields: [tenantId], references: [id], onDelete: Cascade)
+  workGroup   HostWorkGroup @relation(fields: [workGroupId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, workGroupId, propertyId])
   @@index([tenantId])
@@ -713,11 +675,10 @@ model WorkGroupExecutor {
   status           WorkGroupExecutorStatus @default(ACTIVE)
   createdAt        DateTime                @default(now())
   updatedAt        DateTime                @updatedAt
-
-  hostTenant     Tenant        @relation("Tenant_WorkGroupExecutorsHost", fields: [hostTenantId], references: [id], onDelete: Cascade)
-  servicesTenant Tenant        @relation("Tenant_WorkGroupExecutorsServices", fields: [servicesTenantId], references: [id], onDelete: Cascade)
-  workGroup      HostWorkGroup @relation("HostWorkGroup_WorkGroupExecutors", fields: [workGroupId], references: [id], onDelete: Cascade)
-  team           Team          @relation("Team_WorkGroupExecutors", fields: [teamId], references: [id], onDelete: Cascade)
+  hostTenant       Tenant                  @relation("Tenant_WorkGroupExecutorsHost", fields: [hostTenantId], references: [id], onDelete: Cascade)
+  servicesTenant   Tenant                  @relation("Tenant_WorkGroupExecutorsServices", fields: [servicesTenantId], references: [id], onDelete: Cascade)
+  team             Team                    @relation("Team_WorkGroupExecutors", fields: [teamId], references: [id], onDelete: Cascade)
+  workGroup        HostWorkGroup           @relation("HostWorkGroup_WorkGroupExecutors", fields: [workGroupId], references: [id], onDelete: Cascade)
 
   @@unique([hostTenantId, workGroupId, teamId])
   @@index([hostTenantId, workGroupId])
@@ -744,11 +705,10 @@ model HostWorkGroupInvite {
   createdAt       DateTime                  @default(now())
   expiresAt       DateTime
   claimedAt       DateTime?
-
-  tenant        Tenant        @relation("Tenant_HostWorkGroupInvites", fields: [tenantId], references: [id], onDelete: Cascade)
-  workGroup     HostWorkGroup @relation("HostWorkGroup_HostWorkGroupInvites", fields: [workGroupId], references: [id], onDelete: Cascade)
-  createdByUser User          @relation("HostWorkGroupInvite_createdByUser", fields: [createdByUserId], references: [id], onDelete: Cascade)
-  claimedByUser User?         @relation("HostWorkGroupInvite_claimedByUser", fields: [claimedByUserId], references: [id], onDelete: SetNull)
+  claimedByUser   User?                     @relation("HostWorkGroupInvite_claimedByUser", fields: [claimedByUserId], references: [id])
+  createdByUser   User                      @relation("HostWorkGroupInvite_createdByUser", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  tenant          Tenant                    @relation("Tenant_HostWorkGroupInvites", fields: [tenantId], references: [id], onDelete: Cascade)
+  workGroup       HostWorkGroup             @relation("HostWorkGroup_HostWorkGroupInvites", fields: [workGroupId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([workGroupId])
@@ -811,9 +771,9 @@ model PropertyChecklistItem {
   requiresValue       Boolean              @default(false)
   valueLabel          String?
   propertyId          String
+  checklistItemAssets ChecklistItemAsset[]
   property            Property             @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  checklistItemAssets ChecklistItemAsset[]
 
   @@index([tenantId])
   @@index([propertyId])
@@ -873,13 +833,13 @@ model Asset {
   createdByUser                User?                         @relation("AssetCreator", fields: [createdByUserId], references: [id])
   tenant                       Tenant                        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   chatMessages                 ChatMessage[]                 @relation("ChatMessageAsset")
+  checklistItemAssets          ChecklistItemAsset[]
+  cleanerVerificationDocuments CleanerVerificationDocument[]
   cleaningMedia                CleaningMedia[]
   inventoryEvidence            InventoryEvidence[]
   inventoryItemAssets          InventoryItemAsset[]
-  checklistItemAssets          ChecklistItemAsset[]
   propertyCover                Property?                     @relation("PropertyCover")
   userAvatar                   User?                         @relation("UserAvatar")
-  cleanerVerificationDocuments CleanerVerificationDocument[]
 
   @@unique([tenantId, bucket, key])
   @@index([tenantId, groupId])
@@ -916,7 +876,7 @@ model ChecklistItemAsset {
   tenantId        String
   checklistItemId String
   assetId         String
-  position        Int // 1, 2 o 3
+  position        Int
   createdAt       DateTime              @default(now())
   asset           Asset                 @relation(fields: [assetId], references: [id], onDelete: Cascade)
   checklistItem   PropertyChecklistItem @relation(fields: [checklistItemId], references: [id], onDelete: Cascade)
@@ -949,13 +909,13 @@ model InventoryItem {
   archivedAt                 DateTime?
   tenant                     Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   inventoryItemAssets        InventoryItemAsset[]
+  variantGroupLinks          InventoryItemVariantGroup[]
   inventoryLines             InventoryLine[]
   inventoryReports           InventoryReport[]
   inventoryReviewItemChanges InventoryReviewItemChange[]
-  inventoryChecks            InventoryCheck[]
-  variantGroupLinks          InventoryItemVariantGroup[]
 
   @@unique([tenantId, nameNormalized])
+  @@unique([tenantId, category, nameNormalized])
   @@index([tenantId])
   @@index([tenantId, category])
   @@index([tenantId, category, archivedAt])
@@ -964,15 +924,15 @@ model InventoryItem {
 /// *
 /// * Grupo de variantes reutilizable a nivel tenant (ej. bed_size, Tamaño de cama).
 model VariantGroup {
-  id         String   @id @default(cuid())
-  tenantId   String
-  key        String
-  label      String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  options    VariantOption[]
-  itemLinks  InventoryItemVariantGroup[]
+  id        String                      @id @default(cuid())
+  tenantId  String
+  key       String
+  label     String
+  createdAt DateTime                    @default(now())
+  updatedAt DateTime                    @updatedAt
+  itemLinks InventoryItemVariantGroup[]
+  tenant    Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  options   VariantOption[]
 
   @@unique([tenantId, key])
   @@index([tenantId])
@@ -981,14 +941,14 @@ model VariantGroup {
 /// *
 /// * Opción dentro de un grupo de variantes (ej. queen, king).
 model VariantOption {
-  id              String     @id @default(cuid())
+  id              String       @id @default(cuid())
   groupId         String
   valueNormalized String
   label           String
-  sortOrder       Int        @default(0)
-  isArchived      Boolean    @default(false)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  sortOrder       Int          @default(0)
+  isArchived      Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
   group           VariantGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, valueNormalized])
@@ -999,17 +959,17 @@ model VariantOption {
 /// *
 /// * Asociación entre InventoryItem y VariantGroup (item usa grupo).
 model InventoryItemVariantGroup {
-  id               String       @id @default(cuid())
-  itemId           String
-  groupId          String
-  required         Boolean      @default(false)
-  isActive         Boolean      @default(true)
-  sortOrder        Int          @default(0)
-  optionAllowlist  Json?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  item             InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  group            VariantGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  id              String        @id @default(cuid())
+  itemId          String
+  groupId         String
+  required        Boolean       @default(false)
+  isActive        Boolean       @default(true)
+  sortOrder       Int           @default(0)
+  optionAllowlist Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  group           VariantGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  item            InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@unique([itemId, groupId])
   @@index([itemId])
@@ -1020,14 +980,14 @@ model InventoryItemVariantGroup {
 /// * Catálogo Global de Ítems (fuente única de verdad para autocomplete).
 /// * No es modificable por usuarios; se actualiza mediante seeds.
 model GlobalCatalogItem {
-  id             String   @id @default(cuid())
-  locale         String   @default("es-MX")
-  name           String
-  nameNormalized String
-  defaultCategory String? // InventoryCategory como string (puede ser null)
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String   @id @default(cuid())
+  locale          String   @default("es-MX")
+  name            String
+  nameNormalized  String
+  defaultCategory String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@unique([locale, nameNormalized])
   @@index([locale, isActive])
@@ -1058,10 +1018,12 @@ model InventoryLine {
   variantValue           String?
   variantValueNormalized String?
   isActive               Boolean            @default(true)
+  inventoryChecks        InventoryCheck[]
+  inventoryReviewItemChanges InventoryReviewItemChange[]
+  inventoryReports       InventoryReport[]
   item                   InventoryItem      @relation(fields: [itemId], references: [id], onDelete: Cascade)
   property               Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   tenant                 Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  inventoryChecks        InventoryCheck[]
 
   @@unique([propertyId, areaNormalized, itemId, variantKey, variantValueNormalized])
   @@index([tenantId, propertyId])
@@ -1115,12 +1077,10 @@ model InventoryCheck {
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
   cleaning        Cleaning             @relation("CleaningInventoryChecks", fields: [cleaningId], references: [id], onDelete: Cascade)
-  property        Property             @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  inventoryLine   InventoryLine        @relation(fields: [inventoryLineId], references: [id], onDelete: Cascade)
-  tenant          Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   createdBy       User?                @relation("InventoryCheckCreator", fields: [createdByUserId], references: [id])
-  inventoryItem   InventoryItem?       @relation(fields: [inventoryItemId], references: [id])
-  inventoryItemId String?
+  inventoryLine   InventoryLine        @relation(fields: [inventoryLineId], references: [id], onDelete: Cascade)
+  property        Property             @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenant          Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([cleaningId, inventoryLineId])
   @@index([tenantId])
@@ -1138,6 +1098,7 @@ model InventoryReviewItemChange {
   tenantId        String
   reviewId        String
   itemId          String
+  inventoryLineId String?
   quantityBefore  Int
   quantityAfter   Int
   reason          InventoryChangeReason
@@ -1149,11 +1110,13 @@ model InventoryReviewItemChange {
   evidence        InventoryEvidence[]
   item            InventoryItem         @relation(fields: [itemId], references: [id], onDelete: Cascade)
   review          InventoryReview       @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  inventoryLine   InventoryLine?        @relation(fields: [inventoryLineId], references: [id], onDelete: SetNull)
   tenant          Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([reviewId])
   @@index([itemId])
+  @@index([reviewId, inventoryLineId])
   @@index([status])
 }
 
@@ -1166,6 +1129,7 @@ model InventoryReport {
   reviewId          String?
   cleaningId        String?
   itemId            String
+  inventoryLineId   String?
   type              InventoryReportType
   severity          InventoryReportSeverity    @default(INFO)
   description       String?
@@ -1182,12 +1146,14 @@ model InventoryReport {
   item              InventoryItem              @relation(fields: [itemId], references: [id], onDelete: Cascade)
   resolvedBy        User?                      @relation("InventoryReportResolver", fields: [resolvedByUserId], references: [id])
   review            InventoryReview?           @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  inventoryLine     InventoryLine?             @relation(fields: [inventoryLineId], references: [id], onDelete: SetNull)
   tenant            Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([reviewId])
   @@index([cleaningId])
   @@index([itemId])
+  @@index([reviewId, inventoryLineId])
   @@index([status])
   @@index([createdByUserId])
 }
@@ -1328,13 +1294,13 @@ model ChatParticipant {
   leftAt           DateTime?
   addedByUserId    String?
   teamId           String?
-  teamMembershipId String?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @default(now()) @updatedAt
   role             ChatParticipantRole @default(MEMBER)
+  teamMembershipId String?
   addedBy          User?               @relation("ChatParticipantAddedBy", fields: [addedByUserId], references: [id])
   team             Team?               @relation(fields: [teamId], references: [id])
-  teamMembership   TeamMembership?     @relation(fields: [teamMembershipId], references: [id], onDelete: SetNull)
+  teamMembership   TeamMembership?     @relation(fields: [teamMembershipId], references: [id])
   thread           ChatThread          @relation(fields: [threadId], references: [id], onDelete: Cascade)
   user             User                @relation("ChatParticipant", fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1405,8 +1371,8 @@ model TeamMembership {
   status           TeamMembershipStatus   @default(PENDING)
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
-  Cleaning         Cleaning[]
   chatParticipants ChatParticipant[]
+  Cleaning         Cleaning[]
   propertyAccesses PropertyMemberAccess[]
   Team             Team                   @relation(fields: [teamId], references: [id], onDelete: Cascade)
   User             User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1415,6 +1381,29 @@ model TeamMembership {
   @@index([teamId])
   @@index([teamId, status])
   @@index([userId])
+}
+
+enum PropertyMemberAccessStatus {
+  ACTIVE
+  INACTIVE
+  REMOVED
+}
+
+enum PropertyAccessRole {
+  CLEANER
+  MANAGER
+}
+
+enum PropertyInviteStatus {
+  PENDING
+  CLAIMED
+  REVOKED
+  EXPIRED
+}
+
+enum WorkGroupExecutorStatus {
+  ACTIVE
+  INACTIVE
 }
 
 enum UserRole {
@@ -1669,12 +1658,12 @@ enum HostWorkGroupStatus {
 }
 
 enum TeamRole {
-  TEAM_LEADER
   OWNER
   MANAGER
   AUXILIAR
   CLEANER
   HANDYMAN
+  TEAM_LEADER
 }
 
 enum CleanerVerificationDocumentType {

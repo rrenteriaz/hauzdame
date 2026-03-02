@@ -314,26 +314,42 @@ export async function applyInventoryChange(changeId: string) {
     throw new Error("Este cambio ya fue procesado");
   }
 
-  // Actualizar todas las líneas activas del item en la propiedad del cambio
   const propertyId = change.review?.cleaning?.propertyId;
   if (!propertyId) {
     throw new Error("No se pudo determinar la propiedad");
   }
 
-  // Buscar la línea de inventario correspondiente
-  const inventoryLine = await prisma.inventoryLine.findFirst({
-          where: {
-            tenantId,
-      propertyId,
-      itemId: change.itemId,
-      isActive: true,
-    },
-  });
+  // Usar inventoryLineId si existe (cambio por línea); si no, fallback por itemId (legacy)
+  let targetLineId: string | null = null;
+  if (change.inventoryLineId) {
+    const line = await prisma.inventoryLine.findFirst({
+      where: {
+        id: change.inventoryLineId,
+        tenantId,
+        propertyId,
+        itemId: change.itemId,
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    targetLineId = line?.id ?? null;
+  }
+  if (!targetLineId) {
+    const fallbackLine = await prisma.inventoryLine.findFirst({
+      where: {
+        tenantId,
+        propertyId,
+        itemId: change.itemId,
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    targetLineId = fallbackLine?.id ?? null;
+  }
 
-  if (inventoryLine) {
-    // Actualizar la cantidad
+  if (targetLineId) {
     await prisma.inventoryLine.update({
-      where: { id: inventoryLine.id },
+      where: { id: targetLineId },
       data: { expectedQty: change.quantityAfter },
     });
   }

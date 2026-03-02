@@ -43,7 +43,6 @@ interface InventoryReviewItemRowProps {
   originalQuantity: number;
   change: InventoryReviewItemChange | undefined;
   report: InventoryReport | undefined;
-  onQuantityChange: (newQuantity: number) => void;
   onReportClick: () => void;
   onItemClick?: () => void;
   disabled?: boolean;
@@ -55,7 +54,6 @@ export default function InventoryReviewItemRow({
   originalQuantity,
   change,
   report,
-  onQuantityChange,
   onReportClick,
   onItemClick,
   disabled = false,
@@ -89,83 +87,58 @@ export default function InventoryReviewItemRow({
           className="flex-1 min-w-0 cursor-pointer"
           onClick={onItemClick}
         >
-          {/* Línea 1: Título + tag/área */}
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <h3 className="text-base sm:text-lg font-semibold text-neutral-900 line-clamp-1 flex-1 min-w-0">{line.item.name}</h3>
-            <span className="text-xs text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded shrink-0">
-              {line.area}
-            </span>
+          {/* Línea 1: Título */}
+          <div className="mb-1">
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900 line-clamp-1">{line.item.name}</h3>
           </div>
 
-          {/* Línea 2: "Registrada: X" + badge estado EN LA MISMA FILA */}
+          {/* Línea 2: "Registrada: X" (+ "Verificada: Y" si difiere) + badge estado (solo Cambio/Reporte, sin OK) */}
           <div className="flex items-center justify-between gap-2 mb-1">
             <p className="text-sm text-neutral-600">
               Registrada: {originalQuantity}
-            </p>
-            {/* Badge estado */}
-            <div className="shrink-0">
-              {!hasQuantityChange && !hasReport && (
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                  OK
-                </span>
-              )}
               {hasQuantityChange && (
-                <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">
-                  Cambio
-                </span>
+                <span className="ml-2">Verificada: {currentQuantity}</span>
               )}
-              {hasReport && (
-                <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">
-                  Reporte {report.status === "PENDING" ? "(Pendiente)" : ""}
-                </span>
-              )}
-            </div>
+            </p>
+            {(hasQuantityChange || hasReport) && (
+              <div className="shrink-0">
+                {hasQuantityChange && (
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">
+                    Cambio
+                  </span>
+                )}
+                {hasReport && (
+                  <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">
+                    Reporte {report!.status === "PENDING" ? "(Pendiente)" : ""}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Línea 3 (móvil): Stepper + botón reportar - UNA SOLA FILA */}
-          <div className="flex items-center justify-between gap-3 sm:hidden mb-1">
-            {/* Stepper de cantidad - estilo pill */}
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => onQuantityChange(Math.max(0, currentQuantity - 1))}
-                disabled={disabled}
-                className="h-10 w-10 rounded-full border border-neutral-200 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition text-base font-medium text-neutral-700"
-              >
-                −
-              </button>
-              <span className="w-8 text-center font-medium tabular-nums text-base text-neutral-900">{currentQuantity}</span>
-              <button
-                type="button"
-                onClick={() => onQuantityChange(currentQuantity + 1)}
-                disabled={disabled}
-                className="h-10 w-10 rounded-full border border-neutral-200 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition text-base font-medium text-neutral-700"
-              >
-                +
-              </button>
-            </div>
-
-            {/* Botón de reportar - estilo pill */}
+          {/* Línea 3 (móvil): Área encima del botón Reportar/Editar incidencia */}
+          <div className="flex flex-col items-end gap-1 sm:hidden mb-1">
+            <span className="text-xs text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded">
+              {line.area}
+            </span>
             <button
               type="button"
-              onClick={onReportClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                onReportClick();
+              }}
               disabled={disabled}
-              className="h-10 w-10 rounded-full border border-neutral-200 bg-white flex items-center justify-center text-amber-600 hover:text-amber-700 hover:bg-amber-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              title="Reportar incidencia"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition shrink-0 ${
+                hasQuantityChange || hasReport
+                  ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                  : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+              } disabled:opacity-50 disabled:cursor-not-allowed active:scale-95`}
+              title={hasQuantityChange || hasReport ? "Editar incidencia" : "Reportar incidencia"}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
+              {hasQuantityChange || hasReport ? "Editar incidencia" : "Reportar incidencia"}
             </button>
           </div>
 
@@ -190,50 +163,29 @@ export default function InventoryReviewItemRow({
           )}
         </div>
 
-        {/* Controles - Solo visible en desktop */}
-        <div className="hidden sm:flex items-center justify-end gap-3 flex-shrink-0">
-          {/* Stepper de cantidad - estilo pill para desktop también */}
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => onQuantityChange(Math.max(0, currentQuantity - 1))}
-              disabled={disabled}
-              className="h-9 w-9 rounded-full border border-neutral-200 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition text-base font-medium text-neutral-700"
-            >
-              −
-            </button>
-            <span className="w-8 text-center font-medium tabular-nums text-base text-neutral-900">{currentQuantity}</span>
-            <button
-              type="button"
-              onClick={() => onQuantityChange(currentQuantity + 1)}
-              disabled={disabled}
-              className="h-9 w-9 rounded-full border border-neutral-200 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition text-base font-medium text-neutral-700"
-            >
-              +
-            </button>
-          </div>
-
-          {/* Botón de reportar - estilo pill para desktop */}
+        {/* Controles desktop: área encima del botón Reportar/Editar incidencia */}
+        <div className="hidden sm:flex flex-col items-end flex-shrink-0 gap-1">
+          <span className="text-xs text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded">
+            {line.area}
+          </span>
           <button
             type="button"
-            onClick={onReportClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              onReportClick();
+            }}
             disabled={disabled}
-            className="h-9 w-9 rounded-full border border-neutral-200 bg-white flex items-center justify-center text-amber-600 hover:text-amber-700 hover:bg-amber-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            title="Reportar incidencia"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+              hasQuantityChange || hasReport
+                ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+            } disabled:opacity-50 disabled:cursor-not-allowed active:scale-95`}
+            title={hasQuantityChange || hasReport ? "Editar incidencia" : "Reportar incidencia"}
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
+            {hasQuantityChange || hasReport ? "Editar incidencia" : "Reportar incidencia"}
           </button>
         </div>
       </div>

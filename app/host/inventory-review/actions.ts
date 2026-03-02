@@ -240,6 +240,7 @@ export async function createOrUpdateInventoryChange(formData: FormData) {
 
   const reviewId = formData.get("reviewId")?.toString();
   const itemId = formData.get("itemId")?.toString();
+  const inventoryLineId = formData.get("inventoryLineId")?.toString() || null;
   const quantityAfterStr = formData.get("quantityAfter")?.toString();
   const reasonStr = formData.get("reason")?.toString();
   const reasonOtherText = formData.get("reasonOtherText")?.toString().trim() || null;
@@ -258,6 +259,7 @@ export async function createOrUpdateInventoryChange(formData: FormData) {
   const review = await prisma.inventoryReview.findFirst({
     where: { id: reviewId, tenantId },
     select: { id: true, status: true, cleaningId: true },
+    include: { cleaning: { select: { propertyId: true } } },
   });
 
   if (!review) {
@@ -268,25 +270,47 @@ export async function createOrUpdateInventoryChange(formData: FormData) {
     throw new Error("Solo se pueden modificar revisiones en estado DRAFT");
   }
 
-  // Obtener la cantidad actual del inventario (expectedQty de InventoryLine activa, scoped por tenant)
-  const inventoryLine = await prisma.inventoryLine.findFirst({
-    where: {
-      tenantId,
-      itemId,
-      isActive: true,
-    },
-    select: { expectedQty: true },
-  });
+  const propertyId = review.cleaning?.propertyId;
 
-  const quantityBefore = inventoryLine?.expectedQty || 0;
+  // Obtener cantidad actual: si inventoryLineId, usar esa línea; si no, fallback por itemId+propertyId (legacy)
+  let quantityBefore = 0;
+  if (inventoryLineId) {
+    const line = await prisma.inventoryLine.findFirst({
+      where: {
+        id: inventoryLineId,
+        tenantId,
+        itemId,
+        isActive: true,
+      },
+      select: { expectedQty: true },
+    });
+    quantityBefore = line?.expectedQty ?? 0;
+  } else if (propertyId) {
+    const line = await prisma.inventoryLine.findFirst({
+      where: {
+        tenantId,
+        propertyId,
+        itemId,
+        isActive: true,
+      },
+      select: { expectedQty: true },
+    });
+    quantityBefore = line?.expectedQty ?? 0;
+  }
 
   // Si la cantidad no cambió, eliminar el cambio si existe
   if (quantityBefore === quantityAfter) {
+    const deleteWhere: { reviewId: string; itemId: string; inventoryLineId?: string | null } = {
+      reviewId,
+      itemId,
+    };
+    if (inventoryLineId) {
+      deleteWhere.inventoryLineId = inventoryLineId;
+    } else {
+      deleteWhere.inventoryLineId = null;
+    }
     await prisma.inventoryReviewItemChange.deleteMany({
-      where: {
-        reviewId,
-        itemId,
-      },
+      where: deleteWhere,
     });
 
     revalidatePath(`/host/cleanings/${review.cleaningId}`);
@@ -313,18 +337,25 @@ export async function createOrUpdateInventoryChange(formData: FormData) {
     throw new Error("La nota no puede tener más de 200 caracteres");
   }
 
-  // Buscar cambio existente
+  // Buscar cambio existente: por inventoryLineId si se proporciona, sino por itemId con inventoryLineId null (legacy)
+  const existingChangeWhere: { reviewId: string; itemId: string; inventoryLineId?: string | null } = {
+    reviewId,
+    itemId,
+  };
+  if (inventoryLineId) {
+    existingChangeWhere.inventoryLineId = inventoryLineId;
+  } else {
+    existingChangeWhere.inventoryLineId = null;
+  }
   const existingChange = await prisma.inventoryReviewItemChange.findFirst({
-    where: {
-      reviewId,
-      itemId,
-    },
+    where: existingChangeWhere,
   });
 
   const changeData = {
     tenantId: tenantId,
     reviewId,
     itemId,
+    inventoryLineId: inventoryLineId ?? null,
     quantityBefore,
     quantityAfter,
     reason,
@@ -380,6 +411,7 @@ export async function createInventoryReport(formData: FormData) {
   const reviewId = formData.get("reviewId")?.toString() || null;
   const cleaningId = formData.get("cleaningId")?.toString() || null;
   const itemId = formData.get("itemId")?.toString();
+  const inventoryLineId = formData.get("inventoryLineId")?.toString() || null;
   const reportId = formData.get("reportId")?.toString() || null; // ID del reporte existente a actualizar
   const typeStr = formData.get("type")?.toString();
   const severityStr = formData.get("severity")?.toString() || "INFO";
@@ -483,14 +515,26 @@ export async function createInventoryReport(formData: FormData) {
       },
     });
   } else if (reviewId) {
-    // Buscar por reviewId + itemId
+    // Buscar por reviewId + itemId + inventoryLineId (si se proporciona)
+    const reportWhere: {
+      tenantId: string;
+      reviewId: string;
+      itemId: string;
+      inventoryLineId?: string | null;
+      status: InventoryReportStatus;
+    } = {
+      tenantId: tenantId,
+      reviewId,
+      itemId,
+      status: InventoryReportStatus.PENDING,
+    };
+    if (inventoryLineId) {
+      reportWhere.inventoryLineId = inventoryLineId;
+    } else {
+      reportWhere.inventoryLineId = null;
+    }
     existingReport = await prisma.inventoryReport.findFirst({
-      where: {
-        tenantId: tenantId,
-        reviewId,
-        itemId,
-        status: InventoryReportStatus.PENDING,
-      },
+      where: reportWhere,
     });
   }
 
@@ -514,6 +558,7 @@ export async function createInventoryReport(formData: FormData) {
         reviewId,
         cleaningId,
         itemId,
+        inventoryLineId: inventoryLineId ?? null,
         type,
         severity,
         description,

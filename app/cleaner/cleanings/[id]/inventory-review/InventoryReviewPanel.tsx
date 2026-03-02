@@ -12,9 +12,8 @@ import {
 import { InventoryReviewStatus, InventoryChangeReason, InventoryReportType, InventoryReportSeverity } from "@prisma/client";
 import InventoryReviewItemRow from "@/app/host/cleanings/[id]/inventory-review/InventoryReviewItemRow";
 import InventoryReviewReportRow from "@/app/host/cleanings/[id]/inventory-review/InventoryReviewReportRow";
-import QuantityChangeModal from "@/app/host/cleanings/[id]/inventory-review/QuantityChangeModal";
+import InventoryIncidentModal, { InventoryIncidentPayload } from "@/app/host/cleanings/[id]/inventory-review/InventoryIncidentModal";
 import CollapsibleSection from "@/lib/ui/CollapsibleSection";
-import InventoryReportModal from "@/app/host/cleanings/[id]/inventory-review/InventoryReportModal";
 import InventoryItemDetailModal from "@/app/host/cleanings/[id]/inventory-review/InventoryItemDetailModal";
 import InventoryItemDetailModalReport from "@/app/host/cleanings/[id]/inventory-review/InventoryItemDetailModalReport";
 
@@ -35,6 +34,7 @@ interface InventoryLine {
 interface InventoryReviewItemChange {
   id: string;
   itemId: string;
+  inventoryLineId?: string | null;
   quantityBefore: number;
   quantityAfter: number;
   reason: InventoryChangeReason;
@@ -46,6 +46,7 @@ interface InventoryReviewItemChange {
 interface InventoryReport {
   id: string;
   itemId: string;
+  inventoryLineId?: string | null;
   type: InventoryReportType;
   severity: InventoryReportSeverity;
   description: string | null;
@@ -84,12 +85,9 @@ export default function InventoryReviewPanel({
   const [changes, setChanges] = useState<Map<string, InventoryReviewItemChange>>(new Map());
   const [reports, setReports] = useState<Map<string, InventoryReport>>(new Map());
   const [quantities, setQuantities] = useState<Map<string, number>>(new Map());
-  const [showQuantityModal, setShowQuantityModal] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
+  const [showIncidentModal, setShowIncidentModal] = useState(false);
   const [showItemDetailModal, setShowItemDetailModal] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
-  const [selectedLineIdForQuantity, setSelectedLineIdForQuantity] = useState<string | null>(null);
+  const [selectedLineForIncident, setSelectedLineForIncident] = useState<InventoryLine | null>(null);
   const [selectedLineForDetail, setSelectedLineForDetail] = useState<InventoryLine | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -103,104 +101,88 @@ export default function InventoryReviewPanel({
     });
     setQuantities(initialQuantities);
 
-    // Cargar cambios y reportes existentes de la revisión
+    // Cargar cambios y reportes existentes: usar inventoryLineId si existe, sino fallback por itemId (legacy)
     if (review) {
       const changesMap = new Map<string, InventoryReviewItemChange>();
       review.itemChanges.forEach((change) => {
-        const line = inventoryLines.find((l) => l.item.id === change.itemId);
-        if (line) {
-          changesMap.set(line.id, change);
-          initialQuantities.set(line.id, change.quantityAfter);
+        const lineId =
+          change.inventoryLineId && inventoryLines.some((l) => l.id === change.inventoryLineId)
+            ? change.inventoryLineId
+            : inventoryLines.find((l) => l.item.id === change.itemId)?.id;
+        if (lineId) {
+          changesMap.set(lineId, change);
+          initialQuantities.set(lineId, change.quantityAfter);
         }
       });
       setChanges(changesMap);
 
       const reportsMap = new Map<string, InventoryReport>();
       review.reports.forEach((report) => {
-        const line = inventoryLines.find((l) => l.item.id === report.itemId);
-        if (line) {
-          reportsMap.set(line.id, report);
+        const lineId =
+          report.inventoryLineId && inventoryLines.some((l) => l.id === report.inventoryLineId)
+            ? report.inventoryLineId
+            : inventoryLines.find((l) => l.item.id === report.itemId)?.id;
+        if (lineId) {
+          reportsMap.set(lineId, report);
         }
       });
       setReports(reportsMap);
     }
   }, [review, inventoryLines]);
 
-  const handleQuantityChange = (lineId: string, newQuantity: number) => {
-    if (review?.status === InventoryReviewStatus.SUBMITTED) {
-      return;
-    }
-
-    const line = inventoryLines.find((l) => l.id === lineId);
-    if (!line) return;
-
-    const currentQuantity = quantities.get(lineId) || line.expectedQty;
-
-    if (newQuantity === currentQuantity) {
-      const newQuantities = new Map(quantities);
-      newQuantities.set(lineId, newQuantity);
-      setQuantities(newQuantities);
-
-      const newChanges = new Map(changes);
-      newChanges.delete(lineId);
-      setChanges(newChanges);
-    } else {
-      setShowItemDetailModal(false);
-      setSelectedLineForDetail(null);
-      setSelectedItemId(line.item.id);
-      setSelectedLineIdForQuantity(lineId);
-      setShowQuantityModal(true);
-    }
-  };
-
-  const handleQuantityReasonSubmit = async (
-    itemId: string,
-    quantityAfter: number,
-    reason: InventoryChangeReason,
-    reasonOtherText: string | null,
-    note: string | null
-  ) => {
+  const handleIncidentSubmit = async (payload: InventoryIncidentPayload) => {
+    if (!selectedLineForIncident) return;
     setError(null);
+    const lineId = selectedLineForIncident.id;
+    const itemId = selectedLineForIncident.item.id;
+
     startTransition(async () => {
       try {
         let effectiveReviewId = review?.id ?? "";
         if (!review) {
-          const formData = new FormData();
-          formData.set("callerContext", "cleaner");
-          formData.set("cleaningId", cleaningId);
-          const result = await createOrUpdateInventoryReview(formData);
+          const fd = new FormData();
+          fd.set("callerContext", "cleaner");
+          fd.set("cleaningId", cleaningId);
+          const result = await createOrUpdateInventoryReview(fd);
           effectiveReviewId = result.id;
           setReview({ id: result.id, status: result.status as InventoryReviewStatus, itemChanges: [], reports: [] });
         }
 
-        const formData = new FormData();
-        formData.set("callerContext", "cleaner");
-        formData.set("reviewId", effectiveReviewId);
-        formData.set("itemId", itemId);
-        formData.set("quantityAfter", quantityAfter.toString());
-        formData.set("reason", reason);
-        if (reasonOtherText) formData.set("reasonOtherText", reasonOtherText);
-        if (note) formData.set("note", note);
+        if (payload.deleteReport) {
+          const existingReport = reports.get(lineId);
+          if (existingReport?.id) {
+            await deleteInventoryReport(existingReport.id, { callerContext: "cleaner" });
+            const newReports = new Map(reports);
+            newReports.delete(lineId);
+            setReports(newReports);
+          }
+        }
 
-        const changeResult = await createOrUpdateInventoryChange(formData);
-
-        // Usar el lineId guardado para actualizar el estado local
-        if (selectedLineIdForQuantity) {
+        if (payload.quantityChange) {
+          const { quantityAfter, reason, reasonOtherText, note } = payload.quantityChange;
+          const fd = new FormData();
+          fd.set("callerContext", "cleaner");
+          fd.set("reviewId", effectiveReviewId);
+          fd.set("itemId", itemId);
+          fd.set("inventoryLineId", lineId);
+          fd.set("quantityAfter", quantityAfter.toString());
+          fd.set("reason", reason);
+          if (reasonOtherText) fd.set("reasonOtherText", reasonOtherText);
+          if (note) fd.set("note", note);
+          const changeResult = await createOrUpdateInventoryChange(fd);
           const newQuantities = new Map(quantities);
-          newQuantities.set(selectedLineIdForQuantity, quantityAfter);
+          newQuantities.set(lineId, quantityAfter);
           setQuantities(newQuantities);
-
           if ("deleted" in changeResult && changeResult.deleted) {
-            // Si el cambio fue eliminado (cantidad volvió a original), remover del mapa
             const newChanges = new Map(changes);
-            newChanges.delete(selectedLineIdForQuantity);
+            newChanges.delete(lineId);
             setChanges(newChanges);
           } else if ("id" in changeResult && changeResult.id) {
-            // Si hay un cambio con id, agregarlo/actualizarlo
             const newChanges = new Map(changes);
-            newChanges.set(selectedLineIdForQuantity, {
+            newChanges.set(lineId, {
               id: changeResult.id,
               itemId,
+              inventoryLineId: lineId,
               quantityBefore: changeResult.quantityBefore,
               quantityAfter: changeResult.quantityAfter,
               reason,
@@ -212,74 +194,39 @@ export default function InventoryReviewPanel({
           }
         }
 
-        setShowQuantityModal(false);
-        setSelectedItemId(null);
-        setSelectedLineIdForQuantity(null);
-        // Refrescar para sincronizar datos en modo embedded
-        if (mode === "embedded") router.refresh();
-      } catch (err: any) {
-        setError(err.message || "Error al guardar el cambio");
-        console.error("[InventoryReview] Error guardando cambio cantidad:", err);
-      }
-    });
-  };
-
-  const handleReportSubmit = async (
-    itemId: string,
-    type: InventoryReportType,
-    severity: InventoryReportSeverity,
-    description: string | null
-  ) => {
-    setError(null);
-    startTransition(async () => {
-      try {
-        let effectiveReviewId = review?.id ?? "";
-        if (!review) {
-          const formData = new FormData();
-          formData.set("callerContext", "cleaner");
-          formData.set("cleaningId", cleaningId);
-          const result = await createOrUpdateInventoryReview(formData);
-          effectiveReviewId = result.id;
-          setReview({ id: result.id, status: result.status as InventoryReviewStatus, itemChanges: [], reports: [] });
-        }
-
-        const formData = new FormData();
-        formData.set("callerContext", "cleaner");
-        formData.set("reviewId", effectiveReviewId);
-        formData.set("cleaningId", cleaningId);
-        formData.set("itemId", itemId);
-        formData.set("type", type);
-        formData.set("severity", severity);
-        if (description) formData.set("description", description);
-        
-        const existingReport = selectedLineId ? reports.get(selectedLineId) : null;
-        if (existingReport?.id) {
-          formData.set("reportId", existingReport.id);
-        }
-
-        const reportResult = await createInventoryReport(formData);
-
-        const newReports = new Map(reports);
-        if (selectedLineId) {
-          newReports.set(selectedLineId, {
+        if (payload.report) {
+          const { type, severity, description } = payload.report;
+          const fd = new FormData();
+          fd.set("callerContext", "cleaner");
+          fd.set("reviewId", effectiveReviewId);
+          fd.set("cleaningId", cleaningId);
+          fd.set("itemId", itemId);
+          fd.set("inventoryLineId", lineId);
+          fd.set("type", type);
+          fd.set("severity", severity);
+          if (description) fd.set("description", description);
+          const existingReport = reports.get(lineId);
+          if (existingReport?.id) fd.set("reportId", existingReport.id);
+          const reportResult = await createInventoryReport(fd);
+          const newReports = new Map(reports);
+          newReports.set(lineId, {
             id: reportResult.id,
             itemId,
+            inventoryLineId: lineId,
             type,
             severity,
-            description,
+            description: payload.report.description,
             status: reportResult.status,
           });
           setReports(newReports);
         }
 
-        setShowReportModal(false);
-        setSelectedItemId(null);
-        setSelectedLineId(null);
-        // Refrescar para sincronizar datos en modo embedded
+        setShowIncidentModal(false);
+        setSelectedLineForIncident(null);
         if (mode === "embedded") router.refresh();
       } catch (err: any) {
-        setError(err.message || "Error al crear el reporte");
-        console.error("[InventoryReview] Error creando reporte:", err);
+        setError(err.message || "Error al guardar");
+        console.error("[InventoryReview] Error:", err);
       }
     });
   };
@@ -294,9 +241,8 @@ export default function InventoryReviewPanel({
         newReports.delete(lineId);
         setReports(newReports);
 
-        setShowReportModal(false);
-        setSelectedItemId(null);
-        setSelectedLineId(null);
+        setShowIncidentModal(false);
+        setSelectedLineForIncident(null);
       } catch (err: any) {
         setError(err.message || "Error al eliminar el reporte");
       }
@@ -556,12 +502,10 @@ export default function InventoryReviewPanel({
                             originalQuantity={line.expectedQty}
                             change={change}
                             report={report}
-                            onQuantityChange={(newQty) => handleQuantityChange(lineId, newQty)}
                             onReportClick={() => {
                               if (isSubmitted) return;
-                              setSelectedItemId(line.item.id);
-                              setSelectedLineId(line.id);
-                              setShowReportModal(true);
+                              setSelectedLineForIncident(line);
+                              setShowIncidentModal(true);
                             }}
                             onItemClick={() => {
                               setSelectedLineForDetail(line);
@@ -588,45 +532,27 @@ export default function InventoryReviewPanel({
         </div>
       </div>
 
-      {/* Modales */}
-      {showQuantityModal && selectedItemId && selectedLineIdForQuantity && (
-        <QuantityChangeModal
-          isOpen={showQuantityModal}
-          itemId={selectedItemId}
-          itemName={inventoryLines.find((l) => l.item.id === selectedItemId)?.item.name || ""}
-          quantityBefore={quantities.get(selectedLineIdForQuantity) || 0}
+      {/* Modal unificado de incidencia */}
+      {showIncidentModal && selectedLineForIncident && (
+        <InventoryIncidentModal
+          isOpen={showIncidentModal}
+          line={selectedLineForIncident}
+          quantityBefore={quantities.get(selectedLineForIncident.id) || selectedLineForIncident.expectedQty}
+          existingChange={changes.get(selectedLineForIncident.id)}
+          existingReport={reports.get(selectedLineForIncident.id)}
           onClose={() => {
-            setShowQuantityModal(false);
-            setSelectedItemId(null);
-            setSelectedLineIdForQuantity(null);
+            setShowIncidentModal(false);
+            setSelectedLineForIncident(null);
           }}
-          onSubmit={(quantityAfter, reason, reasonOtherText, note) =>
-            handleQuantityReasonSubmit(selectedItemId, quantityAfter, reason, reasonOtherText, note)
+          onSubmit={handleIncidentSubmit}
+          onDeleteReport={
+            reports.get(selectedLineForIncident.id)?.id
+              ? () =>
+                  handleDeleteReport(reports.get(selectedLineForIncident!.id)!.id, selectedLineForIncident.id)
+              : undefined
           }
         />
       )}
-
-      {showReportModal && selectedItemId && selectedLineId && (() => {
-        const line = inventoryLines.find((l) => l.id === selectedLineId);
-        const existingReport = reports.get(selectedLineId);
-        return (
-          <InventoryReportModal
-            isOpen={showReportModal}
-            itemId={selectedItemId}
-            itemName={line?.item.name || ""}
-            existingReport={existingReport}
-            onClose={() => {
-              setShowReportModal(false);
-              setSelectedItemId(null);
-              setSelectedLineId(null);
-            }}
-            onSubmit={(type, severity, description) =>
-              handleReportSubmit(selectedItemId, type, severity, description)
-            }
-            onDelete={existingReport?.id ? () => handleDeleteReport(existingReport.id, selectedLineId) : undefined}
-          />
-        );
-      })()}
 
       {showItemDetailModal && selectedLineForDetail && (() => {
         const lineReport = reports.get(selectedLineForDetail.id);
@@ -663,9 +589,8 @@ export default function InventoryReviewPanel({
             }}
             onReportClick={() => {
               setShowItemDetailModal(false);
-              setSelectedItemId(selectedLineForDetail.item.id);
-              setSelectedLineId(selectedLineForDetail.id);
-              setShowReportModal(true);
+              setSelectedLineForIncident(selectedLineForDetail);
+              setShowIncidentModal(true);
               setSelectedLineForDetail(null);
             }}
             onDeleteReport={lineReport?.id ? () => {
@@ -673,9 +598,6 @@ export default function InventoryReviewPanel({
               setShowItemDetailModal(false);
               setSelectedLineForDetail(null);
             } : undefined}
-            onQuantityChange={(newQty) => {
-              handleQuantityChange(selectedLineForDetail.id, newQty);
-            }}
             disabled={isSubmitted}
           />
         );
