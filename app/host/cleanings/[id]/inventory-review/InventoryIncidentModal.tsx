@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import {
   InventoryChangeReason,
@@ -8,7 +8,6 @@ import {
   InventoryReportSeverity,
 } from "@prisma/client";
 import { changeReasonLabel, reportTypeLabel, reportSeverityLabel } from "@/lib/inventory-i18n";
-import ImagePicker from "@/components/media/ImagePicker";
 import ConfirmDeleteReportModal from "./ConfirmDeleteReportModal";
 
 interface InventoryLine {
@@ -110,7 +109,10 @@ export default function InventoryIncidentModal({
   );
   const [description, setDescription] = useState(existingReport?.description || "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showPhotoChoiceModal, setShowPhotoChoiceModal] = useState(false);
   const [reportImages, setReportImages] = useState<Array<{ file: File; previewUrl: string }>>([]);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const MAX_REPORT_IMAGES = 5;
 
@@ -130,6 +132,27 @@ export default function InventoryIncidentModal({
     });
   }, []);
 
+  const handlePhotoFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const previewUrl = URL.createObjectURL(file);
+      addReportImage(file, previewUrl);
+      e.target.value = "";
+    },
+    [addReportImage]
+  );
+
+  const openCamera = useCallback(() => {
+    setShowPhotoChoiceModal(false);
+    cameraInputRef.current?.click();
+  }, []);
+
+  const openGallery = useCallback(() => {
+    setShowPhotoChoiceModal(false);
+    galleryInputRef.current?.click();
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       setQuantityAfter(existingChange?.quantityAfter ?? quantityBefore);
@@ -140,6 +163,7 @@ export default function InventoryIncidentModal({
       setSelectedSeverity(existingReport?.severity || "INFO");
       setDescription(existingReport?.description || "");
       setReportImages([]);
+      setShowPhotoChoiceModal(false);
     }
   }, [isOpen, existingChange, existingReport, quantityBefore]);
 
@@ -405,17 +429,37 @@ export default function InventoryIncidentModal({
                         </div>
                       ))}
                       {reportImages.length < MAX_REPORT_IMAGES && (
-                        <ImagePicker
-                          onSelect={(file, previewUrl) => addReportImage(file, previewUrl)}
-                          className="flex-1 min-w-[140px] sm:min-w-0 sm:w-16 sm:flex-initial w-full sm:h-16 h-24 rounded-lg border-2 border-dashed border-neutral-300 flex flex-col sm:flex-row items-center justify-center gap-2 text-neutral-600 hover:border-neutral-400 hover:bg-neutral-50 transition-colors cursor-pointer py-4 sm:py-0"
-                        >
-                          <svg className="w-8 h-8 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 13v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7" />
-                          </svg>
-                          <span className="text-sm font-medium">Tomar foto o subir imagen</span>
-                        </ImagePicker>
+                        <>
+                          <input
+                            ref={cameraInputRef}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handlePhotoFileSelect}
+                            className="hidden"
+                            aria-hidden
+                          />
+                          <input
+                            ref={galleryInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePhotoFileSelect}
+                            className="hidden"
+                            aria-hidden
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPhotoChoiceModal(true)}
+                            className="flex-1 min-w-[140px] sm:min-w-0 sm:w-16 sm:flex-initial w-full sm:h-16 h-24 rounded-lg border-2 border-dashed border-neutral-300 flex flex-col sm:flex-row items-center justify-center gap-2 text-neutral-600 hover:border-neutral-400 hover:bg-neutral-50 transition-colors cursor-pointer py-4 sm:py-0"
+                          >
+                            <svg className="w-8 h-8 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 13v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7" />
+                            </svg>
+                            <span className="text-sm font-medium">Tomar foto o subir imagen</span>
+                          </button>
+                        </>
                       )}
                     </div>
                     <p className="text-xs text-neutral-500 mt-1">
@@ -483,6 +527,65 @@ export default function InventoryIncidentModal({
           setShowDeleteConfirm(false);
         }}
       />
+
+      {/* Modal: Tomar foto o subir imagen */}
+      {showPhotoChoiceModal && (
+        <div
+          className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowPhotoChoiceModal(false)}
+        >
+          <div
+            className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-sm shadow-xl animate-in slide-in-from-bottom sm:animate-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 pb-8 sm:pb-4">
+              <h3 className="text-lg font-semibold text-neutral-900 mb-4">
+                ¿Cómo deseas agregar la imagen?
+              </h3>
+              <div className="flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={openCamera}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-neutral-200 hover:bg-neutral-50 transition-colors text-left"
+                >
+                  <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <span className="font-medium text-neutral-900 block">Tomar foto</span>
+                    <span className="text-sm text-neutral-500">Usar la cámara del dispositivo</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={openGallery}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-neutral-200 hover:bg-neutral-50 transition-colors text-left"
+                >
+                  <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <span className="font-medium text-neutral-900 block">Subir imagen</span>
+                    <span className="text-sm text-neutral-500">Elegir de la galería</span>
+                  </div>
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPhotoChoiceModal(false)}
+                className="w-full mt-4 py-2.5 text-sm font-medium text-neutral-600 hover:text-neutral-900"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
