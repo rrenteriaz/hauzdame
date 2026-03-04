@@ -26,20 +26,37 @@ function getSupabaseClient() {
 }
 
 export class SupabaseStorageProvider implements StorageProvider {
+  private async ensureBucketExists(supabase: ReturnType<typeof createClient>, bucket: string) {
+    const { error } = await supabase.storage.createBucket(bucket, { public: true });
+    // Si el bucket ya existe, createBucket puede devolver error; ignorar si es "already exists"
+    if (error && !error.message?.toLowerCase().includes("already exists")) {
+      throw new Error(`Failed to create bucket "${bucket}": ${error.message}`);
+    }
+  }
+
   async putPublicObject(params: PutPublicObjectParams): Promise<PutPublicObjectResult> {
     const { bucket, key, contentType, buffer } = params;
     const supabase = getSupabaseClient();
 
     // Subir archivo al bucket
-    const { data, error } = await supabase.storage
+    let result = await supabase.storage
       .from(bucket)
       .upload(key, buffer, {
         contentType,
-        upsert: false, // No sobrescribir si existe
+        upsert: true,
       });
 
-    if (error) {
-      throw new Error(`Failed to upload to Supabase: ${error.message}`);
+    // Si el bucket no existe, crearlo y reintentar
+    if (result.error?.message?.toLowerCase().includes("not found") || result.error?.message?.toLowerCase().includes("bucket")) {
+      await this.ensureBucketExists(supabase, bucket);
+      result = await supabase.storage.from(bucket).upload(key, buffer, {
+        contentType,
+        upsert: true,
+      });
+    }
+
+    if (result.error) {
+      throw new Error(`Failed to upload to Supabase: ${result.error.message}`);
     }
 
     // Obtener URL pública

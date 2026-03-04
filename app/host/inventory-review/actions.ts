@@ -681,6 +681,9 @@ export async function uploadInventoryReportEvidence(formData: FormData) {
   if (!reportId || !file) {
     throw new Error("reportId y file son requeridos");
   }
+  if (file.size === 0) {
+    throw new Error("El archivo está vacío. Selecciona una imagen válida.");
+  }
 
   if (!ALLOWED_EVIDENCE_MIME.includes(file.type)) {
     throw new Error("Tipo de archivo no permitido. Use JPG, PNG, WebP o HEIC.");
