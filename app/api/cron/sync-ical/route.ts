@@ -53,8 +53,9 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const locked = await tryAcquireAdvisoryLock();
-  if (!locked) {
+  let acquired = false;
+  acquired = await tryAcquireAdvisoryLock();
+  if (!acquired) {
     console.log("[cron][ical] Skipped: lock already held by another run");
     return NextResponse.json({
       ok: true,
@@ -126,6 +127,6 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   } finally {
-    await releaseAdvisoryLock();
+    if (acquired) await releaseAdvisoryLock();
   }
 }
