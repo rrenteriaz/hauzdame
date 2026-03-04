@@ -4,6 +4,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { StorageProvider, PutPublicObjectParams, PutPublicObjectResult, DeleteObjectParams } from "./types";
 
 // Server-only: no usar NEXT_PUBLIC_ para credenciales sensibles
@@ -26,7 +27,7 @@ function getSupabaseClient() {
 }
 
 export class SupabaseStorageProvider implements StorageProvider {
-  private async ensureBucketExists(supabase: ReturnType<typeof createClient>, bucket: string) {
+  private async ensureBucketExists(supabase: SupabaseClient<any, any, any, any>, bucket: string) {
     const { error } = await supabase.storage.createBucket(bucket, { public: true });
     // Si el bucket ya existe, createBucket puede devolver error; ignorar si es "already exists"
     if (error && !error.message?.toLowerCase().includes("already exists")) {
