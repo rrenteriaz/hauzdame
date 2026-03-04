@@ -1,0 +1,3 @@
+# Force Node 20 to avoid mise/node@22 download issues on Railway
+[variables]
+NIXPACKS_NODE_VERSION = "20"
