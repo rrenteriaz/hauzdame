@@ -60,6 +60,7 @@ export async function GET(req: NextRequest) {
       ts: new Date().toISOString(),
       reason: "lock_held",
     });
+    console.log("");
     return NextResponse.json({
       ok: true,
       skipped: true,
@@ -68,13 +69,14 @@ export async function GET(req: NextRequest) {
   }
 
   const startAt = Date.now();
-  console.log("[cron][ical] ----------------");
+  console.log("[cron][ical] ----------------\n");
   console.log("[cron][ical] start", {
     ts: new Date().toISOString(),
     batchSize: BATCH_SIZE,
     lockId: LOCK_ID,
     env: process.env.NODE_ENV ?? "development",
   });
+  console.log("");
 
   try {
     const propertiesWithIcal = await prisma.property.findMany({
@@ -97,7 +99,8 @@ export async function GET(req: NextRequest) {
         errors: 0,
         durationMs,
       });
-      console.log("[cron][ical] ----------------");
+      console.log("");
+      console.log("[cron][ical] ----------------\n");
       return NextResponse.json({
         ok: true,
         tenantsProcessed: 0,
@@ -140,7 +143,8 @@ export async function GET(req: NextRequest) {
       errors,
       durationMs,
     });
-    console.log("[cron][ical] ----------------");
+    console.log("");
+    console.log("[cron][ical] ----------------\n");
     return NextResponse.json({
       ok: true,
       tenantsProcessed: tenants.length,
