@@ -335,11 +335,13 @@ export async function getInventoryInboxItems(filters: InboxFilters = {}) {
         report.createdBy?.name || report.createdBy?.email || "Cleaner",
       createdAt: report.createdAt,
       resolvedAt: report.resolvedAt,
-      evidence: report.evidence.map((ev) => ({
-        id: ev.id,
-        url: ev.asset.publicUrl,
-        variant: ev.asset.variant,
-      })),
+      evidence: report.evidence
+        .filter((ev) => ev.asset.publicUrl)
+        .map((ev) => ({
+          id: ev.id,
+          url: ev.asset.publicUrl!,
+          variant: ev.asset.variant as string,
+        })),
     })),
   ];
 
