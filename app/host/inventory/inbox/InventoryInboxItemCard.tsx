@@ -84,7 +84,17 @@ export default function InventoryInboxItemCard({
   };
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4">
+    <div 
+      className="rounded-lg border border-neutral-200 bg-white p-4 hover:border-neutral-300 hover:shadow-sm transition-all cursor-pointer group"
+      onClick={() => {
+        if (item.type === "REPORT") {
+          onResolveReport(item);
+        } else {
+          // Para cambios, podríamos abrir un detalle similar o simplemente dejarlo así por ahora
+          // Si hay cleaningId, ir allí es una opción, pero el usuario pidió ver el detalle/fotos
+        }
+      }}
+    >
       <div className="flex items-start gap-4">
         {/* Móvil: Columna izquierda = thumbnail + Ver limpieza */}
         <div className="flex flex-col items-center gap-2 flex-shrink-0 sm:gap-0 sm:items-stretch">
@@ -106,6 +116,7 @@ export default function InventoryInboxItemCard({
           {item.cleaningId && (
             <Link
               href={`/host/cleanings/${item.cleaningId}?returnTo=${encodeURIComponent(inboxReturnUrl)}`}
+              onClick={(e) => e.stopPropagation()}
               className="sm:hidden text-xs font-medium text-neutral-700 hover:underline whitespace-nowrap py-1 -mx-1 px-1 rounded active:bg-neutral-100"
             >
               Ver limpieza
@@ -134,6 +145,7 @@ export default function InventoryInboxItemCard({
                     <span className="hidden sm:inline"> · </span>
                     <Link
                       href={`/host/cleanings/${item.cleaningId}?returnTo=${encodeURIComponent(inboxReturnUrl)}`}
+                      onClick={(e) => e.stopPropagation()}
                       className="hidden sm:inline text-neutral-700 font-medium hover:underline"
                     >
                       Ver limpieza
@@ -210,7 +222,10 @@ export default function InventoryInboxItemCard({
 
       {/* Acciones */}
       {!disabled && (
-        <div className="mt-4 pt-4 border-t border-neutral-200 flex gap-2">
+        <div 
+          className="mt-4 pt-4 border-t border-neutral-200 flex gap-2"
+          onClick={(e) => e.stopPropagation()}
+        >
           {item.type === "CHANGE" ? (
             <>
               <button
