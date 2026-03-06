@@ -17,7 +17,7 @@ export default function ConfirmDeleteReportModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50"
       onClick={onClose}
     >
       <div
