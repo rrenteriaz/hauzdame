@@ -42,6 +42,11 @@ interface InventoryReviewItemChange {
   status: string;
 }
 
+interface InventoryReportEvidence {
+  id: string;
+  asset?: { id: string; publicUrl: string | null } | null;
+}
+
 interface InventoryReport {
   id: string;
   itemId: string;
@@ -50,6 +55,7 @@ interface InventoryReport {
   severity: InventoryReportSeverity;
   description: string | null;
   status: string;
+  evidence?: InventoryReportEvidence[];
 }
 
 interface InventoryReview {
@@ -114,13 +120,23 @@ export default function InventoryReviewScreen({
       setChanges(changesMap);
 
       const reportsMap = new Map<string, InventoryReport>();
-      review.reports.forEach((report) => {
+      review.reports.forEach((report: any) => {
         const lineId =
           report.inventoryLineId && inventoryLines.some((l) => l.id === report.inventoryLineId)
             ? report.inventoryLineId
             : inventoryLines.find((l) => l.item.id === report.itemId)?.id;
         if (lineId) {
-          reportsMap.set(lineId, report);
+          reportsMap.set(lineId, {
+            id: report.id,
+            itemId: report.itemId,
+            inventoryLineId: report.inventoryLineId ?? null,
+            type: report.type,
+            severity: report.severity,
+            description: report.description,
+            status: report.status,
+            // Preservar evidencias que vienen del servidor (fuente de verdad inicial)
+            evidence: Array.isArray(report.evidence) ? report.evidence : [],
+          });
         }
       });
       setReports(reportsMap);
@@ -217,6 +233,8 @@ export default function InventoryReviewScreen({
             await uploadInventoryReportEvidence(evFd);
           }
         }
+        // Fuente de verdad post-save: el backend retorna el reporte con sus evidencias actuales.
+        const backendEvidence = reportResult.evidence ?? [];
         const newReports = new Map(reports);
         newReports.set(lineId, {
           id: reportResult.id,
@@ -226,8 +244,26 @@ export default function InventoryReviewScreen({
           severity,
           description: payload.report.description,
           status: reportResult.status,
+          evidence: backendEvidence,
         });
         setReports(newReports);
+      }
+
+      // Edge case: solo se eliminaron imágenes (sin cambio de reporte ni eliminación de él).
+      // Los removedEvidenceIds ya fueron procesados en el servidor.
+      // Actualizamos el estado local quitando esas evidencias del reporte.
+      if (!payload.report && !payload.deleteReport && removedEvidenceIds?.length) {
+        const existingReport = reports.get(lineId);
+        if (existingReport) {
+          const newReports = new Map(reports);
+          newReports.set(lineId, {
+            ...existingReport,
+            evidence: (existingReport.evidence ?? []).filter(
+              (e) => !removedEvidenceIds.includes(e.id)
+            ),
+          });
+          setReports(newReports);
+        }
       }
 
       setShowIncidentModal(false);

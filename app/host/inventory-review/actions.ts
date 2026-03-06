@@ -525,7 +525,7 @@ export async function createInventoryReport(formData: FormData) {
   // Si se proporciona reportId, actualizar ese reporte específico
   // Si no, buscar si ya existe un reporte para este item en esta revisión
   let existingReport = null;
-  
+
   if (reportId) {
     // Buscar el reporte específico por ID
     existingReport = await prisma.inventoryReport.findFirst({
@@ -604,7 +604,33 @@ export async function createInventoryReport(formData: FormData) {
     }
   }
 
-  return { id: report.id, status: report.status };
+  // Devolver el reporte con sus evidencias actuales para que el frontend
+  // pueda reconstruir el estado local desde la fuente de verdad del backend
+  const fullReport = await prisma.inventoryReport.findFirst({
+    where: { id: report.id, tenantId },
+    select: {
+      id: true,
+      status: true,
+      type: true,
+      severity: true,
+      description: true,
+      itemId: true,
+      inventoryLineId: true,
+      evidence: {
+        select: {
+          id: true,
+          assetId: true,
+          asset: { select: { id: true, publicUrl: true } },
+        },
+      },
+    },
+  });
+
+  return {
+    id: report.id,
+    status: report.status,
+    evidence: fullReport?.evidence ?? [],
+  };
 }
 
 /**
@@ -632,6 +658,13 @@ export async function deleteInventoryReport(
       id: true,
       status: true,
       reviewId: true,
+      evidence: {
+        select: {
+          id: true,
+          assetId: true,
+          asset: { select: { id: true, bucket: true, key: true } },
+        },
+      },
     },
   });
 
@@ -639,12 +672,40 @@ export async function deleteInventoryReport(
     throw new Error("Reporte no encontrado");
   }
 
+  // Regla de negocio: solo se puede eliminar si el Host aún no lo ha procesado (PENDING)
   if (report.status !== InventoryReportStatus.PENDING) {
-    throw new Error("Solo se pueden eliminar reportes en estado PENDING");
+    throw new Error("No puedes eliminar una incidencia que ya fue procesada por el Host");
   }
 
-  await prisma.inventoryReport.deleteMany({
-    where: { id: reportId, tenantId },
+  // Cleanup completo: borrar archivos en Storage antes de tocar BD
+  for (const evidence of report.evidence) {
+    const bucket = evidence.asset?.bucket;
+    const key = evidence.asset?.key;
+    if (bucket && key) {
+      try {
+        await storageProvider.deleteObject({ bucket, key });
+      } catch (err) {
+        console.warn(`[deleteInventoryReport] No se pudo borrar archivo en Storage para evidence ${evidence.id}:`, err);
+      }
+    }
+  }
+
+  // Borrar en BD: evidencias, assets y reporte en transacción
+  const assetIds = report.evidence.map((e) => e.assetId);
+  await prisma.$transaction(async (tx) => {
+    if (report.evidence.length > 0) {
+      await tx.inventoryEvidence.deleteMany({
+        where: { reportId, tenantId },
+      });
+      if (assetIds.length > 0) {
+        await tx.asset.deleteMany({
+          where: { id: { in: assetIds }, tenantId },
+        });
+      }
+    }
+    await tx.inventoryReport.delete({
+      where: { id: reportId },
+    });
   });
 
   if (report.reviewId) {

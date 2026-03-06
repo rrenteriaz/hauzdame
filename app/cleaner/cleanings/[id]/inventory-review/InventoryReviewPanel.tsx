@@ -45,6 +45,11 @@ interface InventoryReviewItemChange {
   status: string;
 }
 
+interface InventoryReportEvidence {
+  id: string;
+  asset?: { id: string; publicUrl: string | null } | null;
+}
+
 interface InventoryReport {
   id: string;
   itemId: string;
@@ -53,6 +58,7 @@ interface InventoryReport {
   severity: InventoryReportSeverity;
   description: string | null;
   status: string;
+  evidence?: InventoryReportEvidence[];
 }
 
 interface InventoryReview {
@@ -120,13 +126,23 @@ export default function InventoryReviewPanel({
       setChanges(changesMap);
 
       const reportsMap = new Map<string, InventoryReport>();
-      review.reports.forEach((report) => {
+      review.reports.forEach((report: any) => {
         const lineId =
           report.inventoryLineId && inventoryLines.some((l) => l.id === report.inventoryLineId)
             ? report.inventoryLineId
             : inventoryLines.find((l) => l.item.id === report.itemId)?.id;
         if (lineId) {
-          reportsMap.set(lineId, report);
+          reportsMap.set(lineId, {
+            id: report.id,
+            itemId: report.itemId,
+            inventoryLineId: report.inventoryLineId ?? null,
+            type: report.type,
+            severity: report.severity,
+            description: report.description,
+            status: report.status,
+            // Preservar evidencias que vienen del servidor (fuente de verdad inicial)
+            evidence: Array.isArray(report.evidence) ? report.evidence : [],
+          });
         }
       });
       setReports(reportsMap);
@@ -218,6 +234,9 @@ export default function InventoryReviewPanel({
         const existingReport = reports.get(lineId);
         if (existingReport?.id) fd.set("reportId", existingReport.id);
         const reportResult = await createInventoryReport(fd);
+
+        // Subir nuevas imágenes secuencialmente
+        const uploadedEvidence: Array<{ id: string; asset: { id: string; publicUrl: string | null } | null }> = [];
         if (reportImageFiles?.length) {
           for (const file of reportImageFiles) {
             const evFd = new FormData();
@@ -227,6 +246,12 @@ export default function InventoryReviewPanel({
             await uploadInventoryReportEvidence(evFd);
           }
         }
+
+        // Fuente de verdad post-save: el backend retorna el reporte con sus evidencias actuales.
+        // Incluye las nuevas evidencias y ya excluye las eliminadas (borradas antes en este handler).
+        // Usamos esa lista directamente sin acumulación local.
+        const backendEvidence = reportResult.evidence ?? [];
+
         const newReports = new Map(reports);
         newReports.set(lineId, {
           id: reportResult.id,
@@ -236,8 +261,26 @@ export default function InventoryReviewPanel({
           severity,
           description: payload.report.description,
           status: reportResult.status,
+          evidence: backendEvidence,
         });
         setReports(newReports);
+      }
+
+      // Edge case: solo se eliminaron imágenes (sin cambio de reporte ni eliminación de él).
+      // El payload no tuvo report ni deleteReport, pero los removedEvidenceIds ya fueron procesados
+      // en el servidor. Actualizamos el estado local quitando esas evidencias.
+      if (!payload.report && !payload.deleteReport && removedEvidenceIds?.length) {
+        const existingReport = reports.get(lineId);
+        if (existingReport) {
+          const newReports = new Map(reports);
+          newReports.set(lineId, {
+            ...existingReport,
+            evidence: (existingReport.evidence ?? []).filter(
+              (e) => !removedEvidenceIds.includes(e.id)
+            ),
+          });
+          setReports(newReports);
+        }
       }
 
       setShowIncidentModal(false);
@@ -292,7 +335,7 @@ export default function InventoryReviewPanel({
         formData.set("reviewId", review.id);
 
         await submitInventoryReview(formData);
-        
+
         // Actualizar estado local
         setReview({ ...review, status: InventoryReviewStatus.SUBMITTED });
 
@@ -329,7 +372,7 @@ export default function InventoryReviewPanel({
         formData.set("callerContext", "cleaner");
         formData.set("reviewId", effectiveReview!.id);
         await submitInventoryReview(formData);
-        
+
         setReview((prev) => (prev ? { ...prev, status: InventoryReviewStatus.SUBMITTED } : prev));
 
         if (mode === "embedded") {
@@ -579,7 +622,7 @@ export default function InventoryReviewPanel({
           onDeleteReport={
             reports.get(selectedLineForIncident.id)?.id
               ? () =>
-                  handleDeleteReport(reports.get(selectedLineForIncident!.id)!.id, selectedLineForIncident.id)
+                handleDeleteReport(reports.get(selectedLineForIncident!.id)!.id, selectedLineForIncident.id)
               : undefined
           }
           isSubmitting={isIncidentSubmitting}
@@ -590,7 +633,7 @@ export default function InventoryReviewPanel({
       {showItemDetailModal && selectedLineForDetail && (() => {
         const lineReport = reports.get(selectedLineForDetail.id);
         const lineChange = changes.get(selectedLineForDetail.id);
-        
+
         // En modo report, usar el modal de solo lectura
         if (isReportMode) {
           const verifiedQuantity = lineChange ? lineChange.quantityAfter : selectedLineForDetail.expectedQty;

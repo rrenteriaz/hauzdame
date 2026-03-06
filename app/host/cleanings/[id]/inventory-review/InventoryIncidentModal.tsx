@@ -204,8 +204,9 @@ export default function InventoryIncidentModal({
   const canSubmitQuantity =
     !hasQuantityChange || (selectedReason && (selectedReason !== "OTHER" || reasonOtherText.trim()));
   const wantsToDeleteReport = !!existingReport && !selectedType;
+  const hasPendingImageDeletions = removedExistingImageIds.length > 0;
   const canSubmit =
-    canSubmitQuantity && (hasQuantityChange || hasReport || wantsToDeleteReport);
+    canSubmitQuantity && (hasQuantityChange || hasReport || wantsToDeleteReport || hasPendingImageDeletions);
 
   const handleSubmit = (e?: React.MouseEvent) => {
     e?.preventDefault();
@@ -264,7 +265,8 @@ export default function InventoryIncidentModal({
     const imageFiles = hasReport && reportImages.length > 0
       ? reportImages.map(({ file }) => file)
       : undefined;
-    const removedIds = hasReport && removedExistingImageIds.length > 0 ? removedExistingImageIds : undefined;
+    // Pasar IDs a eliminar siempre que existan, sin requerir hasReport activo
+    const removedIds = removedExistingImageIds.length > 0 ? removedExistingImageIds : undefined;
 
     onSubmit(payload, imageFiles, removedIds);
   };
@@ -343,11 +345,10 @@ export default function InventoryIncidentModal({
                           key={option.value}
                           type="button"
                           onClick={() => setSelectedReason(option.value)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                            selectedReason === option.value
+                          className={`px-4 py-2 rounded-full text-sm font-medium border transition ${selectedReason === option.value
                               ? "bg-neutral-900 text-white border-neutral-900"
                               : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50"
-                          }`}
+                            }`}
                         >
                           {option.label}
                         </button>
@@ -399,11 +400,10 @@ export default function InventoryIncidentModal({
                       key={option.value}
                       type="button"
                       onClick={() => setSelectedType(selectedType === option.value ? null : option.value)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                        selectedType === option.value
+                      className={`px-4 py-2 rounded-full text-sm font-medium border transition ${selectedType === option.value
                           ? "bg-neutral-900 text-white border-neutral-900"
                           : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50"
-                      }`}
+                        }`}
                     >
                       {option.label}
                     </button>
@@ -422,11 +422,10 @@ export default function InventoryIncidentModal({
                           key={option.value}
                           type="button"
                           onClick={() => setSelectedSeverity(option.value)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                            selectedSeverity === option.value
+                          className={`px-4 py-2 rounded-full text-sm font-medium border transition ${selectedSeverity === option.value
                               ? "bg-neutral-900 text-white border-neutral-900"
                               : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50"
-                          }`}
+                            }`}
                         >
                           {option.label}
                         </button>
@@ -490,42 +489,42 @@ export default function InventoryIncidentModal({
                               </div>
                             ))}
                             {totalImages < MAX_REPORT_IMAGES && (
-                        <>
-                          <input
-                            ref={cameraInputRef}
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={handlePhotoFileSelect}
-                            className="hidden"
-                            aria-hidden
-                          />
-                          <input
-                            ref={galleryInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handlePhotoFileSelect}
-                            className="hidden"
-                            aria-hidden
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPhotoChoiceModal(true)}
-                            className="flex-1 min-w-[140px] sm:min-w-[200px] w-full h-24 sm:h-14 rounded-lg border-2 border-dashed border-neutral-300 flex flex-row items-center justify-center gap-3 text-neutral-600 hover:border-neutral-400 hover:bg-neutral-50 transition-colors cursor-pointer py-4 sm:py-3 px-4"
-                          >
-                            <svg className="w-8 h-8 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 13v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7" />
-                            </svg>
-                            <span className="text-sm font-medium text-left sm:text-center sm:whitespace-nowrap">Tomar foto o subir imagen</span>
-                          </button>
-                        </>
-                      )}
-                    </div>
-                    <p className="text-xs text-neutral-500 mt-1">
-                      Indispensable para que el Host pueda evaluar el problema. Máx. {MAX_REPORT_IMAGES} imágenes.
-                    </p>
+                              <>
+                                <input
+                                  ref={cameraInputRef}
+                                  type="file"
+                                  accept="image/*"
+                                  capture="environment"
+                                  onChange={handlePhotoFileSelect}
+                                  className="hidden"
+                                  aria-hidden
+                                />
+                                <input
+                                  ref={galleryInputRef}
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handlePhotoFileSelect}
+                                  className="hidden"
+                                  aria-hidden
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPhotoChoiceModal(true)}
+                                  className="flex-1 min-w-[140px] sm:min-w-[200px] w-full h-24 sm:h-14 rounded-lg border-2 border-dashed border-neutral-300 flex flex-row items-center justify-center gap-3 text-neutral-600 hover:border-neutral-400 hover:bg-neutral-50 transition-colors cursor-pointer py-4 sm:py-3 px-4"
+                                >
+                                  <svg className="w-8 h-8 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 13v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7" />
+                                  </svg>
+                                  <span className="text-sm font-medium text-left sm:text-center sm:whitespace-nowrap">Tomar foto o subir imagen</span>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                          <p className="text-xs text-neutral-500 mt-1">
+                            Indispensable para que el Host pueda evaluar el problema. Máx. {MAX_REPORT_IMAGES} imágenes.
+                          </p>
                         </>
                       );
                     })()}
