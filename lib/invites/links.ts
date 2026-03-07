@@ -11,7 +11,12 @@
  * 3. window.location.origin (client-only fallback)
  * 4. http://localhost:8080 (development fallback)
  */
-export function getBaseUrl(): string {
+export function getBaseUrl(providedBaseUrl?: string): string {
+  // 0. Use provided URL if available (from request origin)
+  if (providedBaseUrl && providedBaseUrl.trim() !== "") {
+    return providedBaseUrl.trim().replace(/\/$/, "");
+  }
+
   // 1. Try canonical environment variable (most reliable)
   const appBaseUrl = process.env.APP_BASE_URL;
   if (appBaseUrl && appBaseUrl.trim() !== "") {
@@ -64,16 +69,16 @@ export type InviteType = "team" | "property" | "workgroup";
 /**
  * Constructs a full invitation link using the centralized base URL.
  */
-export function getInviteLink(token: string, type: InviteType = "team"): string {
-  const baseUrl = getBaseUrl();
+export function getInviteLink(token: string, type: InviteType = "team", baseUrl?: string): string {
+  const finalBaseUrl = getBaseUrl(baseUrl);
   
   switch (type) {
     case "property":
-      return `${baseUrl}/join?token=${token}&type=property`;
+      return `${finalBaseUrl}/join?token=${token}&type=property`;
     case "workgroup":
-      return `${baseUrl}/join/host?token=${token}`;
+      return `${finalBaseUrl}/join/host?token=${token}`;
     case "team":
     default:
-      return `${baseUrl}/join?token=${token}`;
+      return `${finalBaseUrl}/join?token=${token}`;
   }
 }
