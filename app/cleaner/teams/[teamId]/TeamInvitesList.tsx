@@ -93,13 +93,8 @@ export default function TeamInvitesList({
     });
   };
 
-  const getInviteLink = (invite: TeamInviteItem) =>
-    typeof window !== "undefined"
-      ? `${window.location.origin}/join?token=${invite.token}`
-      : invite.inviteLink;
-
   const handleCopyInviteLink = async (invite: TeamInviteItem) => {
-    const linkToCopy = getInviteLink(invite);
+    const linkToCopy = invite.inviteLink;
     try {
       await navigator.clipboard.writeText(linkToCopy);
       setCopiedInviteId(invite.id);
@@ -231,7 +226,7 @@ export default function TeamInvitesList({
                     <input
                       type="text"
                       readOnly
-                      value={getInviteLink(invite)}
+                      value={invite.inviteLink}
                       className="flex-1 rounded-lg border border-neutral-300 bg-neutral-50 px-2 py-1 text-xs text-neutral-900 outline-none"
                     />
                     <button

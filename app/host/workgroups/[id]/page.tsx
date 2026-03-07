@@ -12,6 +12,7 @@ import ExecutorsSection from "./ExecutorsSection";
 import ToggleWorkGroupStatusButton from "./ToggleWorkGroupStatusButton";
 import { getExecutorsForWorkGroupsForUi } from "@/lib/workgroups/resolveWorkGroupsForProperty";
 import { safeReturnTo } from "@/lib/navigation/safeReturnTo";
+import { getInviteLink } from "@/lib/invites/links";
 
 export default async function WorkGroupDetailPage({
   params,
@@ -221,6 +222,12 @@ export default async function WorkGroupDetailPage({
     invites = [];
   }
 
+  // Inyectar inviteLink generado en servidor
+  const invitesWithLinks = invites.map((invite: any) => ({
+    ...invite,
+    inviteLink: getInviteLink(invite.token, "workgroup"),
+  }));
+
   // Validar returnTo y usar fallback seguro
   const returnTo = safeReturnTo(resolvedSearchParams?.returnTo, "/host/workgroups");
 
@@ -296,7 +303,7 @@ export default async function WorkGroupDetailPage({
           <WorkGroupInvitesSection
             workGroupId={workGroup.id}
             workGroupName={workGroup.name}
-            invites={invites as any}
+            invites={invitesWithLinks as any}
             returnTo={returnTo}
           />
         )}

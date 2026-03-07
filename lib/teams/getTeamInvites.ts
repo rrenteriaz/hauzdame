@@ -1,3 +1,4 @@
+import { getInviteLink } from "@/lib/invites/links";
 import prisma from "@/lib/prisma";
 import type { User } from "@prisma/client";
 
@@ -79,7 +80,6 @@ export async function getTeamInvites(args: {
   });
 
   const now = new Date();
-  const resolvedBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || "";
 
   return invites.map((invite) => {
     const isExpired = invite.status === "PENDING" && invite.expiresAt < now;
@@ -91,7 +91,7 @@ export async function getTeamInvites(args: {
       createdAt: invite.createdAt.toISOString(),
       expiresAt: invite.expiresAt.toISOString(),
       claimedAt: invite.claimedAt?.toISOString() || null,
-      inviteLink: `${resolvedBaseUrl}/join?token=${invite.token}`,
+      inviteLink: getInviteLink(invite.token, "team"),
     };
   });
 }

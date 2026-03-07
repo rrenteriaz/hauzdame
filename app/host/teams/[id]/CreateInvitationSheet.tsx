@@ -48,13 +48,7 @@ export default function CreateInvitationSheet({
       }
 
       const data = await response.json();
-      // Construir URL usando window.location.origin en el cliente para evitar 0.0.0.0
-      if (typeof window !== "undefined") {
-        const clientInviteLink = `${window.location.origin}/join?token=${data.invite.token}`;
-        setGeneratedLink(clientInviteLink);
-      } else {
-        setGeneratedLink(data.inviteLink);
-      }
+      setGeneratedLink(data.inviteLink);
       // No cerrar automáticamente, mostrar el link generado
     } catch (err: any) {
       setError(err.message || "Error al generar el link de invitación");

@@ -1,5 +1,6 @@
 // app/api/host-workgroups/[workGroupId]/invites/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { getInviteLink } from "@/lib/invites/links";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDefaultTenant } from "@/lib/tenant";
@@ -106,8 +107,7 @@ export async function POST(
     });
 
     // Construir link
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
-    const inviteLink = `${baseUrl}/join/host?token=${token}`;
+    const inviteLink = getInviteLink(token, "workgroup");
 
     return NextResponse.json({
       ok: true,

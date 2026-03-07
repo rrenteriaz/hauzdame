@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getInviteLink } from "@/lib/invites/links";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 import { randomBytes } from "crypto";
@@ -81,8 +82,7 @@ export async function POST(
       select: { id: true, status: true, expiresAt: true, token: true },
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
-    const inviteLink = `${baseUrl}/join?token=${token}&type=property`;
+    const inviteLink = getInviteLink(token, "property");
 
     return NextResponse.json({
       ok: true,

@@ -130,7 +130,7 @@ export default function TeamInvitesList({ teamId }: TeamInvitesListProps) {
         <ul className="space-y-2">
           {invites.map((invite) => {
             const statusInfo = formatStatus(invite.status);
-            const inviteLink = `${typeof window !== "undefined" ? window.location.origin : ""}/join?token=${invite.token}`;
+            const inviteLink = invite.inviteLink;
 
             return (
               <li

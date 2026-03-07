@@ -24,6 +24,7 @@ interface Invite {
     name: string | null;
     email: string;
   } | null;
+  inviteLink: string;
 }
 
 interface WorkGroupInvitesSectionProps {
@@ -116,13 +117,8 @@ export default function WorkGroupInvitesSection({
     });
   };
 
-  const getInviteLink = (token: string) => {
-    if (typeof window === "undefined") return "";
-    return `${window.location.origin}/join/host?token=${token}`;
-  };
-
   const handleCopyInviteLink = async (invite: Invite) => {
-    const linkToCopy = getInviteLink(invite.token);
+    const linkToCopy = invite.inviteLink;
     try {
       await navigator.clipboard.writeText(linkToCopy);
       setCopiedInviteId(invite.id);
@@ -160,9 +156,7 @@ export default function WorkGroupInvitesSection({
 
       const data: { invite: { token: string }; inviteLink: string } = await response.json();
 
-      // Usar origin del cliente para evitar 0.0.0.0
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      setGeneratedLink(data.inviteLink || `${origin}/join/host?token=${data.invite.token}`);
+      setGeneratedLink(data.inviteLink);
       router.refresh(); // Refrescar para mostrar la nueva invitación en la lista
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error al generar el link de invitación";
@@ -415,7 +409,7 @@ export default function WorkGroupInvitesSection({
                       <input
                         type="text"
                         readOnly
-                        value={getInviteLink(invite.token)}
+                        value={invite.inviteLink}
                         className="flex-1 rounded-lg border border-neutral-300 bg-neutral-50 px-2 py-1 text-xs text-neutral-900 outline-none"
                       />
                       <StopPropagationDiv>

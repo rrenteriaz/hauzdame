@@ -70,13 +70,8 @@ export default function InvitationsCard({ teamId, invites }: InvitationsCardProp
     };
   }, []);
 
-  const getInviteLink = (invite: TeamInvite) =>
-    typeof window !== "undefined"
-      ? `${window.location.origin}/join?token=${invite.token}`
-      : invite.inviteLink;
-
   const handleCopyInviteLink = async (invite: TeamInvite) => {
-    const linkToCopy = getInviteLink(invite);
+    const linkToCopy = invite.inviteLink;
 
     try {
       await navigator.clipboard.writeText(linkToCopy);
@@ -191,7 +186,7 @@ export default function InvitationsCard({ teamId, invites }: InvitationsCardProp
                                 <input
                                   type="text"
                                   readOnly
-                                  value={getInviteLink(invite)}
+                                  value={invite.inviteLink}
                                   className="flex-1 rounded-lg border border-neutral-300 bg-neutral-50 px-2 py-1 text-xs text-neutral-900 outline-none"
                                 />
                                 <button
