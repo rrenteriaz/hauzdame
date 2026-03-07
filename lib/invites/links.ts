@@ -33,11 +33,23 @@ export function getBaseUrl(): string {
   }
 
   // 4. Production fail-fast
-  // We check for a generic production indicator (Railway usually sets NODE_ENV or RAILWAY_ENVIRONMENT)
-  const isProduction = process.env.NODE_ENV === "production" || !!process.env.RAILWAY_ENVIRONMENT;
+  // Railway often set NODE_ENV=production. Also check common Railway provider variables.
+  const isProduction = 
+    process.env.NODE_ENV === "production" || 
+    !!process.env.RAILWAY_ENVIRONMENT || 
+    !!process.env.RAILWAY_ENVIRONMENT_NAME ||
+    !!process.env.RAILWAY_STATIC_URL;
   
   if (isProduction) {
-    console.error("CRITICAL: APP_BASE_URL is not configured in production environment.");
+    // Log the error for easier debugging in Railway logs
+    if (typeof window === "undefined") {
+      console.error("CRITICAL: APP_BASE_URL is not configured in production environment.", {
+        NODE_ENV: process.env.NODE_ENV,
+        RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
+        RAILWAY_STATIC_URL: process.env.RAILWAY_STATIC_URL
+      });
+    }
+    
     // We return a slightly more useful error link instead of throwing to prevent a full crash, 
     // but the link will obviously be an error indicator.
     return "https://ERROR_MISSING_APP_BASE_URL";

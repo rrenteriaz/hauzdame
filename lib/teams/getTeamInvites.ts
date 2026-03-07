@@ -91,7 +91,7 @@ export async function getTeamInvites(args: {
       createdAt: invite.createdAt.toISOString(),
       expiresAt: invite.expiresAt.toISOString(),
       claimedAt: invite.claimedAt?.toISOString() || null,
-      inviteLink: getInviteLink(invite.token, "team"),
+      inviteLink: getInviteLink(invite.token, "team", baseUrl),
     };
   });
 }

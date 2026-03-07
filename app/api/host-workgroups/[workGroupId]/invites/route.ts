@@ -106,8 +106,8 @@ export async function POST(
       },
     });
 
-    // Construir link
-    const inviteLink = getInviteLink(token, "workgroup");
+    // Construir link usando el origin real del request
+    const inviteLink = getInviteLink(token, "workgroup", req.nextUrl.origin);
 
     return NextResponse.json({
       ok: true,

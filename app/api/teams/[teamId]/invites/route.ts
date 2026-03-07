@@ -220,8 +220,8 @@ export async function POST(
       },
     });
 
-    // Construir link
-    const inviteLink = getInviteLink(token, "team");
+    // Construir link usando el origin real del request
+    const inviteLink = getInviteLink(token, "team", req.nextUrl.origin);
 
     return NextResponse.json({
       ok: true,

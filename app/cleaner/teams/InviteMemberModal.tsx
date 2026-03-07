@@ -100,11 +100,8 @@ export default function InviteMemberModal({
         throw new Error(data.error || "Error al generar el link de invitación");
       }
 
-      const data: { invite: { token: string } } = await response.json();
-
-      // Usar origin del cliente para evitar 0.0.0.0
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      setGeneratedLink(`${origin}/join?token=${data.invite.token}`);
+      const data: { invite: { token: string }; inviteLink: string } = await response.json();
+      setGeneratedLink(data.inviteLink);
       onInviteCreated();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error al generar el link de invitación";

@@ -82,7 +82,7 @@ export async function POST(
       select: { id: true, status: true, expiresAt: true, token: true },
     });
 
-    const inviteLink = getInviteLink(token, "property");
+    const inviteLink = getInviteLink(token, "property", req.nextUrl.origin);
 
     return NextResponse.json({
       ok: true,
