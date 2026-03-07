@@ -21,6 +21,7 @@ interface TeamInvite {
     name: string | null;
     email: string;
   };
+  inviteLink: string;
 }
 
 interface TeamInvitesListProps {
